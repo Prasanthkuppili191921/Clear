@@ -106,7 +106,7 @@ namespace AiInterviewAssistant
                 {
                     AppMessage.Show(
                         "Speech-to-Text model is not configured.\n\n" +
-                        "Please configure the Speech-to-Text model " +
+                        "Please configure the Speech-to-text model " +
                         "from Configuration.");
 
                     return false;
@@ -137,6 +137,20 @@ namespace AiInterviewAssistant
         {
             try
             {
+                // =====================================================
+                // CHATGPT VIEW
+                //
+                // Voice is handled by the embedded ChatGPT WebView.
+                // Returning false prevents the local recorder from
+                // starting after the WebView voice toggle is invoked.
+                // =====================================================
+
+                if (_chatGPTView)
+                {
+                    _ = ChatGPTWebViewHost.ToggleVoiceAsync();
+                    return false;
+                }
+
                 AppSettings settings =
                     SettingsService.Load();
 
