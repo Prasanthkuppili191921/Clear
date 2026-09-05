@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
@@ -157,7 +157,7 @@ namespace AiInterviewAssistant.ChatGPTHost
             {
                 if (Visibility != Visibility.Visible)
                     return;
-                    
+
                 await ChatGPTBrowser.EnsureCoreWebView2Async();
 
                 ChatGPTBrowser.CoreWebView2.OpenDevToolsWindow();
@@ -188,7 +188,7 @@ namespace AiInterviewAssistant.ChatGPTHost
                     "ChatGPTSend.js",
                     "ChatGPTCleanup.js",
                     "ChatGPTUI.js"
-};
+                };
 
                 foreach (string scriptFile in scriptFiles)
                 {
@@ -268,9 +268,7 @@ namespace AiInterviewAssistant.ChatGPTHost
                 // the textbox.
                 await Task.Delay(1500);
 
-                ChatGPTReady?.Invoke(
-                    this,
-                    EventArgs.Empty);
+                // No automatic question injection here.
             }
             catch
             {
