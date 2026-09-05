@@ -87,6 +87,7 @@ namespace AiInterviewAssistant.ChatGPTHost
             }
         }
 
+
         public async Task SendQuestionAsync(string question)
         {
             if (string.IsNullOrWhiteSpace(question))
@@ -112,6 +113,33 @@ namespace AiInterviewAssistant.ChatGPTHost
                 // Ignore ChatGPT send errors for now.
             }
         }
+
+
+        // =========================================================
+        // START NEW CHAT
+        // =========================================================
+
+        public async Task StartNewChatAsync()
+        {
+            try
+            {
+                if (ChatGPTBrowser.CoreWebView2 == null)
+                {
+                    await ChatGPTBrowser.EnsureCoreWebView2Async();
+                }
+
+                string script =
+                    "window.aiInterviewAssistant && " +
+                    "window.aiInterviewAssistant.startNewChat();";
+
+                await ChatGPTBrowser.ExecuteScriptAsync(script);
+            }
+            catch
+            {
+                // Ignore ChatGPT new chat errors.
+            }
+        }
+
 
         // =========================================================
         // SCROLL CHATGPT WEBVIEW
@@ -274,6 +302,7 @@ namespace AiInterviewAssistant.ChatGPTHost
             {
             }
         }
+
 
         // =========================================================
         // TOGGLE CHATGPT VOICE
