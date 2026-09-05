@@ -249,6 +249,43 @@
         return false;
     }
 
+
+    // =========================================================
+    // START NEW CHAT
+    // =========================================================
+
+    function startNewChat() {
+
+        const selectors = [
+            'a[data-testid="create-new-chat-button"]',
+            'a[href="https://chatgpt.com/"]'
+        ];
+
+        for (const selector of selectors) {
+
+            const newChatButton =
+                document.querySelector(selector);
+
+            if (!newChatButton)
+                continue;
+
+            console.log(
+                '[AI Interview] Clicking ChatGPT New Chat:',
+                selector
+            );
+
+            newChatButton.click();
+            return true;
+        }
+
+        console.log(
+            '[AI Interview] ChatGPT New Chat button not found'
+        );
+
+        return false;
+    }
+
+
     // =========================================================
     // TOGGLE CHATGPT VOICE
     //
@@ -301,6 +338,9 @@
 
     window.aiInterviewAssistantModules.setQuestion =
         setQuestion;
+
+    window.aiInterviewAssistantModules.startNewChat =
+        startNewChat;
 
     window.aiInterviewAssistantModules.toggleVoice =
         toggleVoice;
