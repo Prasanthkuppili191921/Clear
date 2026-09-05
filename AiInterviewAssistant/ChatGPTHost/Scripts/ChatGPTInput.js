@@ -252,37 +252,34 @@
     // =========================================================
     // TOGGLE CHATGPT VOICE
     //
-    // First click:
-    //     Start Voice
-    //
-    // Second click:
-    //     Stop Voice
+    // ChatGPT currently exposes Voice mode separately from
+    // dictation. Support the current Voice selectors first and
+    // keep the dictation selectors as fallbacks.
     // =========================================================
 
     function toggleVoice() {
 
-        let voiceButton =
-            document.querySelector(
-                'button[aria-label="Start Voice"]'
-            );
+        const selectors = [
+            'button[aria-label="Start Voice"]',
+            'button[aria-label="Stop Voice"]',
+            'button[aria-label="Start dictation"]',
+            'button[aria-label="Dictate button"]',
+            'button[aria-label="Submit dictation"]',
+            'button[aria-label="Cancel dictation"]',
+            'button[aria-label="Stop dictation"]'
+        ];
 
-        if (voiceButton) {
+        for (const selector of selectors) {
+
+            const voiceButton =
+                document.querySelector(selector);
+
+            if (!voiceButton)
+                continue;
+
             console.log(
-                '[AI Interview] Clicking ChatGPT Start Voice'
-            );
-
-            voiceButton.click();
-            return true;
-        }
-
-        voiceButton =
-            document.querySelector(
-                'button[aria-label="Stop Voice"]'
-            );
-
-        if (voiceButton) {
-            console.log(
-                '[AI Interview] Clicking ChatGPT Stop Voice'
+                '[AI Interview] Clicking ChatGPT voice control:',
+                selector
             );
 
             voiceButton.click();
@@ -290,7 +287,7 @@
         }
 
         console.log(
-            '[AI Interview] ChatGPT Voice button not found'
+            '[AI Interview] ChatGPT voice control not found'
         );
 
         return false;
