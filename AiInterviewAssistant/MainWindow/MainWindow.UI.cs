@@ -1,4 +1,4 @@
-﻿using NAudio.Wave;
+using NAudio.Wave;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -132,6 +132,12 @@ namespace AiInterviewAssistant
             object sender,
             RoutedEventArgs e)
         {
+            if (_chatGPTView)
+            {
+                _ = ChatGPTWebViewHost.StartNewChatAsync();
+                return;
+            }
+
             if (isGenerating &&
                 cancellationTokenSource != null)
             {
@@ -235,7 +241,18 @@ namespace AiInterviewAssistant
         {
             try
             {
-               
+                if (_chatGPTView)
+                {
+                    if (TextInputPanel != null)
+                    {
+                        TextInputPanel.Visibility =
+                            Visibility.Collapsed;
+                    }
+
+                    _ = ChatGPTWebViewHost.ToggleVoiceAsync();
+                    return;
+                }
+
                 // =====================================================
                 // EXISTING VOICE FUNCTIONALITY
                 //
