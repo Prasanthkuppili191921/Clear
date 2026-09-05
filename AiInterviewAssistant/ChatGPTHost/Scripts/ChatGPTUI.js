@@ -21,6 +21,9 @@
     window.aiInterviewAssistant.sendQuestion =
         modules.sendQuestion;
 
+    window.aiInterviewAssistant.startNewChat =
+        modules.startNewChat;
+
     window.aiInterviewAssistant.scrollChat =
         modules.scrollChat;
 
