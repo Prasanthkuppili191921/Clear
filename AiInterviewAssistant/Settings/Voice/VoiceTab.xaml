@@ -1,0 +1,189 @@
+﻿<UserControl x:Class="AiInterviewAssistant.Settings.Voice.VoiceTab"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Unloaded="UserControl_Unloaded">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+
+        <StackPanel>
+
+            <!-- ================================================= -->
+            <!-- HEADER -->
+            <!-- ================================================= -->
+
+            <TextBlock
+                Text="VOICE"
+                FontSize="11"
+                FontWeight="SemiBold"
+                Foreground="{DynamicResource MutedBrush}"
+                Margin="2,0,0,16"/>
+
+
+            <!-- ================================================= -->
+            <!-- VOICE ENABLED -->
+            <!-- Hidden - Voice is handled automatically -->
+            <!-- ================================================= -->
+
+            <Grid
+                Margin="0,0,0,18"
+                Visibility="Collapsed">
+
+                <TextBlock
+                    Text="Enable Voice Input"
+                    FontSize="13"
+                    Foreground="{DynamicResource TextBrush}"
+                    VerticalAlignment="Center"/>
+
+                <ToggleButton
+                    x:Name="VoiceEnabledSwitch"
+                    HorizontalAlignment="Right"
+                    Style="{DynamicResource SettingsSwitchStyle}"/>
+
+            </Grid>
+
+
+            <!-- ================================================= -->
+            <!-- INPUT DEVICE -->
+            <!-- ================================================= -->
+
+            <TextBlock
+                Text="Input Device"
+                FontSize="13"
+                Foreground="{DynamicResource TextBrush}"
+                Margin="0,0,0,6"/>
+
+            <ComboBox
+                x:Name="MicrophoneComboBox"
+                Style="{DynamicResource SettingsComboBoxStyle}"
+                Margin="0,0,0,18"/>
+
+
+            <!-- ================================================= -->
+            <!-- OUTPUT DEVICE -->
+            <!-- ================================================= -->
+
+            <TextBlock
+                Text="Output Device"
+                FontSize="13"
+                Foreground="{DynamicResource TextBrush}"
+                Margin="0,0,0,6"/>
+
+            <ComboBox
+                x:Name="OutputDeviceComboBox"
+                Style="{DynamicResource SettingsComboBoxStyle}"
+                Margin="0,0,0,18"/>
+
+
+            <!-- ================================================= -->
+            <!-- VOICE WAVEFORM -->
+            <!-- ================================================= -->
+
+            <Grid
+                x:Name="MicrophoneActivityPanel"
+                Height="52"
+                Margin="0,18,0,0"
+                Visibility="Collapsed">
+
+                <Border
+                    Width="150"
+                    Height="46"
+                    CornerRadius="23"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Background="{DynamicResource PanelBackgroundBrush}"
+                    BorderBrush="{DynamicResource MainBorderBrush}"
+                    BorderThickness="1">
+
+                    <Grid>
+
+                        <StackPanel
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+
+                            <Border
+                                x:Name="VoiceBar1"
+                                Width="4"
+                                Height="8"
+                                CornerRadius="2"
+                                Margin="3,0"
+                                Background="{DynamicResource AccentBrush}"/>
+
+                            <Border
+                                x:Name="VoiceBar2"
+                                Width="4"
+                                Height="14"
+                                CornerRadius="2"
+                                Margin="3,0"
+                                Background="{DynamicResource AccentBrush}"/>
+
+                            <Border
+                                x:Name="VoiceBar3"
+                                Width="4"
+                                Height="20"
+                                CornerRadius="2"
+                                Margin="3,0"
+                                Background="{DynamicResource AccentBrush}"/>
+
+                            <Border
+                                x:Name="VoiceBar4"
+                                Width="4"
+                                Height="28"
+                                CornerRadius="2"
+                                Margin="3,0"
+                                Background="{DynamicResource AccentBrush}"/>
+
+                            <Border
+                                x:Name="VoiceBar5"
+                                Width="4"
+                                Height="20"
+                                CornerRadius="2"
+                                Margin="3,0"
+                                Background="{DynamicResource AccentBrush}"/>
+
+                            <Border
+                                x:Name="VoiceBar6"
+                                Width="4"
+                                Height="14"
+                                CornerRadius="2"
+                                Margin="3,0"
+                                Background="{DynamicResource AccentBrush}"/>
+
+                            <Border
+                                x:Name="VoiceBar7"
+                                Width="4"
+                                Height="8"
+                                CornerRadius="2"
+                                Margin="3,0"
+                                Background="{DynamicResource AccentBrush}"/>
+
+                        </StackPanel>
+
+                    </Grid>
+
+                </Border>
+
+            </Grid>
+
+
+            <!-- ================================================= -->
+            <!-- TEST MICROPHONE -->
+            <!-- ================================================= -->
+
+            <Button
+                x:Name="TestVoiceButton"
+                Height="40"
+                Content="🎤  Test Microphone"
+                Background="{DynamicResource AccentBrush}"
+                Foreground="{DynamicResource TextBrush}"
+                BorderThickness="0"
+                FontWeight="SemiBold"
+                Cursor="Hand"
+                Margin="0,18,0,0"
+                Click="TestVoiceButton_Click"/>
+
+        </StackPanel>
+
+    </ScrollViewer>
+
+</UserControl>

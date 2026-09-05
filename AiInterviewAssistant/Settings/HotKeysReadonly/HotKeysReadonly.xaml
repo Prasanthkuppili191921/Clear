@@ -1,0 +1,1104 @@
+﻿<UserControl x:Class="AiInterviewAssistant.Settings.HotKeysReadonly.HotKeysReadonly"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <UserControl.Resources>
+
+        <!-- =========================================================
+             TITLE
+             ========================================================= -->
+
+        <Style x:Key="HotkeyTitleStyle"
+               TargetType="{x:Type TextBlock}">
+
+            <Setter Property="FontSize"
+                    Value="12"/>
+
+            <Setter Property="FontWeight"
+                    Value="SemiBold"/>
+
+            <Setter Property="Foreground"
+                    Value="{DynamicResource TextBrush}"/>
+
+        </Style>
+
+
+
+        <!-- =========================================================
+             DESCRIPTION
+             ========================================================= -->
+
+        <Style x:Key="HotkeyDescriptionStyle"
+               TargetType="{x:Type TextBlock}">
+
+            <Setter Property="FontSize"
+                    Value="9"/>
+
+            <Setter Property="Margin"
+                    Value="0,2,0,0"/>
+
+            <Setter Property="Foreground"
+                    Value="{DynamicResource SecondaryTextBrush}"/>
+
+        </Style>
+
+
+
+        <!-- =========================================================
+             CARD BACKGROUND
+             ========================================================= -->
+
+        <SolidColorBrush x:Key="ReadonlyCardBackground"
+                         Color="#000000"
+                         Opacity="0.08"/>
+
+
+
+        <!-- =========================================================
+             CARD BORDER
+             ========================================================= -->
+
+        <SolidColorBrush x:Key="ReadonlyCardBorder"
+                         Color="#000000"
+                         Opacity="0.14"/>
+
+
+
+        <!-- =========================================================
+             HOTKEY BADGE BACKGROUND
+             ========================================================= -->
+
+        <SolidColorBrush x:Key="ReadonlyHotkeyBackground"
+                         Color="#000000"
+                         Opacity="0.10"/>
+
+
+
+        <!-- =========================================================
+             HOTKEY BADGE BORDER
+             ========================================================= -->
+
+        <SolidColorBrush x:Key="ReadonlyHotkeyBorder"
+                         Color="#000000"
+                         Opacity="0.20"/>
+
+
+
+        <!-- =========================================================
+             CARD STYLE
+             ========================================================= -->
+
+        <Style x:Key="HotkeyCardStyle"
+               TargetType="{x:Type Border}">
+
+            <Setter Property="Background"
+                    Value="{StaticResource ReadonlyCardBackground}"/>
+
+            <Setter Property="BorderBrush"
+                    Value="{StaticResource ReadonlyCardBorder}"/>
+
+            <Setter Property="BorderThickness"
+                    Value="1"/>
+
+            <Setter Property="CornerRadius"
+                    Value="8"/>
+
+            <Setter Property="Padding"
+                    Value="10,7"/>
+
+            <Setter Property="Margin"
+                    Value="0,0,0,4"/>
+
+        </Style>
+
+
+
+        <!-- =========================================================
+             HOTKEY BADGE
+             ========================================================= -->
+
+        <Style x:Key="HotkeyBadgeStyle"
+               TargetType="{x:Type Border}">
+
+            <Setter Property="Background"
+                    Value="{StaticResource ReadonlyHotkeyBackground}"/>
+
+            <Setter Property="BorderBrush"
+                    Value="{StaticResource ReadonlyHotkeyBorder}"/>
+
+            <Setter Property="BorderThickness"
+                    Value="1"/>
+
+            <Setter Property="CornerRadius"
+                    Value="6"/>
+
+            <Setter Property="Padding"
+                    Value="9,5"/>
+
+            <Setter Property="HorizontalAlignment"
+                    Value="Right"/>
+
+            <Setter Property="VerticalAlignment"
+                    Value="Center"/>
+
+        </Style>
+
+
+
+        <!-- =========================================================
+             HOTKEY TEXT
+             ========================================================= -->
+
+        <Style x:Key="HotkeyBadgeTextStyle"
+               TargetType="{x:Type TextBlock}">
+
+            <Setter Property="FontSize"
+                    Value="11"/>
+
+            <Setter Property="FontWeight"
+                    Value="Bold"/>
+
+            <Setter Property="Foreground"
+                    Value="{DynamicResource TextBrush}"/>
+
+        </Style>
+
+
+
+        <!-- =========================================================
+             SECTION TITLE
+             ========================================================= -->
+
+        <Style x:Key="HotkeySectionStyle"
+               TargetType="{x:Type TextBlock}">
+
+            <Setter Property="FontSize"
+                    Value="14"/>
+
+            <Setter Property="FontWeight"
+                    Value="SemiBold"/>
+
+            <Setter Property="Margin"
+                    Value="12,12,0,6"/>
+
+            <Setter Property="Foreground"
+                    Value="{DynamicResource TextBrush}"/>
+
+        </Style>
+
+
+
+        <!-- =========================================================
+             SCROLLBAR
+             ========================================================= -->
+
+        <Style x:Key="HotkeysScrollBarStyle"
+               TargetType="{x:Type ScrollBar}">
+
+            <Setter Property="Width"
+                    Value="6"/>
+
+            <Setter Property="Background"
+                    Value="Transparent"/>
+
+            <Setter Property="BorderThickness"
+                    Value="0"/>
+
+            <Setter Property="Opacity"
+                    Value="0.70"/>
+
+            <Setter Property="Template">
+
+                <Setter.Value>
+
+                    <ControlTemplate TargetType="{x:Type ScrollBar}">
+
+                        <Grid Width="6"
+                              Background="Transparent">
+
+                            <Track x:Name="PART_Track"
+                                   IsDirectionReversed="True">
+
+                                <Track.DecreaseRepeatButton>
+
+                                    <RepeatButton
+                                        Command="ScrollBar.LineUpCommand"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Focusable="False"
+                                        IsTabStop="False"
+                                        Opacity="0"/>
+
+                                </Track.DecreaseRepeatButton>
+
+
+
+                                <Track.Thumb>
+
+                                    <Thumb
+                                        MinHeight="35"
+                                        Background="{DynamicResource TextBrush}"
+                                        BorderThickness="0"
+                                        Opacity="0.75">
+
+                                        <Thumb.Template>
+
+                                            <ControlTemplate
+                                                TargetType="{x:Type Thumb}">
+
+                                                <Border
+                                                    Width="6"
+                                                    MinHeight="35"
+                                                    Background="{DynamicResource TextBrush}"
+                                                    CornerRadius="3"
+                                                    SnapsToDevicePixels="True"
+                                                    Opacity="0.80"/>
+
+                                            </ControlTemplate>
+
+                                        </Thumb.Template>
+
+                                    </Thumb>
+
+                                </Track.Thumb>
+
+
+
+                                <Track.IncreaseRepeatButton>
+
+                                    <RepeatButton
+                                        Command="ScrollBar.LineDownCommand"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Focusable="False"
+                                        IsTabStop="False"
+                                        Opacity="0"/>
+
+                                </Track.IncreaseRepeatButton>
+
+                            </Track>
+
+                        </Grid>
+
+
+
+                        <ControlTemplate.Triggers>
+
+                            <Trigger Property="Orientation"
+                                     Value="Horizontal">
+
+                                <Setter Property="Visibility"
+                                        Value="Collapsed"/>
+
+                            </Trigger>
+
+
+
+                            <Trigger Property="IsMouseOver"
+                                     Value="True">
+
+                                <Setter Property="Opacity"
+                                        Value="1"/>
+
+                            </Trigger>
+
+                        </ControlTemplate.Triggers>
+
+                    </ControlTemplate>
+
+                </Setter.Value>
+
+            </Setter>
+
+        </Style>
+
+
+
+        <!-- =========================================================
+             SCROLL VIEWER
+             ========================================================= -->
+
+        <Style x:Key="HotkeysScrollViewerStyle"
+               TargetType="{x:Type ScrollViewer}">
+
+            <Setter Property="HorizontalScrollBarVisibility"
+                    Value="Disabled"/>
+
+            <Setter Property="VerticalScrollBarVisibility"
+                    Value="Auto"/>
+
+            <Setter Property="PanningMode"
+                    Value="VerticalOnly"/>
+
+            <Setter Property="CanContentScroll"
+                    Value="True"/>
+
+        </Style>
+
+    </UserControl.Resources>
+
+
+
+    <!-- =============================================================
+         ROOT
+         ============================================================= -->
+
+    <Grid>
+
+        <ScrollViewer
+            Style="{StaticResource HotkeysScrollViewerStyle}"
+            VerticalScrollBarVisibility="Auto"
+            HorizontalScrollBarVisibility="Disabled"
+            Padding="0">
+
+            <ScrollViewer.Resources>
+
+                <Style TargetType="{x:Type ScrollBar}"
+                       BasedOn="{StaticResource HotkeysScrollBarStyle}"/>
+
+            </ScrollViewer.Resources>
+
+
+
+            <StackPanel Margin="4,0,8,8">
+
+
+
+                <!-- =================================================
+                     HEADER
+                     ================================================= -->
+
+                <TextBlock
+                    Text="HOTKEYS"
+                    FontSize="11"
+                    FontWeight="SemiBold"
+                    Foreground="{DynamicResource MutedBrush}"/>
+
+
+
+                <!-- =================================================
+                     SHOW / HIDE
+                     ================================================= -->
+
+                <Border Style="{StaticResource HotkeyCardStyle}">
+
+                    <Grid>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="145"/>
+                        </Grid.ColumnDefinitions>
+
+
+
+                        <StackPanel VerticalAlignment="Center">
+
+                            <TextBlock
+                                Text="Show / Hide Main Window"
+                                Style="{StaticResource HotkeyTitleStyle}"/>
+
+                            <TextBlock
+                                Text="Show or hide the main assistant window."
+                                Style="{StaticResource HotkeyDescriptionStyle}"/>
+
+                        </StackPanel>
+
+
+
+                        <Border
+                            Grid.Column="1"
+                            Style="{StaticResource HotkeyBadgeStyle}">
+
+                            <TextBlock
+                                Text="Ctrl + \"
+                                Style="{StaticResource HotkeyBadgeTextStyle}"/>
+
+                        </Border>
+
+                    </Grid>
+
+                </Border>
+
+
+
+                <!-- =================================================
+                     MOVE LEFT
+                     ================================================= -->
+
+                <Border Style="{StaticResource HotkeyCardStyle}">
+
+                    <Grid>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="145"/>
+                        </Grid.ColumnDefinitions>
+
+
+
+                        <StackPanel>
+
+                            <TextBlock
+                                Text="Move Window Left"
+                                Style="{StaticResource HotkeyTitleStyle}"/>
+
+                            <TextBlock
+                                Text="Move the main window to the left."
+                                Style="{StaticResource HotkeyDescriptionStyle}"/>
+
+                        </StackPanel>
+
+
+
+                        <Border
+                            Grid.Column="1"
+                            Style="{StaticResource HotkeyBadgeStyle}">
+
+                            <TextBlock
+                                Text="Ctrl + Left"
+                                Style="{StaticResource HotkeyBadgeTextStyle}"/>
+
+                        </Border>
+
+                    </Grid>
+
+                </Border>
+
+
+
+                <!-- =================================================
+                     MOVE RIGHT
+                     ================================================= -->
+
+                <Border Style="{StaticResource HotkeyCardStyle}">
+
+                    <Grid>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="145"/>
+                        </Grid.ColumnDefinitions>
+
+
+
+                        <StackPanel>
+
+                            <TextBlock
+                                Text="Move Window Right"
+                                Style="{StaticResource HotkeyTitleStyle}"/>
+
+                            <TextBlock
+                                Text="Move the main window to the right."
+                                Style="{StaticResource HotkeyDescriptionStyle}"/>
+
+                        </StackPanel>
+
+
+
+                        <Border
+                            Grid.Column="1"
+                            Style="{StaticResource HotkeyBadgeStyle}">
+
+                            <TextBlock
+                                Text="Ctrl + Right"
+                                Style="{StaticResource HotkeyBadgeTextStyle}"/>
+
+                        </Border>
+
+                    </Grid>
+
+                </Border>
+
+
+
+                <!-- =================================================
+                     MOVE UP
+                     ================================================= -->
+
+                <Border Style="{StaticResource HotkeyCardStyle}">
+
+                    <Grid>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="145"/>
+                        </Grid.ColumnDefinitions>
+
+
+
+                        <StackPanel>
+
+                            <TextBlock
+                                Text="Move Window Up"
+                                Style="{StaticResource HotkeyTitleStyle}"/>
+
+                            <TextBlock
+                                Text="Move the main window upward."
+                                Style="{StaticResource HotkeyDescriptionStyle}"/>
+
+                        </StackPanel>
+
+
+
+                        <Border
+                            Grid.Column="1"
+                            Style="{StaticResource HotkeyBadgeStyle}">
+
+                            <TextBlock
+                                Text="Ctrl + Up"
+                                Style="{StaticResource HotkeyBadgeTextStyle}"/>
+
+                        </Border>
+
+                    </Grid>
+
+                </Border>
+
+
+
+                <!-- =================================================
+                     MOVE DOWN
+                     ================================================= -->
+
+                <Border Style="{StaticResource HotkeyCardStyle}">
+
+                    <Grid>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="145"/>
+                        </Grid.ColumnDefinitions>
+
+
+
+                        <StackPanel>
+
+                            <TextBlock
+                                Text="Move Window Down"
+                                Style="{StaticResource HotkeyTitleStyle}"/>
+
+                            <TextBlock
+                                Text="Move the main window downward."
+                                Style="{StaticResource HotkeyDescriptionStyle}"/>
+
+                        </StackPanel>
+
+
+
+                        <Border
+                            Grid.Column="1"
+                            Style="{StaticResource HotkeyBadgeStyle}">
+
+                            <TextBlock
+                                Text="Ctrl + Down"
+                                Style="{StaticResource HotkeyBadgeTextStyle}"/>
+
+                        </Border>
+
+                    </Grid>
+
+                </Border>
+
+
+
+                <!-- =================================================
+                     SCROLL UP
+                     ================================================= -->
+
+                <Border Style="{StaticResource HotkeyCardStyle}">
+
+                    <Grid>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="145"/>
+                        </Grid.ColumnDefinitions>
+
+
+
+                        <StackPanel>
+
+                            <TextBlock
+                                Text="Chat Scroll Up"
+                                Style="{StaticResource HotkeyTitleStyle}"/>
+
+                            <TextBlock
+                                Text="Scroll the chat content upward."
+                                Style="{StaticResource HotkeyDescriptionStyle}"/>
+
+                        </StackPanel>
+
+
+
+                        <Border
+                            Grid.Column="1"
+                            Style="{StaticResource HotkeyBadgeStyle}">
+
+                            <TextBlock
+                                Text="Alt + Up"
+                                Style="{StaticResource HotkeyBadgeTextStyle}"/>
+
+                        </Border>
+
+                    </Grid>
+
+                </Border>
+
+
+
+                <!-- =================================================
+                     SCROLL DOWN
+                     ================================================= -->
+
+                <Border Style="{StaticResource HotkeyCardStyle}">
+
+                    <Grid>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="145"/>
+                        </Grid.ColumnDefinitions>
+
+
+
+                        <StackPanel>
+
+                            <TextBlock
+                                Text="Chat Scroll Down"
+                                Style="{StaticResource HotkeyTitleStyle}"/>
+
+                            <TextBlock
+                                Text="Scroll the chat content downward."
+                                Style="{StaticResource HotkeyDescriptionStyle}"/>
+
+                        </StackPanel>
+
+
+
+                        <Border
+                            Grid.Column="1"
+                            Style="{StaticResource HotkeyBadgeStyle}">
+
+                            <TextBlock
+                                Text="Alt + Down"
+                                Style="{StaticResource HotkeyBadgeTextStyle}"/>
+
+                        </Border>
+
+                    </Grid>
+
+                </Border>
+
+
+
+                <!-- =================================================
+                     ESC
+                     ================================================= -->
+
+                <Border Style="{StaticResource HotkeyCardStyle}">
+
+                    <Grid>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="145"/>
+                        </Grid.ColumnDefinitions>
+
+
+
+                        <StackPanel>
+
+                            <TextBlock
+                                Text="Exit Application"
+                                Style="{StaticResource HotkeyTitleStyle}"/>
+
+                            <TextBlock
+                                Text="Completely close the application."
+                                Style="{StaticResource HotkeyDescriptionStyle}"/>
+
+                        </StackPanel>
+
+
+
+                        <Border
+                            Grid.Column="1"
+                            Style="{StaticResource HotkeyBadgeStyle}">
+
+                            <TextBlock
+                                Text="Esc"
+                                Style="{StaticResource HotkeyBadgeTextStyle}"/>
+
+                        </Border>
+
+                    </Grid>
+
+                </Border>
+
+
+
+                <!-- =================================================
+                     VOICE
+                     ================================================= -->
+
+                <Border Style="{StaticResource HotkeyCardStyle}">
+
+                    <Grid>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="145"/>
+                        </Grid.ColumnDefinitions>
+
+
+
+                        <StackPanel>
+
+                            <TextBlock
+                                Text="Voice On / Off"
+                                Style="{StaticResource HotkeyTitleStyle}"/>
+
+                            <TextBlock
+                                Text="Start or stop voice input."
+                                Style="{StaticResource HotkeyDescriptionStyle}"/>
+
+                        </StackPanel>
+
+
+
+                        <Border
+                            Grid.Column="1"
+                            Style="{StaticResource HotkeyBadgeStyle}">
+
+                            <TextBlock
+                                x:Name="VoiceHotkeyText"
+                                Text="Ctrl + Space"
+                                Style="{StaticResource HotkeyBadgeTextStyle}"/>
+
+                        </Border>
+
+                    </Grid>
+
+                </Border>
+
+
+
+                <!-- =================================================
+                     VISION AI
+                     ================================================= -->
+
+                <Border Style="{StaticResource HotkeyCardStyle}">
+
+                    <Grid>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="145"/>
+                        </Grid.ColumnDefinitions>
+
+
+
+                        <StackPanel>
+
+                            <TextBlock
+                                Text="Online Test"
+                                Style="{StaticResource HotkeyTitleStyle}"/>
+
+                            <TextBlock
+                                Text="Capture the screen and send it to Vision AI."
+                                Style="{StaticResource HotkeyDescriptionStyle}"/>
+
+                        </StackPanel>
+
+
+
+                        <Border
+                            Grid.Column="1"
+                            Style="{StaticResource HotkeyBadgeStyle}">
+
+                            <TextBlock
+                                x:Name="VisionHotkeyText"
+                                Text="Alt + Enter"
+                                Style="{StaticResource HotkeyBadgeTextStyle}"/>
+
+                        </Border>
+
+                    </Grid>
+
+                </Border>
+
+
+
+                <!-- =================================================
+                     SEND MESSAGE
+                     ================================================= -->
+
+                <Border Style="{StaticResource HotkeyCardStyle}">
+
+                    <Grid>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="145"/>
+                        </Grid.ColumnDefinitions>
+
+
+
+                        <StackPanel>
+
+                            <TextBlock
+                                Text="Send Message"
+                                Style="{StaticResource HotkeyTitleStyle}"/>
+
+                            <TextBlock
+                                Text="Send the current question to AI."
+                                Style="{StaticResource HotkeyDescriptionStyle}"/>
+
+                        </StackPanel>
+
+
+
+                        <Border
+                            Grid.Column="1"
+                            Style="{StaticResource HotkeyBadgeStyle}">
+
+                            <TextBlock
+                                x:Name="MessageHotkeyText"
+                                Text="Ctrl + Enter"
+                                Style="{StaticResource HotkeyBadgeTextStyle}"/>
+
+                        </Border>
+
+                    </Grid>
+
+                </Border>
+
+
+
+                <!-- =================================================
+                     MESSAGE MODE
+                     ================================================= -->
+
+                <Border Style="{StaticResource HotkeyCardStyle}">
+
+                    <Grid>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="145"/>
+                        </Grid.ColumnDefinitions>
+
+
+
+                        <StackPanel>
+
+                            <TextBlock
+                                Text="Message On / Off"
+                                Style="{StaticResource HotkeyTitleStyle}"/>
+
+                            <TextBlock
+                                Text="Open or close the message input section."
+                                Style="{StaticResource HotkeyDescriptionStyle}"/>
+
+                        </StackPanel>
+
+
+
+                        <Border
+                            Grid.Column="1"
+                            Style="{StaticResource HotkeyBadgeStyle}">
+
+                            <TextBlock
+                                Text="Ctrl + M"
+                                Style="{StaticResource HotkeyBadgeTextStyle}"/>
+
+                        </Border>
+
+                    </Grid>
+
+                </Border>
+
+
+
+                <!-- =================================================
+                     SMART ANSWER
+                     ================================================= -->
+
+                <Border Style="{StaticResource HotkeyCardStyle}">
+
+                    <Grid>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="145"/>
+                        </Grid.ColumnDefinitions>
+
+
+
+                        <StackPanel>
+
+                            <TextBlock
+                                Text="Smart Answer On / Off"
+                                Style="{StaticResource HotkeyTitleStyle}"/>
+
+                            <TextBlock
+                                Text="Turn Smart Answer mode on or off."
+                                Style="{StaticResource HotkeyDescriptionStyle}"/>
+
+                        </StackPanel>
+
+
+
+                        <Border
+                            Grid.Column="1"
+                            Style="{StaticResource HotkeyBadgeStyle}">
+
+                            <TextBlock
+                                Text="Ctrl + Shift + S"
+                                Style="{StaticResource HotkeyBadgeTextStyle}"/>
+
+                        </Border>
+
+                    </Grid>
+
+                </Border>
+
+                <!-- =================================================
+                     CLEAR CHAT
+                     ================================================= -->
+
+                <Border Style="{StaticResource HotkeyCardStyle}">
+
+                    <Grid>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="145"/>
+                        </Grid.ColumnDefinitions>
+
+
+                        <StackPanel>
+
+                            <TextBlock
+                                Text="Clear Chat"
+                                Style="{StaticResource HotkeyTitleStyle}"/>
+
+                            <TextBlock
+                                Text="Clear all messages from the chat window."
+                                Style="{StaticResource HotkeyDescriptionStyle}"/>
+
+                        </StackPanel>
+
+
+                        <Border
+                            Grid.Column="1"
+                            Style="{StaticResource HotkeyBadgeStyle}">
+
+                            <TextBlock
+                                Text="Ctrl + Shift + Backspace"
+                                Style="{StaticResource HotkeyBadgeTextStyle}"/>
+
+                        </Border>
+
+                    </Grid>
+
+                </Border>
+
+
+
+                <!-- =================================================
+                     OPEN SETTINGS
+                     ================================================= -->
+
+                <Border Style="{StaticResource HotkeyCardStyle}">
+
+                    <Grid>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="145"/>
+                        </Grid.ColumnDefinitions>
+
+
+
+                        <StackPanel>
+
+                            <TextBlock
+                                Text="Open Settings"
+                                Style="{StaticResource HotkeyTitleStyle}"/>
+
+                            <TextBlock
+                                Text="Open the Settings window."
+                                Style="{StaticResource HotkeyDescriptionStyle}"/>
+
+                        </StackPanel>
+
+
+
+                        <Border
+                            Grid.Column="1"
+                            Style="{StaticResource HotkeyBadgeStyle}">
+
+                            <TextBlock
+                                Text="Ctrl + Shift + \"
+                                Style="{StaticResource HotkeyBadgeTextStyle}"/>
+
+                        </Border>
+
+                    </Grid>
+
+                </Border>
+
+
+
+                <!-- =================================================
+                     STEALTH MODE
+                     ================================================= -->
+
+                <Border Style="{StaticResource HotkeyCardStyle}">
+
+                    <Grid>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="145"/>
+                        </Grid.ColumnDefinitions>
+
+
+
+                        <StackPanel>
+
+                            <TextBlock
+                                Text="Stealth Mode On / Off"
+                                Style="{StaticResource HotkeyTitleStyle}"/>
+
+                            <TextBlock
+                                Text="Hide or show the application from screen capture."
+                                Style="{StaticResource HotkeyDescriptionStyle}"/>
+
+                        </StackPanel>
+
+
+
+                        <Border
+                            Grid.Column="1"
+                            Style="{StaticResource HotkeyBadgeStyle}">
+
+                            <TextBlock
+                                Text="Ctrl + Shift + H"
+                                Style="{StaticResource HotkeyBadgeTextStyle}"/>
+
+                        </Border>
+
+                    </Grid>
+
+                </Border>
+
+
+
+            </StackPanel>
+
+        </ScrollViewer>
+
+    </Grid>
+
+</UserControl>

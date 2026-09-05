@@ -1,0 +1,79 @@
+﻿<UserControl x:Class="AiInterviewAssistant.Settings.AI.AITab"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+
+        <StackPanel>
+
+            <TextBlock
+                Text="AI"
+                FontSize="11"
+                FontWeight="SemiBold"
+                Foreground="{DynamicResource MutedBrush}"
+                Margin="2,0,0,16"/>
+
+            <!-- =====================================================
+                 TEMPERATURE
+                 ===================================================== -->
+
+            <TextBlock
+                Text="Temperature"
+                FontSize="13"
+                Foreground="{DynamicResource TextBrush}"
+                Margin="0,0,0,6"/>
+
+            <TextBox
+                x:Name="TemperatureTextBox"
+                Height="38"
+                Text="0.2"
+                Style="{DynamicResource SettingsTextBoxStyle}"
+                Margin="0,0,0,18"/>
+
+
+            <!-- =====================================================
+                 RESPONSE LENGTH
+                 ===================================================== -->
+
+            <TextBlock
+                Text="Max Response Length"
+                FontSize="13"
+                Foreground="{DynamicResource TextBrush}"
+                Margin="0,0,0,6"/>
+
+            <ComboBox
+                x:Name="ResponseLengthComboBox"
+                SelectedIndex="1"
+                Style="{DynamicResource SettingsComboBoxStyle}"
+                Margin="0,0,0,18">
+
+                <ComboBoxItem Content="Short"/>
+                <ComboBoxItem Content="Medium"/>
+                <ComboBoxItem Content="Long"/>
+
+            </ComboBox>
+
+
+            <!-- =====================================================
+                 SYSTEM PROMPT
+                 ===================================================== -->
+
+            <TextBlock
+                Text="System Prompt"
+                FontSize="13"
+                Foreground="{DynamicResource TextBrush}"
+                Margin="0,0,0,6"/>
+
+            <TextBox
+                x:Name="SystemPromptTextBox"
+                Height="90"
+                TextWrapping="Wrap"
+                AcceptsReturn="True"
+                VerticalScrollBarVisibility="Auto"
+                Style="{DynamicResource SettingsTextBoxStyle}"/>
+
+        </StackPanel>
+
+    </ScrollViewer>
+
+</UserControl>

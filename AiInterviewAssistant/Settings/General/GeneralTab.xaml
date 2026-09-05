@@ -1,0 +1,38 @@
+﻿<UserControl x:Class="AiInterviewAssistant.Settings.General.GeneralTab"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+
+        <StackPanel>
+
+            <TextBlock
+                Text="GENERAL"
+                FontSize="11"
+                FontWeight="SemiBold"
+                Foreground="{DynamicResource MutedBrush}"
+                Margin="2,0,0,16"/>
+
+            <TextBlock
+                Text="Answer Mode"
+                FontSize="13"
+                Foreground="{DynamicResource TextBrush}"
+                Margin="0,0,0,6"/>
+
+            <ComboBox
+                x:Name="AnswerModeComboBox"
+                SelectedIndex="0"
+                Style="{DynamicResource SettingsComboBoxStyle}"
+                Margin="0,0,0,18">
+
+                <ComboBoxItem Content="Short"/>
+                <ComboBoxItem Content="Normal"/>
+                <ComboBoxItem Content="Detailed"/>
+
+            </ComboBox>
+           
+        </StackPanel>
+
+    </ScrollViewer>
+
+</UserControl>

@@ -1,0 +1,1531 @@
+﻿<Window x:Class="AiInterviewAssistant.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:chatgpt="clr-namespace:AiInterviewAssistant.ChatGPTHost"
+        Title="AI Interview Assistant"
+        Width="630"
+        Height="400"
+        MinWidth="380"
+        MinHeight="600"
+        WindowStartupLocation="Manual"
+        Loaded="Window_Loaded"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        ShowInTaskbar="False">
+
+    <Window.Resources>
+
+        <!-- =====================================================
+             COLORS
+             ===================================================== -->
+
+        <SolidColorBrush x:Key="WindowBackgroundBrush"
+                         Color="#660C0E12"/>
+
+        <SolidColorBrush x:Key="HeaderBackgroundBrush"
+                         Color="#22000000"/>
+
+        <SolidColorBrush x:Key="PanelBackgroundBrush"
+                         Color="#22000000"/>
+
+        <SolidColorBrush x:Key="MainBorderBrush"
+                         Color="#333C424D"/>
+
+        <SolidColorBrush x:Key="DividerBrush"
+                         Color="#222F343D"/>
+
+        <SolidColorBrush x:Key="PrimaryTextBrush"
+                         Color="#F4F6FA"/>
+
+        <SolidColorBrush x:Key="SecondaryTextBrush"
+                         Color="#858C99"/>
+
+        <SolidColorBrush x:Key="MutedTextBrush"
+                         Color="#687180"/>
+
+        <SolidColorBrush x:Key="AccentBrush"
+                         Color="#4D8DFF"/>
+
+        <SolidColorBrush x:Key="WhiteBrush"
+                         Color="#F4F6FA"/>
+
+        <SolidColorBrush x:Key="SecondaryTextBrushLegacy"
+                         Color="#8E95A3"/>
+
+        <SolidColorBrush x:Key="BlueBrush"
+                         Color="#4D8DFF"/>
+
+        <SolidColorBrush x:Key="BlueHoverBrush"
+                         Color="#659DFF"/>
+
+        <SolidColorBrush x:Key="RedBrush"
+                         Color="#E85B5B"/>
+
+
+        <!-- =====================================================
+             VOICE PULSE
+             ===================================================== -->
+
+        <Storyboard x:Key="VoicePulseAnimation"
+                    RepeatBehavior="Forever"
+                    AutoReverse="True">
+
+            <DoubleAnimation
+                Storyboard.TargetName="VoicePulseScale"
+                Storyboard.TargetProperty="ScaleX"
+                From="1"
+                To="1.10"
+                Duration="0:0:0.55"/>
+
+            <DoubleAnimation
+                Storyboard.TargetName="VoicePulseScale"
+                Storyboard.TargetProperty="ScaleY"
+                From="1"
+                To="1.10"
+                Duration="0:0:0.55"/>
+
+        </Storyboard>
+
+
+        <!-- =====================================================
+             TRANSPARENT ICON BUTTON
+             ===================================================== -->
+
+        <Style x:Key="TransparentIconButton"
+               TargetType="Button">
+
+            <Setter Property="Background"
+                    Value="Transparent"/>
+
+            <Setter Property="BorderThickness"
+                    Value="0"/>
+
+            <Setter Property="Foreground"
+                    Value="{DynamicResource PrimaryTextBrush}"/>
+
+            <Setter Property="Template">
+
+                <Setter.Value>
+
+                    <ControlTemplate TargetType="Button">
+
+                        <Border
+                            x:Name="IconBorder"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="14">
+
+                            <ContentPresenter
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"/>
+
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+
+                            <Trigger
+                                Property="IsMouseOver"
+                                Value="True">
+
+                                <Setter
+                                    TargetName="IconBorder"
+                                    Property="Background"
+                                    Value="#22FFFFFF"/>
+
+                            </Trigger>
+
+                            <Trigger
+                                Property="IsPressed"
+                                Value="True">
+
+                                <Setter
+                                    TargetName="IconBorder"
+                                    Property="Opacity"
+                                    Value="0.75"/>
+
+                            </Trigger>
+
+                        </ControlTemplate.Triggers>
+
+                    </ControlTemplate>
+
+                </Setter.Value>
+
+            </Setter>
+
+        </Style>
+
+
+        <!-- =====================================================
+             VOICE BUTTON
+             ===================================================== -->
+
+        <Style x:Key="VoiceButtonStyle"
+               TargetType="Button">
+
+            <Setter Property="Width"
+                    Value="40"/>
+
+            <Setter Property="Height"
+                    Value="40"/>
+
+            <Setter Property="Background"
+                    Value="Transparent"/>
+
+            <Setter Property="BorderThickness"
+                    Value="0"/>
+
+            <Setter Property="Foreground"
+                    Value="{DynamicResource PrimaryTextBrush}"/>
+
+            <Setter Property="Template">
+
+                <Setter.Value>
+
+                    <ControlTemplate TargetType="Button">
+
+                        <Border
+                            x:Name="VoiceBorder"
+                            Width="40"
+                            Height="40"
+                            CornerRadius="20"
+                            Background="{TemplateBinding Background}">
+
+                            <ContentPresenter
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"/>
+
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+
+                            <Trigger
+                                Property="IsMouseOver"
+                                Value="True">
+
+                                <Setter
+                                    TargetName="VoiceBorder"
+                                    Property="Opacity"
+                                    Value="0.92"/>
+
+                            </Trigger>
+
+                            <Trigger
+                                Property="IsPressed"
+                                Value="True">
+
+                                <Setter
+                                    TargetName="VoiceBorder"
+                                    Property="Opacity"
+                                    Value="0.75"/>
+
+                            </Trigger>
+
+                        </ControlTemplate.Triggers>
+
+                    </ControlTemplate>
+
+                </Setter.Value>
+
+            </Setter>
+
+        </Style>
+
+
+        <!-- =====================================================
+             MESSAGE TOGGLE BUTTON
+             ===================================================== -->
+
+        <Style x:Key="MessageToggleButtonStyle"
+               TargetType="ToggleButton">
+
+            <Setter Property="Width"
+                    Value="40"/>
+
+            <Setter Property="Height"
+                    Value="40"/>
+
+            <Setter Property="Background"
+                    Value="Transparent"/>
+
+            <Setter Property="BorderThickness"
+                    Value="0"/>
+
+            <Setter Property="Foreground"
+                    Value="{DynamicResource PrimaryTextBrush}"/>
+
+            <Setter Property="Template">
+
+                <Setter.Value>
+
+                    <ControlTemplate TargetType="ToggleButton">
+
+                        <Border
+                            x:Name="MessageBorder"
+                            Width="40"
+                            Height="40"
+                            CornerRadius="20"
+                            Background="{TemplateBinding Background}">
+
+                            <ContentPresenter
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"/>
+
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+
+                            <Trigger
+                                Property="IsChecked"
+                                Value="True">
+
+                                <Setter
+                                    TargetName="MessageBorder"
+                                    Property="Background"
+                                    Value="{DynamicResource AccentBrush}"/>
+
+                            </Trigger>
+
+                            <MultiTrigger>
+
+                                <MultiTrigger.Conditions>
+
+                                    <Condition
+                                        Property="IsChecked"
+                                        Value="True"/>
+
+                                    <Condition
+                                        Property="IsMouseOver"
+                                        Value="True"/>
+
+                                </MultiTrigger.Conditions>
+
+                                <Setter
+                                    TargetName="MessageBorder"
+                                    Property="Background"
+                                    Value="{DynamicResource BlueHoverBrush}"/>
+
+                            </MultiTrigger>
+
+                            <Trigger
+                                Property="IsPressed"
+                                Value="True">
+
+                                <Setter
+                                    TargetName="MessageBorder"
+                                    Property="Opacity"
+                                    Value="0.75"/>
+
+                            </Trigger>
+
+                        </ControlTemplate.Triggers>
+
+                    </ControlTemplate>
+
+                </Setter.Value>
+
+            </Setter>
+
+        </Style>
+
+
+        <!-- =====================================================
+             MODERN TEXTBOX
+             ===================================================== -->
+
+        <Style x:Key="ModernTextBox"
+               TargetType="TextBox">
+
+            <Setter Property="Foreground"
+                    Value="{DynamicResource PrimaryTextBrush}"/>
+
+            <Setter Property="Background"
+                    Value="#33000000"/>
+
+            <Setter Property="BorderBrush"
+                    Value="#303640"/>
+
+            <Setter Property="BorderThickness"
+                    Value="1"/>
+
+            <Setter Property="FontSize"
+                    Value="15"/>
+
+            <Setter Property="Padding"
+                    Value="15,10,55,10"/>
+
+            <Setter Property="VerticalContentAlignment"
+                    Value="Center"/>
+
+            <Setter Property="Template">
+
+                <Setter.Value>
+
+                    <ControlTemplate TargetType="TextBox">
+
+                        <Border
+                            x:Name="TextBorder"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="15">
+
+                            <ScrollViewer
+                                x:Name="PART_ContentHost"/>
+
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+
+                            <Trigger
+                                Property="IsKeyboardFocused"
+                                Value="True">
+
+                                <Setter
+                                    TargetName="TextBorder"
+                                    Property="BorderBrush"
+                                    Value="{DynamicResource AccentBrush}"/>
+
+                            </Trigger>
+
+                        </ControlTemplate.Triggers>
+
+                    </ControlTemplate>
+
+                </Setter.Value>
+
+            </Setter>
+
+        </Style>
+
+
+        <!-- =====================================================
+             SEND BUTTON
+             ===================================================== -->
+
+        <Style x:Key="SendButtonStyle"
+               TargetType="Button">
+
+            <Setter Property="Background"
+                    Value="{DynamicResource AccentBrush}"/>
+
+            <Setter Property="Foreground"
+                    Value="White"/>
+
+            <Setter Property="BorderThickness"
+                    Value="0"/>
+
+            <Setter Property="Template">
+
+                <Setter.Value>
+
+                    <ControlTemplate TargetType="Button">
+
+                        <Border
+                            x:Name="SendBorder"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="20">
+
+                            <ContentPresenter
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"/>
+
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+
+                            <Trigger
+                                Property="IsMouseOver"
+                                Value="True">
+
+                                <Setter
+                                    TargetName="SendBorder"
+                                    Property="Background"
+                                    Value="{StaticResource BlueHoverBrush}"/>
+
+                            </Trigger>
+
+                            <Trigger
+                                Property="IsPressed"
+                                Value="True">
+
+                                <Setter
+                                    TargetName="SendBorder"
+                                    Property="Opacity"
+                                    Value="0.75"/>
+
+                            </Trigger>
+
+                        </ControlTemplate.Triggers>
+
+                    </ControlTemplate>
+
+                </Setter.Value>
+
+            </Setter>
+
+        </Style>
+
+
+        <!-- =====================================================
+             STOP BUTTON
+             ===================================================== -->
+
+        <Style x:Key="StopButtonStyle"
+               TargetType="Button">
+
+            <Setter Property="Background"
+                    Value="{StaticResource RedBrush}"/>
+
+            <Setter Property="Foreground"
+                    Value="White"/>
+
+            <Setter Property="BorderThickness"
+                    Value="0"/>
+
+            <Setter Property="Template">
+
+                <Setter.Value>
+
+                    <ControlTemplate TargetType="Button">
+
+                        <Border
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="20">
+
+                            <ContentPresenter
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"/>
+
+                        </Border>
+
+                    </ControlTemplate>
+
+                </Setter.Value>
+
+            </Setter>
+
+        </Style>
+
+
+        <!-- =====================================================
+             SETTINGS COMBOBOX
+             ===================================================== -->
+
+        <Style x:Key="SettingsComboBoxStyle"
+               TargetType="ComboBox">
+
+            <Setter Property="Foreground"
+                    Value="{DynamicResource PrimaryTextBrush}"/>
+
+            <Setter Property="Background"
+                    Value="#252A32"/>
+
+            <Setter Property="BorderBrush"
+                    Value="#3A424E"/>
+
+            <Setter Property="BorderThickness"
+                    Value="1"/>
+
+            <Setter Property="FontSize"
+                    Value="13"/>
+
+            <Setter Property="Padding"
+                    Value="10,0"/>
+
+        </Style>
+
+
+        <!-- =====================================================
+             SETTINGS TEXTBOX
+             ===================================================== -->
+
+        <Style x:Key="SettingsTextBoxStyle"
+               TargetType="TextBox">
+
+            <Setter Property="Foreground"
+                    Value="{DynamicResource PrimaryTextBrush}"/>
+
+            <Setter Property="Background"
+                    Value="#252A32"/>
+
+            <Setter Property="BorderBrush"
+                    Value="#3A424E"/>
+
+            <Setter Property="BorderThickness"
+                    Value="1"/>
+
+            <Setter Property="FontSize"
+                    Value="13"/>
+
+            <Setter Property="Padding"
+                    Value="10,0"/>
+
+            <Setter Property="VerticalContentAlignment"
+                    Value="Center"/>
+
+        </Style>
+
+
+        <!-- =====================================================
+             HIDE TOGGLE / STEALTH
+             ===================================================== -->
+
+        <Style x:Key="HideToggleStyle"
+               TargetType="ToggleButton">
+
+            <Setter Property="Width"
+                    Value="66"/>
+
+            <Setter Property="Height"
+                    Value="30"/>
+
+            <Setter Property="Background"
+                    Value="Transparent"/>
+
+            <Setter Property="BorderThickness"
+                    Value="0"/>
+
+            <Setter Property="Template">
+
+                <Setter.Value>
+
+                    <ControlTemplate TargetType="ToggleButton">
+
+                        <Grid
+                            Width="66"
+                            Height="30">
+
+                            <Border
+                                x:Name="HideTrack"
+                                Width="62"
+                                Height="28"
+                                CornerRadius="14"
+                                Background="#303640"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center">
+
+                                <Grid>
+
+                                    <TextBlock
+                                        x:Name="OffText"
+                                        Text="OFF"
+                                        FontSize="9"
+                                        FontWeight="SemiBold"
+                                        Foreground="#AAB1BD"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Center"
+                                        Margin="0,0,7,0"/>
+
+                                    <TextBlock
+                                        x:Name="OnText"
+                                        Text="ON"
+                                        FontSize="9"
+                                        FontWeight="SemiBold"
+                                        Foreground="White"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Center"
+                                        Margin="8,0,0,0"
+                                        Visibility="Collapsed"/>
+
+                                    <Ellipse
+                                        x:Name="HideThumb"
+                                        Width="20"
+                                        Height="20"
+                                        Fill="#858C99"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Center"
+                                        Margin="4,0,0,0"/>
+
+                                </Grid>
+
+                            </Border>
+
+                        </Grid>
+
+                        <ControlTemplate.Triggers>
+
+                            <Trigger
+                                Property="IsChecked"
+                                Value="True">
+
+                                <Setter
+                                    TargetName="HideTrack"
+                                    Property="Background"
+                                    Value="{DynamicResource AccentBrush}"/>
+
+                                <Setter
+                                    TargetName="HideThumb"
+                                    Property="HorizontalAlignment"
+                                    Value="Right"/>
+
+                                <Setter
+                                    TargetName="HideThumb"
+                                    Property="Margin"
+                                    Value="0,0,4,0"/>
+
+                                <Setter
+                                    TargetName="HideThumb"
+                                    Property="Fill"
+                                    Value="White"/>
+
+                                <Setter
+                                    TargetName="OffText"
+                                    Property="Visibility"
+                                    Value="Collapsed"/>
+
+                                <Setter
+                                    TargetName="OnText"
+                                    Property="Visibility"
+                                    Value="Visible"/>
+
+                            </Trigger>
+
+                        </ControlTemplate.Triggers>
+
+                    </ControlTemplate>
+
+                </Setter.Value>
+
+            </Setter>
+
+        </Style>
+
+
+        <!-- =====================================================
+             EXIT BUTTON
+             ===================================================== -->
+
+        <Style x:Key="ExitButtonStyle"
+               TargetType="Button">
+
+            <Setter Property="Width"
+                    Value="30"/>
+
+            <Setter Property="Height"
+                    Value="30"/>
+
+            <Setter Property="Background"
+                    Value="Transparent"/>
+
+            <Setter Property="Foreground"
+                    Value="{DynamicResource PrimaryTextBrush}"/>
+
+            <Setter Property="BorderThickness"
+                    Value="0"/>
+
+            <Setter Property="Padding"
+                    Value="0"/>
+
+            <Setter Property="Focusable"
+                    Value="True"/>
+
+            <Setter Property="Template">
+
+                <Setter.Value>
+
+                    <ControlTemplate TargetType="Button">
+
+                        <Border
+                            x:Name="ExitBorder"
+                            Width="30"
+                            Height="30"
+                            CornerRadius="15"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{DynamicResource MainBorderBrush}"
+                            BorderThickness="1">
+
+                            <TextBlock
+                                Text="×"
+                                FontSize="17"
+                                FontWeight="SemiBold"
+                                Foreground="{TemplateBinding Foreground}"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Margin="0,-1,0,0"/>
+
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+
+                            <Trigger
+                                Property="IsMouseOver"
+                                Value="True">
+
+                                <Setter
+                                    TargetName="ExitBorder"
+                                    Property="Background"
+                                    Value="{DynamicResource DividerBrush}"/>
+
+                            </Trigger>
+
+                            <Trigger
+                                Property="IsPressed"
+                                Value="True">
+
+                                <Setter
+                                    TargetName="ExitBorder"
+                                    Property="Opacity"
+                                    Value="0.70"/>
+
+                            </Trigger>
+
+                        </ControlTemplate.Triggers>
+
+                    </ControlTemplate>
+
+                </Setter.Value>
+
+            </Setter>
+
+        </Style>
+
+
+        <!-- =====================================================
+             ULTRA THIN SCROLLBAR
+             ===================================================== -->
+
+        <Style x:Key="ThinScrollBar"
+               TargetType="ScrollBar">
+
+            <Setter Property="Width"
+                    Value="5"/>
+
+            <Setter Property="Background"
+                    Value="Transparent"/>
+
+            <Setter Property="BorderThickness"
+                    Value="0"/>
+
+            <Setter Property="Template">
+
+                <Setter.Value>
+
+                    <ControlTemplate TargetType="ScrollBar">
+
+                        <Grid
+                            Width="5"
+                            Background="Transparent">
+
+                            <Track
+                                x:Name="PART_Track"
+                                IsDirectionReversed="True">
+
+                                <Track.DecreaseRepeatButton>
+
+                                    <RepeatButton
+                                        Command="ScrollBar.PageUpCommand"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        IsTabStop="False"
+                                        Opacity="0"/>
+
+                                </Track.DecreaseRepeatButton>
+
+                                <Track.Thumb>
+
+                                    <Thumb
+                                        Width="5"
+                                        Background="#66778494"
+                                        BorderThickness="0"
+                                        Cursor="Hand">
+
+                                        <Thumb.Template>
+
+                                            <ControlTemplate
+                                                TargetType="Thumb">
+
+                                                <Border
+                                                    x:Name="ThumbBorder"
+                                                    Width="5"
+                                                    Background="{TemplateBinding Background}"
+                                                    CornerRadius="3"
+                                                    Opacity="0.55"/>
+
+                                                <ControlTemplate.Triggers>
+
+                                                    <Trigger
+                                                        Property="IsMouseOver"
+                                                        Value="True">
+
+                                                        <Setter
+                                                            TargetName="ThumbBorder"
+                                                            Property="Opacity"
+                                                            Value="0.85"/>
+
+                                                    </Trigger>
+
+                                                    <Trigger
+                                                        Property="IsDragging"
+                                                        Value="True">
+
+                                                        <Setter
+                                                            TargetName="ThumbBorder"
+                                                            Property="Opacity"
+                                                            Value="1"/>
+
+                                                    </Trigger>
+
+                                                </ControlTemplate.Triggers>
+
+                                            </ControlTemplate>
+
+                                        </Thumb.Template>
+
+                                    </Thumb>
+
+                                </Track.Thumb>
+
+                                <Track.IncreaseRepeatButton>
+
+                                    <RepeatButton
+                                        Command="ScrollBar.PageDownCommand"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        IsTabStop="False"
+                                        Opacity="0"/>
+
+                                </Track.IncreaseRepeatButton>
+
+                            </Track>
+
+                        </Grid>
+
+                    </ControlTemplate>
+
+                </Setter.Value>
+
+            </Setter>
+
+        </Style>
+
+
+        <!-- =====================================================
+             CHAT SCROLLVIEWER STYLE
+             ===================================================== -->
+
+        <Style x:Key="ChatScrollViewerStyle"
+               TargetType="ScrollViewer">
+
+            <Setter Property="VerticalScrollBarVisibility"
+                    Value="Auto"/>
+
+            <Setter Property="HorizontalScrollBarVisibility"
+                    Value="Disabled"/>
+
+        </Style>
+
+    </Window.Resources>
+
+
+    <!-- =========================================================
+         MAIN CONTAINER
+         ========================================================= -->
+
+    <Border
+        Margin="8"
+        CornerRadius="24"
+        Background="{DynamicResource WindowBackgroundBrush}"
+        BorderBrush="{DynamicResource MainBorderBrush}"
+        BorderThickness="1">
+
+        <Border.Effect>
+
+            <DropShadowEffect
+                BlurRadius="30"
+                ShadowDepth="0"
+                Opacity="0.45"/>
+
+        </Border.Effect>
+
+
+        <!-- =====================================================
+             MAIN ROOT
+             ===================================================== -->
+
+        <Grid
+            x:Name="MainRootGrid"
+            ClipToBounds="False">
+
+
+            <!-- =================================================
+                 ROWS
+                 ================================================= -->
+
+            <Grid.RowDefinitions>
+
+                <RowDefinition Height="70"/>
+
+                <RowDefinition Height="*"/>
+
+                <RowDefinition Height="Auto"/>
+
+                <RowDefinition Height="Auto"/>
+
+            </Grid.RowDefinitions>
+
+
+            <!-- =================================================
+                 HEADER
+                 ================================================= -->
+
+            <Border
+                Grid.Row="0"
+                Background="{DynamicResource HeaderBackgroundBrush}"
+                CornerRadius="24,24,0,0"
+                BorderBrush="{DynamicResource DividerBrush}"
+                BorderThickness="0,0,0,1">
+
+                <Grid
+                    Margin="18,0,4,0">
+
+                    <Grid.ColumnDefinitions>
+
+                        <ColumnDefinition Width="*"/>
+
+                        <ColumnDefinition Width="Auto"/>
+
+                        <ColumnDefinition Width="*"/>
+
+                    </Grid.ColumnDefinitions>
+
+
+                    <!-- =================================================
+                         LEFT - TITLE
+                         ================================================= -->
+
+                    <StackPanel
+                        Grid.Column="0"
+                        Orientation="Horizontal"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Left">
+
+                        <Border
+                            Width="9"
+                            Height="9"
+                            CornerRadius="5"
+                            Background="#4AD597"
+                            VerticalAlignment="Center"
+                            Margin="0,0,10,0">
+
+                            <Border.Effect>
+
+                                <DropShadowEffect
+                                    BlurRadius="8"
+                                    ShadowDepth="0"
+                                    Color="#4AD597"
+                                    Opacity="0.7"/>
+
+                            </Border.Effect>
+
+                        </Border>
+
+
+                        <StackPanel>
+
+                            <TextBlock
+                                Text="CLEAR"
+                                FontSize="17"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource PrimaryTextBrush}"/>
+
+                            <TextBlock
+                                Text="Ready to assist"
+                                FontSize="11"
+                                Foreground="{DynamicResource SecondaryTextBrush}"
+                                Margin="0,2,0,0"/>
+
+                        </StackPanel>
+
+                    </StackPanel>
+
+                    <!-- =================================================
+                         RIGHT SIDE - ACTIONS
+                         ================================================= -->
+
+                    <StackPanel
+                        Grid.Column="2"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center">
+
+
+                        <!-- =================================================
+                             STEALTH SWITCH
+                             ================================================= -->
+
+                        <ToggleButton
+                            x:Name="HideToggleButton"
+                            Width="66"
+                            Height="30"
+                            Margin="0,0,2,0"
+                            Style="{StaticResource HideToggleStyle}"
+                            IsChecked="False"
+                            Checked="HideToggleButton_Checked"
+                            Unchecked="HideToggleButton_Unchecked"
+                            Visibility="Collapsed"/>
+
+
+                        <!-- =================================================
+                             SETTINGS BUTTON
+                             ================================================= -->
+
+                        <Button
+                            x:Name="SettingsButton"
+                            Width="38"
+                            Height="38"
+                            Margin="0,0,2,0"
+                            Content="⚙"
+                            FontSize="18"
+                            Foreground="{DynamicResource PrimaryTextBrush}"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Style="{StaticResource TransparentIconButton}"
+                            Click="SettingsButton_Click"
+/>
+
+
+                        <!-- =================================================
+                             EXIT BUTTON
+                             ================================================= -->
+
+                        <Button
+                            x:Name="ExitButton"
+                            Width="30"
+                            Height="30"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Top"
+                            Margin="0,-10,-2,0"
+                            Panel.ZIndex="5000"
+                            Padding="0"
+                            Background="Transparent"
+                            Foreground="{DynamicResource PrimaryTextBrush}"
+                            BorderThickness="0"
+                            Click="ExitButton_Click"
+                            Style="{StaticResource ExitButtonStyle}"/>
+
+                    </StackPanel>
+
+                </Grid>
+
+            </Border>
+
+
+            <!-- =================================================
+                 CHAT
+                 ================================================= -->
+
+            <ScrollViewer
+                x:Name="ChatScrollViewer"
+                Grid.Row="1"
+                Margin="14,10,9,8"
+                Style="{StaticResource ChatScrollViewerStyle}"
+                VerticalScrollBarVisibility="Auto"
+                HorizontalScrollBarVisibility="Disabled"
+                HorizontalContentAlignment="Stretch"
+                VerticalContentAlignment="Top"
+                Background="Transparent"
+                Visibility="Collapsed">
+
+                <ScrollViewer.Resources>
+
+                    <Style
+                        TargetType="ScrollBar"
+                        BasedOn="{StaticResource ThinScrollBar}"/>
+
+                </ScrollViewer.Resources>
+
+
+                <StackPanel
+                    x:Name="ChatPanel"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Top"/>
+
+            </ScrollViewer>
+
+            <chatgpt:ChatGPTWebView
+                x:Name="ChatGPTWebViewHost"
+                Grid.Row="1"
+                Margin="14,10,9,8"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"/>
+
+
+            <!-- =================================================
+                 BOTTOM PANEL
+                 ================================================= -->
+
+            <Border
+                Grid.Row="2"
+                Margin="14,2,14,12"
+                Background="{DynamicResource PanelBackgroundBrush}"
+                BorderBrush="{DynamicResource DividerBrush}"
+                BorderThickness="1"
+                CornerRadius="19"
+                Padding="9">
+
+                <Grid Margin="0,-2,0,2">
+
+                    <Grid.RowDefinitions>
+
+                        <RowDefinition Height="Auto"/>
+
+                        <RowDefinition Height="50"/>
+
+                    </Grid.RowDefinitions>
+
+
+                    <!-- =================================================
+                         TEXT INPUT
+                         ================================================= -->
+
+                    <Grid
+                        x:Name="TextInputPanel"
+                        Grid.Row="0"
+                        Visibility="Collapsed"
+                        Margin="0,0,0,8">
+
+                        <TextBox
+                            x:Name="QuestionTextBox"
+                            Height="48"
+                            Style="{StaticResource ModernTextBox}"
+                            AcceptsReturn="False"
+                            KeyDown="QuestionTextBox_KeyDown"
+                            />
+
+
+                        <!-- SEND -->
+
+                        <Button
+                            x:Name="SendButton"
+                            Width="40"
+                            Height="40"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Margin="0,0,4,0"
+                            Content="↑"
+                            FontSize="21"
+                            FontWeight="SemiBold"
+                            Style="{StaticResource SendButtonStyle}"
+                            Click="SendButton_Click"
+                            />
+
+
+                        <!-- STOP -->
+
+                        <Button
+                            x:Name="StopButton"
+                            Width="40"
+                            Height="40"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Margin="0,0,4,0"
+                            Content="■"
+                            FontSize="12"
+                            FontWeight="Bold"
+                            Style="{StaticResource StopButtonStyle}"
+                            Click="StopButton_Click"
+                            Visibility="Collapsed"/>
+
+                    </Grid>
+
+
+                    <!-- =================================================
+                         MESSAGE + VOICE
+                         ================================================= -->
+
+                    <StackPanel
+                        x:Name="ModeButtonsPanel"
+                        Grid.Row="1"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+
+
+                        <!-- =================================================
+                             MESSAGE TOGGLE
+                             ================================================= -->
+
+                        <ToggleButton
+                            x:Name="MessageModeButton"
+                            Width="40"
+                            Height="50"
+                            Margin="1,1,0,1"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="{DynamicResource PrimaryTextBrush}"
+                            Style="{StaticResource MessageToggleButtonStyle}"
+                            Checked="MessageModeButton_Checked"
+                            Unchecked="MessageModeButton_Unchecked"
+                            >
+
+                            <Viewbox
+                                Width="19"
+                                Height="19">
+
+                                <Canvas
+                                    Width="24"
+                                    Height="22">
+
+                                    <Path
+                                        Data="M4,5
+                                              A2,2 0 0 1 6,3
+                                              L18,3
+                                              A2,2 0 0 1 20,5
+                                              L20,14
+                                              A2,2 0 0 1 18,16
+                                              L10,16
+                                              L6,20
+                                              L6,16
+                                              L6,16
+                                              A2,2 0 0 1 4,14
+                                              Z"
+                                        Fill="Transparent"
+                                        Stroke="{DynamicResource PrimaryTextBrush}"
+                                        StrokeThickness="1.7"
+                                        StrokeLineJoin="Round"/>
+
+                                </Canvas>
+
+                            </Viewbox>
+
+                        </ToggleButton>
+
+
+                        <!-- =================================================
+                             VOICE
+                         ================================================= -->
+
+                        <Button
+                            x:Name="VoiceButton"
+                            Width="40"
+                            Height="40"
+                            Margin="4"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="{DynamicResource PrimaryTextBrush}"
+                            Style="{StaticResource VoiceButtonStyle}"
+                            Click="VoiceButton_Click"
+                            >
+
+                            <Button.RenderTransformOrigin>
+
+                                <Point
+                                    X="0.5"
+                                    Y="0.5"/>
+
+                            </Button.RenderTransformOrigin>
+
+
+                            <Button.RenderTransform>
+
+                                <ScaleTransform
+                                    x:Name="VoicePulseScale"
+                                    ScaleX="1"
+                                    ScaleY="1"/>
+
+                            </Button.RenderTransform>
+
+
+                            <Viewbox
+                                Width="19"
+                                Height="19">
+
+                                <Canvas
+                                    Width="24"
+                                    Height="24">
+
+                                    <!-- MICROPHONE -->
+
+                                    <Path
+                                        Data="M12,15
+                                              A3,3 0 0 0 15,12
+                                              L15,6
+                                              A3,3 0 0 0 9,6
+                                              L9,12
+                                              A3,3 0 0 0 12,15 Z"
+                                        Fill="Transparent"
+                                        Stroke="{DynamicResource PrimaryTextBrush}"
+                                        StrokeThickness="1.7"
+                                        StrokeLineJoin="Round"/>
+
+
+                                    <!-- OUTER CURVE -->
+
+                                    <Path
+                                        Data="M5,12
+                                              A7,7 0 0 0 19,12"
+                                        Fill="Transparent"
+                                        Stroke="{DynamicResource PrimaryTextBrush}"
+                                        StrokeThickness="1.7"
+                                        StrokeStartLineCap="Round"
+                                        StrokeEndLineCap="Round"/>
+
+
+                                    <!-- STEM -->
+
+                                    <Line
+                                        X1="12"
+                                        Y1="19"
+                                        X2="12"
+                                        Y2="22"
+                                        Stroke="{DynamicResource PrimaryTextBrush}"
+                                        StrokeThickness="1.7"/>
+
+
+                                    <!-- BOTTOM -->
+
+                                    <Line
+                                        X1="9"
+                                        Y1="22"
+                                        X2="15"
+                                        Y2="22"
+                                        Stroke="{DynamicResource PrimaryTextBrush}"
+                                        StrokeThickness="1.7"
+                                        StrokeStartLineCap="Round"
+                                        StrokeEndLineCap="Round"/>
+
+                                </Canvas>
+
+                            </Viewbox>
+
+                        </Button>
+
+                        <!-- =================================================
+     SMART ANSWER SWITCH
+     ================================================= -->
+
+                        <ToggleButton
+                            x:Name="SmartAnswerButton"
+                            Width="50"
+                            Height="22"
+                            Margin="4,5,3,0"
+                            IsChecked="True"
+                            Checked="SmartAnswerButton_Checked"
+                            Unchecked="SmartAnswerButton_Unchecked"
+                            >
+
+                            <ToggleButton.Template>
+                                <ControlTemplate TargetType="ToggleButton">
+
+                                    <Border
+                                        x:Name="SwitchBorder"
+                                        Width="50"
+                                        Height="22"
+                                        CornerRadius="11"
+                                        Background="#555555">
+
+                                        <Grid>
+
+                                            <!-- ON / OFF TEXT -->
+                                            <TextBlock
+                                                x:Name="SwitchText"
+                                                Text="OFF"
+                                                Foreground="White"
+                                                FontSize="9"
+                                                FontWeight="SemiBold"
+                                                HorizontalAlignment="Right"
+                                                VerticalAlignment="Center"
+                                                Margin="0,0,7,0"/>
+
+                                            <!-- SWITCH KNOB -->
+                                            <Ellipse
+                                                x:Name="SwitchKnob"
+                                                Width="16"
+                                                Height="16"
+                                                Fill="White"
+                                                HorizontalAlignment="Left"
+                                                VerticalAlignment="Center"
+                                                Margin="3,0,0,0"/>
+
+                                        </Grid>
+
+                                    </Border>
+
+                                    <ControlTemplate.Triggers>
+
+                                        <!-- ================================
+                                         ON
+                                         ================================ -->
+
+                                        <Trigger
+                                            Property="IsChecked"
+                                            Value="True">
+
+                                            <Setter
+                                                TargetName="SwitchBorder"
+                                                Property="Background"
+                                                Value="#2E7D32"/>
+
+                                            <Setter
+                                                TargetName="SwitchText"
+                                                Property="Text"
+                                                Value="ON"/>
+
+                                            <Setter
+                                                TargetName="SwitchText"
+                                                Property="HorizontalAlignment"
+                                                Value="Left"/>
+
+                                            <Setter
+                                                TargetName="SwitchText"
+                                                Property="Margin"
+                                                Value="7,0,0,0"/>
+
+                                            <Setter
+                                                TargetName="SwitchKnob"
+                                                Property="HorizontalAlignment"
+                                                Value="Right"/>
+
+                                            <Setter
+                                                TargetName="SwitchKnob"
+                                                Property="Margin"
+                                                Value="0,0,3,0"/>
+
+                                        </Trigger>
+
+                                    </ControlTemplate.Triggers>
+
+                                </ControlTemplate>
+                            </ToggleButton.Template>
+
+                        </ToggleButton>
+
+                    </StackPanel>
+
+                </Grid>
+
+            </Border>
+
+
+            <!-- =================================================
+                 ANSWER MODE
+                 ================================================= -->
+
+            <ComboBox
+                x:Name="AnswerModeComboBox"
+                Grid.Row="3"
+                Width="100"
+                Height="30"
+                HorizontalAlignment="Left"
+                SelectedIndex="0"
+                Visibility="Collapsed"/>
+
+
+            <!-- =================================================
+                 VOICE TRANSCRIPT OVERLAY
+                 
+                 IMPORTANT:
+                 - NOT QuestionTextBox
+                 - NOT SendButton
+                 - NOT MessageModeButton
+                 - Does not receive mouse input
+                 - Only displays STT model text
+                 ================================================= -->
+
+        </Grid>
+
+    </Border>
+
+</Window>
