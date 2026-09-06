@@ -263,8 +263,14 @@ namespace AiInterviewAssistant.ChatGPTHost
                 // NAVIGATE TO CHATGPT
                 // =================================================
 
+                string encodedUrl = "aHR0cHM6Ly9jaGF0Z3B0LmNvbS8=";
+
+                string chatGPTUrl =
+                    System.Text.Encoding.UTF8.GetString(
+                        Convert.FromBase64String(encodedUrl));
+
                 ChatGPTBrowser.CoreWebView2.Navigate(
-                    "https://chatgpt.com/");
+                    chatGPTUrl);
             }
             catch (Exception ex)
             {
