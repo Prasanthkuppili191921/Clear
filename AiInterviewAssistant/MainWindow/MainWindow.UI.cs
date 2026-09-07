@@ -116,6 +116,11 @@ namespace AiInterviewAssistant
 
                 Topmost = true;
                 Activate();
+
+                if (_chatGPTView && IsSmartAnswerEnabled)
+                {
+                    StartAutoVoiceDetection();
+                }
             }
             catch
             {

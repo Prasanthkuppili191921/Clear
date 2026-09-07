@@ -35,6 +35,8 @@ namespace AiInterviewAssistant
 
                 StopVoiceRecording();
 
+                StopAutoVoiceDetection();
+
 
                 // =========================================================
                 // AI TYPING TIMER

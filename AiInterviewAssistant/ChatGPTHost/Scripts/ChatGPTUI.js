@@ -33,6 +33,9 @@
     window.aiInterviewAssistant.stopDictationAndSend =
         modules.stopDictationAndSend;
 
+    window.aiInterviewAssistant.startVoiceIfNotActive =
+        modules.startVoiceIfNotActive;
+
     // =========================================================
     // APPLY CLEANUP
     // =========================================================

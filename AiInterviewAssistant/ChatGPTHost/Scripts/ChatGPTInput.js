@@ -285,6 +285,175 @@
         return false;
     }
 
+    // =========================================================
+    // START CHATGPT VOICE IF NOT ALREADY ACTIVE
+    //
+    // AUTO VOICE ONLY
+    //
+    // If voice is already active:
+    //     DO NOTHING
+    //
+    // If voice is not active:
+    //     START VOICE
+    // =========================================================
+
+    async function startVoiceIfNotActive() {
+
+        console.log(
+            '[AI Interview Assistant] startVoiceIfNotActive START'
+        );
+
+        // ---------------------------------------------------------
+        // ACTIVE VOICE SELECTORS
+        // ---------------------------------------------------------
+
+        const activeSelectors = [
+            'button[aria-label="Stop dictation"]',
+            'button[aria-label="Submit dictation"]',
+            'button[aria-label="Cancel dictation"]'
+        ];
+
+        // ---------------------------------------------------------
+        // START VOICE SELECTORS
+        // ---------------------------------------------------------
+
+        const startSelectors = [
+            'button[aria-label="Start dictation"]',
+            'button[aria-label="Dictate button"]'
+        ];
+
+        // ---------------------------------------------------------
+        // STEP 1
+        // Check whether voice is already active
+        // ---------------------------------------------------------
+
+        for (const selector of activeSelectors) {
+
+            const activeButton =
+                document.querySelector(selector);
+
+            if (activeButton) {
+
+                console.log(
+                    '[AI Interview Assistant] Voice already ACTIVE'
+                );
+
+                return true;
+            }
+        }
+
+        // ---------------------------------------------------------
+        // STEP 2
+        // Find START button
+        // ---------------------------------------------------------
+
+        let startButton = null;
+
+        for (const selector of startSelectors) {
+
+            const button =
+                document.querySelector(selector);
+
+            if (!button)
+                continue;
+
+            if (button.disabled)
+                continue;
+
+            if (
+                button.getAttribute('aria-disabled') === 'true'
+            )
+                continue;
+
+            startButton = button;
+            break;
+        }
+
+        // ---------------------------------------------------------
+        // STEP 3
+        // Start button not found
+        // ---------------------------------------------------------
+
+        if (!startButton) {
+
+            console.log(
+                '[AI Interview Assistant] AUTO START: ' +
+                'Start dictation button not found'
+            );
+
+            return false;
+        }
+
+        // ---------------------------------------------------------
+        // STEP 4
+        // Click START
+        // ---------------------------------------------------------
+
+        try {
+
+            startButton.focus();
+
+            await new Promise(resolve =>
+                setTimeout(resolve, 50)
+            );
+
+            console.log(
+                '[AI Interview Assistant] AUTO START: ' +
+                'Starting ChatGPT dictation'
+            );
+
+            startButton.click();
+
+        }
+        catch (error) {
+
+            console.error(
+                '[AI Interview Assistant] AUTO START: ' +
+                'Failed to start dictation',
+                error
+            );
+
+            return false;
+        }
+
+        // ---------------------------------------------------------
+        // STEP 5
+        // Verify recording state
+        // ---------------------------------------------------------
+
+        for (let i = 0; i < 20; i++) {
+
+            for (const selector of activeSelectors) {
+
+                if (
+                    document.querySelector(selector)
+                ) {
+
+                    console.log(
+                        '[AI Interview Assistant] AUTO START: ' +
+                        'ChatGPT dictation ACTIVE'
+                    );
+
+                    return true;
+                }
+            }
+
+            await new Promise(resolve =>
+                setTimeout(resolve, 100)
+            );
+        }
+
+        // ---------------------------------------------------------
+        // Click happened but state could not be verified
+        // ---------------------------------------------------------
+
+        console.log(
+            '[AI Interview Assistant] AUTO START: ' +
+            'Dictation state could not be verified'
+        );
+
+        return true;
+    }
 
     // =========================================================
     // TOGGLE CHATGPT VOICE DICTATION
@@ -799,5 +968,9 @@
 
     window.aiInterviewAssistantModules.stopDictationAndSend =
         stopDictationAndSend;
+
+    window.aiInterviewAssistantModules.startVoiceIfNotActive =
+        startVoiceIfNotActive;
+
 
 })();

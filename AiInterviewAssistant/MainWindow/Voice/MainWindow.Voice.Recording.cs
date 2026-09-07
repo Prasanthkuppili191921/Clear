@@ -472,6 +472,9 @@ namespace AiInterviewAssistant
                 // and automatically send the dictated text.
                 _ = ChatGPTWebViewHost.StopDictationAndSendAsync();
 
+                // Allow next system voice to trigger Auto Voice
+                autoVoiceTriggered = false;
+
                 return;
             }
 

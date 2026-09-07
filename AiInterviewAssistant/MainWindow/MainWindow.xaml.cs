@@ -127,7 +127,7 @@ namespace AiInterviewAssistant
         // SMART ANSWER
         // =========================================================
 
-        private bool _smartAnswerEnabled = true;
+        private bool _smartAnswerEnabled = false;
 
         public bool IsSmartAnswerEnabled
         {
@@ -216,10 +216,16 @@ namespace AiInterviewAssistant
             // SMART ANSWER STATE
             // =====================================================
 
+            //if (SmartAnswerButton != null)
+            //{
+            //    SmartAnswerButton.IsChecked =
+            //        currentSettings.SmartAnswerEnabled;
+            //}
+
             if (SmartAnswerButton != null)
             {
-                SmartAnswerButton.IsChecked =
-                    currentSettings.SmartAnswerEnabled;
+                SmartAnswerButton.IsChecked = false;
+                _smartAnswerEnabled = false;
             }
 
 
@@ -267,6 +273,25 @@ namespace AiInterviewAssistant
                 MainWindow_Closed;
 
             Loaded += MainWindow_Loaded;
+
+            Loaded += MainWindow_AutoVoiceLoaded;
+        }
+
+        private void MainWindow_AutoVoiceLoaded(
+    object sender,
+    RoutedEventArgs e)
+        {
+            try
+            {
+                if (_chatGPTView &&
+                    IsSmartAnswerEnabled)
+                {
+                    StartAutoVoiceDetection();
+                }
+            }
+            catch
+            {
+            }
         }
 
         private void MainWindow_Loaded(
@@ -1595,6 +1620,12 @@ namespace AiInterviewAssistant
             try
             {
                 _smartAnswerEnabled = true;
+
+                // Auto Voice Detection only in ChatGPTView
+                if (_chatGPTView)
+                {
+                    StartAutoVoiceDetection();
+                }
             }
             catch
             {
@@ -1613,6 +1644,8 @@ namespace AiInterviewAssistant
             try
             {
                 _smartAnswerEnabled = false;
+
+                StopAutoVoiceDetection();
             }
             catch
             {

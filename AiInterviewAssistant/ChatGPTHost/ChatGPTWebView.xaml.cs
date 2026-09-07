@@ -188,7 +188,7 @@ namespace AiInterviewAssistant.ChatGPTHost
 
                 await ChatGPTBrowser.EnsureCoreWebView2Async();
 
-                ChatGPTBrowser.CoreWebView2.OpenDevToolsWindow();
+                //ChatGPTBrowser.CoreWebView2.OpenDevToolsWindow();
 
 
                 // =================================================
@@ -340,6 +340,27 @@ namespace AiInterviewAssistant.ChatGPTHost
             catch
             {
                 // Ignore ChatGPT voice errors.
+            }
+        }
+
+        public async Task StartVoiceIfNotActiveAsync()
+        {
+            try
+            {
+                if (ChatGPTBrowser.CoreWebView2 == null)
+                {
+                    await ChatGPTBrowser.EnsureCoreWebView2Async();
+                }
+
+                string script =
+                    "window.aiInterviewAssistant && " +
+                    "window.aiInterviewAssistant.startVoiceIfNotActive();";
+
+                await ChatGPTBrowser.ExecuteScriptAsync(script);
+            }
+            catch
+            {
+                // Ignore ChatGPT auto voice errors.
             }
         }
 
