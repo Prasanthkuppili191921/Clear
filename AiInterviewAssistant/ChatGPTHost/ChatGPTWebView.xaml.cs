@@ -342,5 +342,26 @@ namespace AiInterviewAssistant.ChatGPTHost
                 // Ignore ChatGPT voice errors.
             }
         }
+
+        public async Task StopDictationAndSendAsync()
+        {
+            try
+            {
+                if (ChatGPTBrowser.CoreWebView2 == null)
+                {
+                    await ChatGPTBrowser.EnsureCoreWebView2Async();
+                }
+
+                string script =
+                    "window.aiInterviewAssistant && " +
+                    "window.aiInterviewAssistant.stopDictationAndSend();";
+
+                await ChatGPTBrowser.ExecuteScriptAsync(script);
+            }
+            catch
+            {
+                // Ignore ChatGPT dictation/send errors.
+            }
+        }
     }
 }

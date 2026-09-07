@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using MessageBox = System.Windows.Forms.MessageBox;
 
 namespace AiInterviewAssistant
@@ -25,11 +26,9 @@ namespace AiInterviewAssistant
         private DateTime voiceLastDiagnostic =
             DateTime.MinValue;
 
-
         // =========================================================
         // TOGGLE VOICE
         // =========================================================
-
         public void ToggleVoiceRecording()
         {
             try
@@ -44,6 +43,31 @@ namespace AiInterviewAssistant
 
                     return;
                 }
+
+                // =====================================================
+                // CHATGPT DICTATION MODE
+                // =====================================================
+
+                if (_chatGPTView)
+                {
+                    if (isVoiceRecording)
+                    {
+                        StopVoiceRecording();
+                        return;
+                    }
+
+                    if (voiceStopping)
+                    {
+                        return;
+                    }
+
+                    StartVoiceRecording();
+                    return;
+                }
+
+                // =====================================================
+                // EXISTING LOCAL VOICE MODE
+                // =====================================================
 
                 if (isVoiceRecording &&
                     voiceRecorder != null)
@@ -74,7 +98,7 @@ namespace AiInterviewAssistant
 
         private void StartVoiceRecording()
         {
-            if (!IsVoiceInputEnabled())
+            if (!_chatGPTView && !IsVoiceInputEnabled())
             {
                 AppMessage.Show(
                     "Voice Input is currently disabled.\n\n" +
@@ -105,164 +129,141 @@ namespace AiInterviewAssistant
 
             try
             {
-                voiceStopping = false;
-                isVoiceRecording = false;
-
-                liveVoiceTranscript =
-                    string.Empty;
-
-                voiceRecordingFormat =
-                    null;
-
-                voiceTotalBytes = 0;
-                voiceNonZeroBytes = 0;
-                voiceLastDiagnostic =
-                    DateTime.Now;
-
-
                 // =================================================
-                // STT CHECK
+                // LOCAL VOICE MODE
                 // =================================================
 
-                if (!InitializeSpeechToText())
+                if (!_chatGPTView)
                 {
-                    return;
-                }
+                    voiceStopping = false;
+                    isVoiceRecording = false;
+
+                    liveVoiceTranscript =
+                        string.Empty;
+
+                    voiceRecordingFormat =
+                        null;
+
+                    voiceTotalBytes = 0;
+                    voiceNonZeroBytes = 0;
+                    voiceLastDiagnostic =
+                        DateTime.Now;
 
 
-                // =================================================
-                // NEW AUDIO BUFFER
-                // =================================================
+                    // =================================================
+                    // STT CHECK
+                    // =================================================
 
-                lock (voiceAudioLock)
-                {
-                    voiceAudioBuffer =
-                        new System.IO.MemoryStream();
-                }
-
-
-                // =================================================
-                // WINDOWS SYSTEM AUDIO
-                //
-                // WASAPI LOOPBACK captures whatever is being
-                // rendered by the selected/default Windows output.
-                //
-                // YouTube / Teams / Browser / Meet / Zoom etc.
-                // can therefore enter the same pipeline.
-                // =================================================
-
-                voiceRecorder =
-                    new WasapiLoopbackCapture();
-
-
-                // =================================================
-                // FORMAT
-                // =================================================
-
-                voiceRecordingFormat =
-                    voiceRecorder.WaveFormat;
-
-                Debug.WriteLine(
-                    "========================================");
-
-                Debug.WriteLine(
-                    "VOICE CAPTURE START");
-
-                Debug.WriteLine(
-                    "VOICE FORMAT = " +
-                    voiceRecordingFormat.Encoding +
-                    " | " +
-                    voiceRecordingFormat.SampleRate +
-                    "Hz | " +
-                    voiceRecordingFormat.BitsPerSample +
-                    "bit | " +
-                    voiceRecordingFormat.Channels +
-                    "ch");
-
-
-                // =================================================
-                // AUDIO DATA
-                // =================================================
-
-                voiceRecorder.DataAvailable +=
-                    VoiceRecorder_DataAvailable;
-
-
-                // =================================================
-                // STOP EVENT
-                // =================================================
-
-                voiceRecorder.RecordingStopped +=
-                    VoiceRecorder_RecordingStopped;
-
-
-                // =================================================
-                // START SYSTEM AUDIO
-                // =================================================
-
-                voiceRecorder.StartRecording();
-
-
-                // =================================================
-                // START LOCAL MICROPHONE
-                // =================================================
-
-                localVoiceStopped = true;
-
-                if (IsLocalVoiceEnabled())
-                {
-                    try
+                    if (!InitializeSpeechToText())
                     {
-                        localVoiceRecorder =
-                            new LocalVoiceCapture();
-
-                        localVoiceRecorder.RecordingStopped +=
-                            localVoiceRecorder_RecordingStopped;
-
-                        localVoiceStopped = false;
-
-                        localVoiceRecorder.Start();
-
-                        localVoiceRecordingFormat =
-                            localVoiceRecorder.WaveFormat;
-
-                        Debug.WriteLine(
-                            "LOCAL MICROPHONE CAPTURE STARTED");
-
-                        Debug.WriteLine(
-                            "LOCAL VOICE FORMAT = " +
-                            localVoiceRecordingFormat.Encoding +
-                            " | " +
-                            localVoiceRecordingFormat.SampleRate +
-                            "Hz | " +
-                            localVoiceRecordingFormat.BitsPerSample +
-                            "bit | " +
-                            localVoiceRecordingFormat.Channels +
-                            "ch");
-                       
+                        return;
                     }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine(
-                            "LOCAL MICROPHONE START ERROR: " +
-                            ex);
 
+
+                    // =================================================
+                    // NEW AUDIO BUFFER
+                    // =================================================
+
+                    lock (voiceAudioLock)
+                    {
+                        voiceAudioBuffer =
+                            new System.IO.MemoryStream();
+                    }
+
+
+                    // =================================================
+                    // WINDOWS SYSTEM AUDIO
+                    // =================================================
+
+                    voiceRecorder =
+                        new WasapiLoopbackCapture();
+
+
+                    // =================================================
+                    // FORMAT
+                    // =================================================
+
+                    voiceRecordingFormat =
+                        voiceRecorder.WaveFormat;
+
+                    Debug.WriteLine(
+                        "SYSTEM AUDIO FORMAT: " +
+                        voiceRecordingFormat);
+
+
+                    // =================================================
+                    // AUDIO DATA
+                    // =================================================
+
+                    voiceRecorder.DataAvailable +=
+                        VoiceRecorder_DataAvailable;
+
+
+                    // =================================================
+                    // STOP EVENT
+                    // =================================================
+
+                    voiceRecorder.RecordingStopped +=
+                        VoiceRecorder_RecordingStopped;
+
+
+                    // =================================================
+                    // START SYSTEM AUDIO
+                    // =================================================
+
+                    voiceRecorder.StartRecording();
+
+
+                    // =================================================
+                    // START LOCAL MICROPHONE
+                    // =================================================
+
+                    localVoiceStopped = true;
+
+                    if (IsLocalVoiceEnabled())
+                    {
                         try
                         {
-                            localVoiceRecorder?.Dispose();
+                            localVoiceRecorder =
+                                new LocalVoiceCapture();
+
+                            localVoiceRecorder.RecordingStopped +=
+                                localVoiceRecorder_RecordingStopped;
+
+                            localVoiceStopped = false;
+
+                            localVoiceRecorder.Start();
+
+                            localVoiceRecordingFormat =
+                                localVoiceRecorder.WaveFormat;
+
+                            Debug.WriteLine(
+                                "LOCAL MICROPHONE CAPTURE STARTED");
+
+                            Debug.WriteLine(
+                                "LOCAL MICROPHONE FORMAT: " +
+                                localVoiceRecordingFormat);
                         }
-                        catch
+                        catch (Exception ex)
                         {
+                            Debug.WriteLine(
+                                "LOCAL MICROPHONE START ERROR: " +
+                                ex.Message);
+
+                            localVoiceStopped = true;
                         }
-
-                        localVoiceRecorder = null;
-                        localVoiceRecordingFormat = null;
-                        localVoiceStopped = true;
                     }
+
+                    isVoiceRecording = true;
                 }
+                else
+                {
+                    // =================================================
+                    // CHATGPT VIEW
+                    // =================================================
 
-
-                isVoiceRecording = true;
+                    isVoiceRecording = true;
+                }
 
 
                 // =================================================
@@ -303,13 +304,24 @@ namespace AiInterviewAssistant
                     voicePulseAnimation != null)
                 {
                     VoicePulseScale.BeginAnimation(
-                        System.Windows.Media.ScaleTransform.ScaleXProperty,
+                        ScaleTransform.ScaleXProperty,
                         voicePulseAnimation);
 
                     VoicePulseScale.BeginAnimation(
-                        System.Windows.Media.ScaleTransform.ScaleYProperty,
+                        ScaleTransform.ScaleYProperty,
                         voicePulseAnimation);
                 }
+
+
+                // =================================================
+                // CHATGPT DICTATION
+                // =================================================
+
+                if (_chatGPTView)
+                {
+                    _ = ChatGPTWebViewHost.ToggleVoiceAsync();
+                }
+
 
                 Debug.WriteLine(
                     "VOICE RECORDING STARTED");
@@ -441,6 +453,33 @@ namespace AiInterviewAssistant
                 return;
             }
 
+            // =========================================================
+            // CHATGPT VIEW
+            // =========================================================
+
+            if (_chatGPTView)
+            {
+                // RECORDING IS NOW OFF
+                isVoiceRecording = false;
+
+                // Allow next Voice ON
+                voiceStopping = false;
+
+                // Immediately remove RED background
+                ResetVoiceUI();
+
+                // Stop ChatGPT Dictation
+                // and automatically send the dictated text.
+                _ = ChatGPTWebViewHost.StopDictationAndSendAsync();
+
+                return;
+            }
+
+            // =========================================================
+            // EXISTING LOCAL VOICE FUNCTIONALITY
+            // ChatGPTView = false
+            // =========================================================
+
             if (voiceRecorder == null)
             {
                 return;
@@ -453,10 +492,7 @@ namespace AiInterviewAssistant
 
             voiceStopping = true;
 
-            // =========================================================
             // RECORDING IS NOW OFF
-            // =========================================================
-
             isVoiceRecording = false;
 
             // Immediately restore microphone button/icon
@@ -474,7 +510,7 @@ namespace AiInterviewAssistant
 
                 if (localVoiceRecorder != null &&
                     localVoiceRecorder.IsRecording)
-                {  
+                {
                     try
                     {
                         localVoiceRecorder.Stop();
@@ -493,7 +529,6 @@ namespace AiInterviewAssistant
                     localVoiceStopped = true;
                 }
 
-
                 // =====================================================
                 // STOP SYSTEM AUDIO
                 // =====================================================
@@ -509,6 +544,7 @@ namespace AiInterviewAssistant
                 voiceStopping = false;
             }
         }
+
 
 
         // =========================================================

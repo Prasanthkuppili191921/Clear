@@ -147,22 +147,22 @@
                    HIDDEN COMPOSER
                    ============================================= */
 
-                //.ai-interview-hidden-composer {
+                .ai-interview-hidden-composer {
 
-                //    opacity: 0 !important;
-                //    visibility: hidden !important;
+                    opacity: 0 !important;
+                    visibility: hidden !important;
 
-                //    pointer-events: none !important;
+                    pointer-events: none !important;
 
-                //    height: 0 !important;
-                //    min-height: 0 !important;
-                //    max-height: 0 !important;
+                    height: 0 !important;
+                    min-height: 0 !important;
+                    max-height: 0 !important;
 
-                //    margin: 0 !important;
-                //    padding: 0 !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
 
-                //    overflow: hidden !important;
-                //}
+                    overflow: hidden !important;
+                }
 
 
                 /* =============================================

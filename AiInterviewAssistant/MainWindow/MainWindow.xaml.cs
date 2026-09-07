@@ -640,30 +640,45 @@ namespace AiInterviewAssistant
                     },
 
 
-                    // =================================================
-                    // SPACE
-                    // =================================================
+                //// =================================================
+                //// SPACE
+                //// =================================================
 
-                    () =>
+                //() =>
+                //{
+                //    try
+                //    {
+                //        if (!IsVoiceInputEnabled()) 
+                //            return; 
+
+                //        if (voiceRecorder == null) 
+                //        { 
+                //            StartVoiceRecording();
+                //        } 
+                //        else 
+                //        { 
+                //            StopVoiceRecording(); 
+                //        }
+                //    }
+                //    catch
+                //    {
+                //    }
+                //},
+
+                // =================================================
+                // SPACE
+                // =================================================
+
+                () =>
+                {
+                    try
                     {
-                        try
-                        {
-                            if (!IsVoiceInputEnabled()) 
-                                return; 
-                            
-                            if (voiceRecorder == null) 
-                            { 
-                                StartVoiceRecording();
-                            } 
-                            else 
-                            { 
-                                StopVoiceRecording(); 
-                            }
-                        }
-                        catch
-                        {
-                        }
-                    },
+                        ToggleVoiceRecording();
+                    }
+                    catch
+                    {
+                    }
+                },
 
 
                     // =================================================

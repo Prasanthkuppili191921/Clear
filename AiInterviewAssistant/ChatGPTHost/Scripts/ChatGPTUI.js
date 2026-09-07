@@ -30,6 +30,9 @@
     window.aiInterviewAssistant.toggleVoice =
         modules.toggleVoice;
 
+    window.aiInterviewAssistant.stopDictationAndSend =
+        modules.stopDictationAndSend;
+
     // =========================================================
     // APPLY CLEANUP
     // =========================================================
