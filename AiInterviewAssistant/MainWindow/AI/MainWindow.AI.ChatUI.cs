@@ -28,14 +28,17 @@ namespace AiInterviewAssistant
         // UI FONT SETTINGS
         // =========================================================
 
+        //private static readonly FontFamily AnswerFont =
+        //    new FontFamily("Tahoma");
+
         private static readonly FontFamily AnswerFont =
-            new FontFamily("Tahoma");
+            new FontFamily("Geist");
 
         private static readonly FontFamily CodeFont =
             new FontFamily("Cascadia Code");
 
-        private const double AnswerFontSize = 14.0;
-        private const double CodeFontSize = 13.5;
+        private const double AnswerFontSize = 17.0;
+        private const double CodeFontSize = 14.5;
 
 
         // =========================================================
@@ -54,8 +57,8 @@ namespace AiInterviewAssistant
         private static readonly Color CodeBorderColor =
             Color.FromRgb(110, 112, 122);
 
-        private static readonly Color NormalTextColor =
-            Color.FromRgb(236, 236, 236);
+        private static readonly Color NormalTextColor = 
+            Color.FromRgb(225, 218, 205);
 
         private static readonly Color CodeTextColor =
             Color.FromRgb(225, 225, 230);
@@ -240,10 +243,10 @@ namespace AiInterviewAssistant
                     Background =
                         new SolidColorBrush(
                                 Color.FromArgb(
-                                    55,
-                                    255,
-                                    255,
-                                    255)),
+                                    100,
+                                    35,
+                                    38,
+                                    45)),
 
                     CornerRadius =
                         new CornerRadius(10),
