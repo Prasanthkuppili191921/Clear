@@ -43,79 +43,71 @@
 
     function hideComposer() {
 
-        const editor =
-            findEditor();
+        const editor = findEditor();
 
         if (!editor)
-            return;
+            return false;
 
-        let composer = null;
+        const composer = editor.closest('form');
 
-        composer =
-            editor.closest('form');
+        if (!composer)
+            return false;
 
-        if (!composer) {
+        // Smart Answer ON
+        if (
+            composer.getAttribute(
+                'data-ai-interview-composer-visible'
+            ) === 'true'
+        ) {
+            composer.classList.remove(
+                'ai-interview-hidden-composer'
+            );
 
-            composer =
-                editor.closest(
-                    '[data-testid="composer"]'
-                );
+            return true;
         }
 
-        if (!composer) {
+        composer.classList.add(
+            'ai-interview-hidden-composer'
+        );
 
-            let current =
-                editor.parentElement;
+        return true;
+    }
 
-            for (
-                let i = 0;
-                i < 12 && current;
-                i++
-            ) {
+    function setComposerVisible(visible) {
+        const editor = findEditor();
 
-                const rect =
-                    current.getBoundingClientRect();
+        if (!editor)
+            return false;
 
-                const buttons =
-                    current.querySelectorAll(
-                        'button'
-                    );
+        const composer = editor.closest('form');
 
-                const hasButtons =
-                    buttons &&
-                    buttons.length > 0;
+        if (!composer)
+            return false;
 
-                if (
-                    hasButtons &&
-                    rect.width > 300 &&
-                    rect.height < 300
-                ) {
+        if (visible) {
+            composer.classList.remove(
+                'ai-interview-hidden-composer'
+            );
 
-                    composer =
-                        current;
-
-                    break;
-                }
-
-                current =
-                    current.parentElement;
-            }
+            composer.setAttribute(
+                'data-ai-interview-composer-visible',
+                'true'
+            );
         }
-
-        if (composer) {
-
-            console.log('[AI Interview] COMPOSER TARGET:', composer);
-            console.log('[AI Interview] TAG:', composer.tagName);
-            console.log('[AI Interview] ID:', composer.id);
-            console.log('[AI Interview] CLASS:', composer.className);
-            console.log('[AI Interview] TESTID:', composer.getAttribute('data-testid'));
-            console.log('[AI Interview] OUTER:', composer.outerHTML.slice(0, 2000));
-
+        else {
             composer.classList.add(
                 'ai-interview-hidden-composer'
             );
+
+            composer.setAttribute(
+                'data-ai-interview-composer-visible',
+                'false'
+            );
         }
+
+        return true;
     }
+
 
 
     // =========================================================
@@ -971,6 +963,9 @@
 
     window.aiInterviewAssistantModules.startVoiceIfNotActive =
         startVoiceIfNotActive;
+
+    window.aiInterviewAssistantModules.setComposerVisible =
+        setComposerVisible;
 
 
 })();

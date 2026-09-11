@@ -3,6 +3,7 @@
     window.aiInterviewAssistantModules =
         window.aiInterviewAssistantModules || {};
 
+
     // =========================================================
     // FIND SCROLLABLE PARENT
     // =========================================================
@@ -17,9 +18,7 @@
             try {
 
                 const style =
-                    window.getComputedStyle(
-                        current
-                    );
+                    window.getComputedStyle(current);
 
                 const overflowY =
                     style.overflowY;
@@ -50,6 +49,96 @@
 
 
     // =========================================================
+    // FIND CHATGPT ACTUAL SCROLL CONTAINER
+    //
+    // No hard-coded ChatGPT class/id.
+    // Finds the largest visible vertical scroll container.
+    // =========================================================
+
+    function findChatScrollContainer() {
+
+        try {
+
+            const candidates =
+                [...document.querySelectorAll('*')]
+                    .filter(element => {
+
+                        try {
+
+                            const style =
+                                window.getComputedStyle(
+                                    element
+                                );
+
+                            const rect =
+                                element.getBoundingClientRect();
+
+                            return (
+                                element.scrollHeight >
+                                element.clientHeight &&
+
+                                element.clientHeight > 100 &&
+
+                                rect.height > 100 &&
+
+                                rect.bottom > 0 &&
+                                rect.top < window.innerHeight &&
+
+                                (
+                                    style.overflowY === 'auto' ||
+                                    style.overflowY === 'scroll' ||
+                                    style.overflowY === 'overlay'
+                                )
+                            );
+
+                        }
+                        catch (e) {
+
+                            return false;
+                        }
+                    });
+
+
+            if (!candidates.length)
+                return null;
+
+
+            // Prefer the container with the largest
+            // actual scrollable area.
+
+            candidates.sort(
+                (a, b) => {
+
+                    const aScrollable =
+                        a.scrollHeight -
+                        a.clientHeight;
+
+                    const bScrollable =
+                        b.scrollHeight -
+                        b.clientHeight;
+
+                    return bScrollable -
+                        aScrollable;
+                }
+            );
+
+
+            return candidates[0];
+
+        }
+        catch (e) {
+
+            console.log(
+                '[AI Interview] Chat scroll container detection error:',
+                e
+            );
+
+            return null;
+        }
+    }
+
+
+    // =========================================================
     // SCROLL LATEST USER QUESTION TO TOP
     // =========================================================
 
@@ -58,12 +147,11 @@
         try {
 
             const viewport =
-                document.querySelector(
-                    '.wm-app-threadViewport'
-                );
+                findChatScrollContainer();
 
             if (!viewport)
                 return false;
+
 
             const userMessages =
                 document.querySelectorAll(
@@ -73,18 +161,23 @@
             if (!userMessages.length)
                 return false;
 
+
             const latestUserMessage =
-                userMessages[userMessages.length - 1];
+                userMessages[
+                userMessages.length - 1
+                ];
 
             if (!latestUserMessage)
                 return false;
 
 
-            // Remove any old transform that was previously
-            // applied to the conversation content.
+            // -------------------------------------------------
+            // Remove old transform
+            // -------------------------------------------------
+
             const conversationContent =
-                viewport.querySelector(
-                    '.wm-app-threadContent'
+                latestUserMessage.closest(
+                    '[class*="threadContent"]'
                 );
 
             if (conversationContent) {
@@ -99,15 +192,15 @@
             }
 
 
-            // -----------------------------------------------------
-            // Make enough room after the latest question so that
-            // the question can actually reach the top.
-            // -----------------------------------------------------
+            // -------------------------------------------------
+            // Create spacer
+            // -------------------------------------------------
 
             let spacer =
                 viewport.querySelector(
                     '[data-ai-interview-scroll-spacer]'
                 );
+
 
             if (!spacer) {
 
@@ -122,7 +215,8 @@
                 spacer.style.height =
                     viewport.clientHeight + 'px';
 
-                spacer.style.width = '1px';
+                spacer.style.width =
+                    '1px';
 
                 spacer.style.pointerEvents =
                     'none';
@@ -130,12 +224,17 @@
                 spacer.style.flexShrink =
                     '0';
 
+
                 const content =
                     conversationContent ||
                     latestUserMessage.parentElement;
 
+
                 if (content) {
-                    content.appendChild(spacer);
+
+                    content.appendChild(
+                        spacer
+                    );
                 }
             }
             else {
@@ -145,15 +244,16 @@
             }
 
 
-            // -----------------------------------------------------
-            // Calculate exact position of latest question
-            // -----------------------------------------------------
+            // -------------------------------------------------
+            // Calculate question position
+            // -------------------------------------------------
 
             const viewportRect =
                 viewport.getBoundingClientRect();
 
             const questionRect =
                 latestUserMessage.getBoundingClientRect();
+
 
             const offset =
                 questionRect.top -
@@ -165,19 +265,23 @@
                 offset;
 
 
-            // -----------------------------------------------------
-            // Move actual ChatGPT scrollbar
-            // -----------------------------------------------------
+            // -------------------------------------------------
+            // Scroll
+            // -------------------------------------------------
 
             viewport.scrollTo({
+
                 top: Math.max(
                     0,
                     targetScrollTop
                 ),
+
                 behavior: 'smooth'
             });
 
+
             return true;
+
         }
         catch (e) {
 
@@ -192,36 +296,40 @@
 
 
     // =========================================================
-    // WAIT FOR NEW USER MESSAGE AND MOVE IT TO TOP
+    // WAIT FOR NEW USER MESSAGE
     // =========================================================
 
     function moveLatestQuestionToTop() {
 
-        let attempts =
-            0;
+        let attempts = 0;
 
-        const maxAttempts =
-            30;
+        const maxAttempts = 30;
+
 
         function attempt() {
 
             attempts++;
 
+
             const moved =
                 scrollLatestUserMessageToTop();
+
 
             if (
                 moved ||
                 attempts >= maxAttempts
             ) {
+
                 return;
             }
+
 
             setTimeout(
                 attempt,
                 100
             );
         }
+
 
         attempt();
     }
@@ -230,39 +338,100 @@
     // =========================================================
     // MANUAL CHAT SCROLL
     //
-    // direction:
-    //   -1 = UP
-    //    1 = DOWN
-    //
-    // IMPORTANT:
-    // - Moves the complete conversation content.
-    // - Previous Q&A are never removed.
-    // - Question + answer remain together.
+    // -1 = UP
+    //  1 = DOWN
     // =========================================================
 
     function scrollChat(direction) {
+
         try {
-            if (direction !== -1 && direction !== 1)
+
+            if (
+                direction !== -1 &&
+                direction !== 1
+            ) {
                 return false;
+            }
 
             const viewport =
-                document.querySelector('.wm-app-threadViewport');
+                findChatScrollContainer();
 
             if (!viewport)
                 return false;
 
-            const SCROLL_DISTANCE = 80;
+            const distance = 120;
 
-            viewport.scrollBy({
-                top: direction * SCROLL_DISTANCE,
-                behavior: 'smooth'
-            });
+            const start =
+                viewport.scrollTop;
+
+            const maxScroll =
+                viewport.scrollHeight -
+                viewport.clientHeight;
+
+            const target =
+                Math.max(
+                    0,
+                    Math.min(
+                        maxScroll,
+                        start + (direction * distance)
+                    )
+                );
+
+            const duration = 350;
+
+            const startTime =
+                performance.now();
+
+
+            function animate(currentTime) {
+
+                const elapsed =
+                    currentTime - startTime;
+
+                const progress =
+                    Math.min(
+                        elapsed / duration,
+                        1
+                    );
+
+
+                // Ease-in-out
+                const eased =
+                    progress < 0.5
+                        ? 2 * progress * progress
+                        : 1 -
+                        Math.pow(
+                            -2 * progress + 2,
+                            2
+                        ) / 2;
+
+
+                viewport.scrollTop =
+                    start +
+                    (target - start) *
+                    eased;
+
+
+                if (progress < 1) {
+
+                    requestAnimationFrame(
+                        animate
+                    );
+                }
+            }
+
+
+            requestAnimationFrame(
+                animate
+            );
 
             return true;
+
         }
         catch (e) {
+
             console.log(
-                '[AI Interview] Manual smooth scroll error:',
+                '[AI Interview] Smooth scroll error:',
                 e
             );
 
@@ -272,9 +441,7 @@
 
 
     // =========================================================
-    // CHATGPT KEYBOARD SCROLL
-    // ALT + UP    = SCROLL UP
-    // ALT + DOWN  = SCROLL DOWN
+    // ALT + UP / DOWN
     // =========================================================
 
     function handleChatGPTKeyboardScroll(event) {
@@ -284,20 +451,22 @@
             if (!event.altKey)
                 return;
 
+
             if (event.key === 'ArrowUp') {
 
                 event.preventDefault();
-                event.stopImmediatePropagation();
+                event.stopPropagation();
 
                 scrollChat(-1);
 
                 return;
             }
 
+
             if (event.key === 'ArrowDown') {
 
                 event.preventDefault();
-                event.stopImmediatePropagation();
+                event.stopPropagation();
 
                 scrollChat(1);
 
@@ -316,21 +485,10 @@
 
 
     // =========================================================
-    // WINDOW LEVEL KEYBOARD CAPTURE
+    // SINGLE KEYBOARD LISTENER
     // =========================================================
 
     window.addEventListener(
-        'keydown',
-        handleChatGPTKeyboardScroll,
-        true
-    );
-
-
-    // =========================================================
-    // DOCUMENT LEVEL KEYBOARD CAPTURE
-    // =========================================================
-
-    document.addEventListener(
         'keydown',
         handleChatGPTKeyboardScroll,
         true
@@ -344,6 +502,9 @@
     window.aiInterviewAssistantModules.findScrollableParent =
         findScrollableParent;
 
+    window.aiInterviewAssistantModules.findChatScrollContainer =
+        findChatScrollContainer;
+
     window.aiInterviewAssistantModules.scrollLatestUserMessageToTop =
         scrollLatestUserMessageToTop;
 
@@ -353,6 +514,5 @@
     window.aiInterviewAssistantModules.scrollChat =
         scrollChat;
 
-    
 
 })();

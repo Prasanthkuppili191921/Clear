@@ -384,5 +384,19 @@ namespace AiInterviewAssistant.ChatGPTHost
                 // Ignore ChatGPT dictation/send errors.
             }
         }
+
+        public async Task SetComposerVisibleAsync(bool visible)
+        {
+            if (ChatGPTBrowser.CoreWebView2 == null)
+                await ChatGPTBrowser.EnsureCoreWebView2Async();
+
+            string script =
+                "window.aiInterviewAssistantModules && " +
+                "window.aiInterviewAssistantModules.setComposerVisible(" +
+                visible.ToString().ToLowerInvariant() +
+                ");";
+
+            await ChatGPTBrowser.ExecuteScriptAsync(script);
+        }
     }
 }

@@ -1613,9 +1613,9 @@ namespace AiInterviewAssistant
         // SMART ANSWER ON
         // =========================================================
 
-        private void SmartAnswerButton_Checked(
-            object sender,
-            RoutedEventArgs e)
+        private async void SmartAnswerButton_Checked(
+     object sender,
+     RoutedEventArgs e)
         {
             try
             {
@@ -1624,7 +1624,9 @@ namespace AiInterviewAssistant
                 // Auto Voice Detection only in ChatGPTView
                 if (_chatGPTView)
                 {
-                    StartAutoVoiceDetection();
+                    await ChatGPTWebViewHost.SetComposerVisibleAsync(true);
+
+                    //StartAutoVoiceDetection();
                 }
             }
             catch
@@ -1637,15 +1639,20 @@ namespace AiInterviewAssistant
         // SMART ANSWER OFF
         // =========================================================
 
-        private void SmartAnswerButton_Unchecked(
-            object sender,
-            RoutedEventArgs e)
+        private async void SmartAnswerButton_Unchecked(
+     object sender,
+     RoutedEventArgs e)
         {
             try
             {
                 _smartAnswerEnabled = false;
 
                 StopAutoVoiceDetection();
+
+                if (_chatGPTView)
+                {
+                    await ChatGPTWebViewHost.SetComposerVisibleAsync(false);
+                }
             }
             catch
             {
