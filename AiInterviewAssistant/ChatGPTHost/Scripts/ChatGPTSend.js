@@ -111,14 +111,26 @@
 
         sendButton.click();
 
+        setTimeout(() => {
 
-        const moveLatestQuestionToTop =
-            window
-                .aiInterviewAssistantModules
-                .moveLatestQuestionToTop;
+            const moveLatestQuestionToTop =
+                window
+                    .aiInterviewAssistantModules
+                    .moveLatestQuestionToTop;
 
-        if (moveLatestQuestionToTop)
-            moveLatestQuestionToTop();
+            if (moveLatestQuestionToTop)
+                moveLatestQuestionToTop();
+
+        }, 300);
+
+
+        //const moveLatestQuestionToTop =
+        //    window
+        //        .aiInterviewAssistantModules
+        //        .moveLatestQuestionToTop;
+
+        //if (moveLatestQuestionToTop)
+        //    moveLatestQuestionToTop();
 
 
         return true;

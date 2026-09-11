@@ -188,7 +188,7 @@ namespace AiInterviewAssistant.ChatGPTHost
 
                 await ChatGPTBrowser.EnsureCoreWebView2Async();
 
-                //ChatGPTBrowser.CoreWebView2.OpenDevToolsWindow();
+                ChatGPTBrowser.CoreWebView2.OpenDevToolsWindow();
 
 
                 // =================================================

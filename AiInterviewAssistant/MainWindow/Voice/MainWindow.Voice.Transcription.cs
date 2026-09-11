@@ -336,17 +336,6 @@ namespace AiInterviewAssistant
 
 
                         // =============================================
-                        // RAW RESPONSE
-                        // =============================================
-
-                        Debug.WriteLine(
-                            "GEMINI RAW RESPONSE:");
-
-                        Debug.WriteLine(
-                            responseText);
-
-
-                        // =============================================
                         // PARSE
                         // =============================================
 
