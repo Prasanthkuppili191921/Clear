@@ -18,6 +18,11 @@ namespace AiInterviewAssistant
 
         private const string ModelFileName = "silero_vad.onnx";
 
+        public static byte[] RemoveSilence(byte[] wavBytes)
+        {
+            return Process(wavBytes);
+        }
+
         public static byte[] Process(byte[] wavBytes)
         {
             if (wavBytes == null || wavBytes.Length <= 44)

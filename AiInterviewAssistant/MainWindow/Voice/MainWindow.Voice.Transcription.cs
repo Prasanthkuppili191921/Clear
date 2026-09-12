@@ -20,40 +20,40 @@ namespace AiInterviewAssistant
 
             try
             {
-                // =====================================================
-                // SILERO VAD
-                // IMPORTANT: ChatGPT WebView is intentionally excluded.
-                // Its voice path must remain completely untouched.
-                // =====================================================
-                if (!_chatGPTView)
-                {
-                    Stopwatch vadTimer = Stopwatch.StartNew();
+                //// =====================================================
+                //// SILERO VAD
+                //// IMPORTANT: ChatGPT WebView is intentionally excluded.
+                //// Its voice path must remain completely untouched.
+                //// =====================================================
+                //if (!_chatGPTView)
+                //{
+                //    Stopwatch vadTimer = Stopwatch.StartNew();
 
-                    byte[] vadAudio =
-                        SileroVadService.RemoveSilence(audioBytes);
+                //    byte[] vadAudio =
+                //        SileroVadService.RemoveSilence(audioBytes);
 
-                    vadTimer.Stop();
+                //    vadTimer.Stop();
 
-                    if (vadAudio == null || vadAudio.Length <= 44)
-                    {
-                        Debug.WriteLine("SILERO VAD: no speech audio remained.");
-                        return string.Empty;
-                    }
+                //    if (vadAudio == null || vadAudio.Length <= 44)
+                //    {
+                //        Debug.WriteLine("SILERO VAD: no speech audio remained.");
+                //        return string.Empty;
+                //    }
 
-                    Debug.WriteLine(
-                        "SILERO VAD TIME = " +
-                        vadTimer.ElapsedMilliseconds + " ms");
+                //    Debug.WriteLine(
+                //        "SILERO VAD TIME = " +
+                //        vadTimer.ElapsedMilliseconds + " ms");
 
-                    Debug.WriteLine(
-                        "STT AUDIO BEFORE VAD = " +
-                        audioBytes.Length + " bytes");
+                //    Debug.WriteLine(
+                //        "STT AUDIO BEFORE VAD = " +
+                //        audioBytes.Length + " bytes");
 
-                    Debug.WriteLine(
-                        "STT AUDIO AFTER VAD = " +
-                        vadAudio.Length + " bytes");
+                //    Debug.WriteLine(
+                //        "STT AUDIO AFTER VAD = " +
+                //        vadAudio.Length + " bytes");
 
-                    audioBytes = vadAudio;
-                }
+                //    audioBytes = vadAudio;
+                //}
 
                 AppSettings settings =
                     SettingsService.Load() ?? new AppSettings();
