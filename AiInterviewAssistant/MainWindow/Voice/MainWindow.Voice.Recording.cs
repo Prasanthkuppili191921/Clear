@@ -191,45 +191,45 @@ namespace AiInterviewAssistant
                 voiceRecorder.StartRecording();
 
 
-                // =================================================
-                // START LOCAL MICROPHONE
-                // =================================================
+                //// =================================================
+                //// START LOCAL MICROPHONE
+                //// =================================================
 
-                localVoiceStopped = true;
+                //localVoiceStopped = true;
 
-                if (IsLocalVoiceEnabled())
-                {
-                    try
-                    {
-                        localVoiceRecorder =
-                            new LocalVoiceCapture();
+                //if (IsLocalVoiceEnabled())
+                //{
+                //    try
+                //    {
+                //        localVoiceRecorder =
+                //            new LocalVoiceCapture();
 
-                        localVoiceRecorder.RecordingStopped +=
-                            localVoiceRecorder_RecordingStopped;
+                //        localVoiceRecorder.RecordingStopped +=
+                //            localVoiceRecorder_RecordingStopped;
 
-                        localVoiceStopped = false;
+                //        localVoiceStopped = false;
 
-                        localVoiceRecorder.Start();
+                //        localVoiceRecorder.Start();
 
-                        localVoiceRecordingFormat =
-                            localVoiceRecorder.WaveFormat;
+                //        localVoiceRecordingFormat =
+                //            localVoiceRecorder.WaveFormat;
 
-                        Debug.WriteLine(
-                            "LOCAL MICROPHONE CAPTURE STARTED");
+                //        Debug.WriteLine(
+                //            "LOCAL MICROPHONE CAPTURE STARTED");
 
-                        Debug.WriteLine(
-                            "LOCAL MICROPHONE FORMAT: " +
-                            localVoiceRecordingFormat);
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine(
-                            "LOCAL MICROPHONE START ERROR: " +
-                            ex.Message);
+                //        Debug.WriteLine(
+                //            "LOCAL MICROPHONE FORMAT: " +
+                //            localVoiceRecordingFormat);
+                //    }
+                //    catch (Exception ex)
+                //    {
+                //        Debug.WriteLine(
+                //            "LOCAL MICROPHONE START ERROR: " +
+                //            ex.Message);
 
-                        localVoiceStopped = true;
-                    }
-                }
+                //        localVoiceStopped = true;
+                //    }
+                //}
 
                 isVoiceRecording = true;
 
@@ -669,10 +669,6 @@ namespace AiInterviewAssistant
 
                 // =================================================
                 // CREATE WAV
-                //
-                // Keep this because Deepgram accepts WAV.
-                // WAV is created in memory only.
-                // Nothing is saved to disk.
                 // =================================================
 
                 byte[] wavBytes;
@@ -681,13 +677,72 @@ namespace AiInterviewAssistant
                     localRawAudio != null &&
                     localRawAudio.Length > 0)
                 {
-                    // CombineVoiceAudio returns FINAL WAV
+                    // CombineVoiceAudio already returns
+                    // final 16KHz / 16-bit / Mono WAV.
                     wavBytes = rawAudio;
                 }
                 else
                 {
-                    // Existing system-audio path
+                    // Existing system-audio conversion.
                     wavBytes = CreateWavBytes(rawAudio);
+                }
+
+
+                // =================================================
+                // SILERO VAD
+                //
+                // ONLY normal Voice mode.
+                //
+                // _chatGPTView == true
+                //      -> VAD is NOT executed.
+                //
+                // This is intentionally AFTER WAV creation
+                // so both system-only and combined audio
+                // use the same VAD input format.
+                // =================================================
+
+                if (!_chatGPTView &&
+                    wavBytes != null &&
+                    wavBytes.Length > 44)
+                {
+                    Stopwatch vadTimer =
+                        Stopwatch.StartNew();
+
+                    Debug.WriteLine(
+                        "========================================");
+
+                    Debug.WriteLine(
+                        "SILERO VAD START");
+
+                    Debug.WriteLine(
+                        "VAD INPUT WAV SIZE = " +
+                        wavBytes.Length);
+
+                    wavBytes =
+                        SileroVadService.Process(
+                            wavBytes);
+
+                    vadTimer.Stop();
+
+                    Debug.WriteLine(
+                        "SILERO VAD TIME = " +
+                        vadTimer.ElapsedMilliseconds +
+                        " ms");
+
+                    if (wavBytes == null)
+                    {
+                        Debug.WriteLine(
+                            "SILERO VAD: NO SPEECH DETECTED");
+                    }
+                    else
+                    {
+                        Debug.WriteLine(
+                            "VAD OUTPUT WAV SIZE = " +
+                            wavBytes.Length);
+                    }
+
+                    Debug.WriteLine(
+                        "========================================");
                 }
 
                 rawAudio = null;
