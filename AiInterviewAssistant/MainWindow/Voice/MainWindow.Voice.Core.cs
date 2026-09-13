@@ -1,5 +1,6 @@
 ﻿using NAudio.Wave;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Windows;
@@ -39,6 +40,21 @@ namespace AiInterviewAssistant
 
         private readonly object localVoiceAudioLock =
             new object();
+
+        // =========================================================
+        // CONTINUOUS SILERO VAD
+        // =========================================================
+
+        private SileroVadSession voiceVadSession;
+
+        private readonly object voiceVadLock =
+            new object();
+
+        private readonly object voiceSessionLock =
+            new object();
+
+        private readonly List<byte[]> voiceSessionSpeechSegments =
+            new List<byte[]>();
 
 
         // =========================================================

@@ -231,6 +231,50 @@ namespace AiInterviewAssistant
                 //    }
                 //}
 
+                // =========================================================
+                // START CONTINUOUS SILERO VAD
+                // =========================================================
+
+                if (!_chatGPTView)
+                {
+                    try
+                    {
+                        lock (voiceSessionLock)
+                        {
+                            voiceSessionSpeechSegments.Clear();
+                        }
+
+                        voiceVadSession =
+                            new SileroVadSession();
+
+                        voiceVadSession.SpeechSegmentReady +=
+                            VoiceVadSession_SpeechSegmentReady;
+
+                        voiceVadSession.Start(
+                            voiceRecordingFormat);
+
+                        System.Diagnostics.Debug.WriteLine(
+                            "SILERO VAD SESSION STARTED");
+                    }
+                    catch (Exception ex)
+                    {
+                        voiceVadSession = null;
+
+                        System.Diagnostics.Debug.WriteLine(
+                            "SILERO VAD SESSION START ERROR: " +
+                            ex);
+                    }
+                }
+
+                // =========================================================
+                // START QUESTION QUEUE
+                // =========================================================
+
+                if (!_chatGPTView)
+                {
+                    StartVoiceQuestionQueue();
+                }
+
                 isVoiceRecording = true;
 
 
@@ -364,6 +408,35 @@ namespace AiInterviewAssistant
                     }
                 }
 
+                // =========================================================
+                // CONTINUOUS SILERO VAD
+                // =========================================================
+
+                if (!_chatGPTView &&
+                    isVoiceRecording &&
+                    e.Buffer != null &&
+                    e.BytesRecorded > 0)
+                {
+                    try
+                    {
+                        lock (voiceVadLock)
+                        {
+                            if (voiceVadSession != null)
+                            {
+                                voiceVadSession.AcceptAudio(
+                                    e.Buffer,
+                                    e.BytesRecorded);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine(
+                            "SILERO VAD AUDIO ERROR: " +
+                            ex);
+                    }
+                }
+
 
                 // =================================================
                 // DIAGNOSTIC EVERY ~1 SECOND
@@ -398,6 +471,10 @@ namespace AiInterviewAssistant
         // STOP RECORDING
         // =========================================================
 
+        // =========================================================
+        // STOP RECORDING
+        // =========================================================
+
         private void StopVoiceRecording()
         {
             if (!Dispatcher.CheckAccess())
@@ -412,7 +489,7 @@ namespace AiInterviewAssistant
             }
 
             // =========================================================
-            // EXISTING LOCAL VOICE FUNCTIONALITY
+            // CHECK SYSTEM AUDIO RECORDER
             // =========================================================
 
             if (voiceRecorder == null)
@@ -425,15 +502,34 @@ namespace AiInterviewAssistant
                 return;
             }
 
+            // =========================================================
+            // MARK STOPPING
+            // =========================================================
+
             voiceStopping = true;
 
-            // RECORDING IS NOW OFF
-            isVoiceRecording = false;
+            // =========================================================
+            // IMPORTANT
+            //
+            // Keep isVoiceRecording = true until
+            // WasapiLoopbackCapture raises RecordingStopped.
+            //
+            // This allows the final DataAvailable event to reach
+            // Silero VAD before the VAD session is flushed.
+            // =========================================================
 
-            // Immediately restore microphone button/icon
+            isVoiceRecording = true;
+
+            // =========================================================
+            // IMMEDIATELY RESTORE VOICE BUTTON UI
+            // =========================================================
+
             ResetVoiceUI();
 
-            // Keep processing message if desired
+            // =========================================================
+            // SHOW PROCESSING
+            // =========================================================
+
             UpdateLiveVoiceMessage(
                 "Processing...");
 
@@ -465,6 +561,18 @@ namespace AiInterviewAssistant
                 }
 
                 // =====================================================
+                // IMPORTANT:
+                //
+                // DO NOT STOP SILERO VAD HERE.
+                //
+                // WasapiLoopbackCapture may still send its final
+                // DataAvailable event.
+                //
+                // VAD will be stopped/flushed inside
+                // VoiceRecorder_RecordingStopped().
+                // =====================================================
+
+                // =====================================================
                 // STOP SYSTEM AUDIO
                 // =====================================================
 
@@ -477,6 +585,52 @@ namespace AiInterviewAssistant
                     ex.Message);
 
                 voiceStopping = false;
+                isVoiceRecording = false;
+
+                ResetVoiceUI();
+
+                RemoveLiveVoiceMessage();
+            }
+        }
+
+        // =========================================================
+        // SILERO VAD SPEECH SEGMENT READY
+        // =========================================================
+
+        private void VoiceVadSession_SpeechSegmentReady(
+            object sender,
+            byte[] speechWav)
+        {
+            try
+            {
+                if (_chatGPTView)
+                    return;
+
+                if (speechWav == null ||
+                    speechWav.Length <= 44)
+                {
+                    return;
+                }
+
+                Debug.WriteLine(
+                    "SILERO VAD: SPEECH SEGMENT RECEIVED | SIZE = " +
+                    speechWav.Length);
+
+                lock (voiceSessionLock)
+                {
+                    voiceSessionSpeechSegments.Add(
+                        speechWav);
+                }
+
+                Debug.WriteLine(
+                    "VOICE SESSION: SPEECH SEGMENT ADDED | SEGMENTS = " +
+                    voiceSessionSpeechSegments.Count);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(
+                    "VOICE SESSION SEGMENT ERROR: " +
+                    ex);
             }
         }
 
@@ -551,338 +705,103 @@ namespace AiInterviewAssistant
                 Debug.WriteLine(
                     "========================================");
 
+                // =================================================
+                // IMPORTANT
+                //
+                // Normal Voice mode:
+                //
+                // SileroVadSession has already detected speech
+                // and queued each question.
+                //
+                // Voice OFF must NOT process the complete
+                // recording again.
+                //
+                // Existing queued questions are allowed to finish
+                // through VoiceQuestionQueue.
+                // =================================================
+
+                if (!_chatGPTView)
+                {
+                    // =====================================================
+                    // AUDIO CAPTURE IS NOW REALLY STOPPED.
+                    //
+                    // Therefore all final DataAvailable events have already
+                    // reached Silero VAD.
+                    // =====================================================
+
+                    try
+                    {
+                        lock (voiceVadLock)
+                        {
+                            if (voiceVadSession != null)
+                            {
+                                voiceVadSession.SpeechSegmentReady -=
+                                    VoiceVadSession_SpeechSegmentReady;
+
+                                voiceVadSession.Stop();
+
+                                voiceVadSession.Dispose();
+
+                                voiceVadSession = null;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine(
+                            "SILERO VAD STOP ERROR: " +
+                            ex);
+                    }
+
+                    Debug.WriteLine(
+                        "VOICE STOP: NEW QUESTIONS DISABLED");
+
+                    Debug.WriteLine(
+                        "VOICE STOP: FINALIZING CURRENT VOICE SESSION");
+
+                    byte[] sessionWav =
+                        BuildVoiceSessionWav();
+
+                    if (sessionWav != null &&
+                        sessionWav.Length > 44)
+                    {
+                        Debug.WriteLine(
+                            "VOICE SESSION WAV READY | SIZE = " +
+                            sessionWav.Length);
+
+                        EnqueueVoiceSession(
+                            sessionWav);
+                    }
+                    else
+                    {
+                        Debug.WriteLine(
+                            "VOICE SESSION: NO SPEECH DETECTED");
+                    }
+
+                    Debug.WriteLine(
+                        "VOICE STOP: EXISTING QUEUE PROCESSING CONTINUES");
+
+                    RemoveLiveVoiceMessage();
+
+                    return;
+                }
+
+                // =================================================
+                // CHATGPT WEBVIEW
+                //
+                // Keep existing ChatGPT behavior untouched.
+                // =================================================
+
                 await Dispatcher.InvokeAsync(() =>
                 {
                     UpdateLiveVoiceMessage(
                         "Processing...");
                 });
-
-
-                // =================================================
-                // WAIT FOR LOCAL MICROPHONE TO STOP
-                // =================================================
-
-                if (IsLocalVoiceEnabled() &&
-                    localVoiceRecorder != null)
-                {
-                    int waitCount = 0;
-
-                    while (!localVoiceStopped &&
-                           waitCount < 100)
-                    {
-                        await Task.Delay(20);
-
-                        waitCount++;
-                    }
-                }
-
-
-                // =================================================
-                // COPY SYSTEM AUDIO
-                // =================================================
-
-                byte[] systemRawAudio;
-
-                lock (voiceAudioLock)
-                {
-                    if (voiceAudioBuffer == null ||
-                        voiceAudioBuffer.Length == 0)
-                    {
-                        systemRawAudio = null;
-                    }
-                    else
-                    {
-                        systemRawAudio =
-                            voiceAudioBuffer.ToArray();
-                    }
-                }
-
-
-                // =================================================
-                // COPY LOCAL MICROPHONE AUDIO
-                // =================================================
-
-                byte[] localRawAudio = null;
-
-                if (IsLocalVoiceEnabled() &&
-                    localVoiceRecorder != null)
-                {
-                    try
-                    {
-                        localRawAudio =
-                            localVoiceRecorder.GetAudioBytes();
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine(
-                            "LOCAL AUDIO READ ERROR: " +
-                            ex);
-                    }
-                }
-
-
-                // =================================================
-                // COMBINE AUDIO
-                // =================================================
-
-                byte[] rawAudio;
-
-                if (IsLocalVoiceEnabled() &&
-                    localRawAudio != null &&
-                    localRawAudio.Length > 0)
-                {
-                    rawAudio =
-                        CombineVoiceAudio(
-                            systemRawAudio,
-                            voiceRecordingFormat,
-                            localRawAudio,
-                            localVoiceRecordingFormat);
-                }
-                else
-                {
-                    // IncludeLocalVoice = false
-                    // Existing system-audio path remains unchanged.
-                    rawAudio = systemRawAudio;
-                }
-
-                // =================================================
-                // NO AUDIO
-                // =================================================
-
-                if (rawAudio == null ||
-                    rawAudio.Length == 0)
-                {
-                    await Dispatcher.InvokeAsync(() =>
-                    {
-                        RemoveLiveVoiceMessage();
-
-                        AppMessage.Show(
-                            "No voice input was captured.");
-                    });
-
-                    return;
-                }
-
-                Debug.WriteLine(
-                    "VOICE CAPTURED BYTES = " +
-                    rawAudio.Length);
-
-                // =================================================
-                // CREATE WAV
-                // =================================================
-
-                byte[] wavBytes;
-
-                if (IsLocalVoiceEnabled() &&
-                    localRawAudio != null &&
-                    localRawAudio.Length > 0)
-                {
-                    // CombineVoiceAudio already returns
-                    // final 16KHz / 16-bit / Mono WAV.
-                    wavBytes = rawAudio;
-                }
-                else
-                {
-                    // Existing system-audio conversion.
-                    wavBytes = CreateWavBytes(rawAudio);
-                }
-
-
-                // =================================================
-                // SILERO VAD
-                //
-                // ONLY normal Voice mode.
-                //
-                // _chatGPTView == true
-                //      -> VAD is NOT executed.
-                //
-                // This is intentionally AFTER WAV creation
-                // so both system-only and combined audio
-                // use the same VAD input format.
-                // =================================================
-
-                if (!_chatGPTView &&
-                    wavBytes != null &&
-                    wavBytes.Length > 44)
-                {
-                    Stopwatch vadTimer =
-                        Stopwatch.StartNew();
-
-                    Debug.WriteLine(
-                        "========================================");
-
-                    Debug.WriteLine(
-                        "SILERO VAD START");
-
-                    Debug.WriteLine(
-                        "VAD INPUT WAV SIZE = " +
-                        wavBytes.Length);
-
-                    wavBytes =
-                        SileroVadService.Process(
-                            wavBytes);
-
-                    vadTimer.Stop();
-
-                    Debug.WriteLine(
-                        "SILERO VAD TIME = " +
-                        vadTimer.ElapsedMilliseconds +
-                        " ms");
-
-                    if (wavBytes == null)
-                    {
-                        Debug.WriteLine(
-                            "SILERO VAD: NO SPEECH DETECTED");
-                    }
-                    else
-                    {
-                        Debug.WriteLine(
-                            "VAD OUTPUT WAV SIZE = " +
-                            wavBytes.Length);
-                    }
-
-                    Debug.WriteLine(
-                        "========================================");
-                }
-
-                rawAudio = null;
-
-                if (wavBytes == null ||
-                    wavBytes.Length <= 44)
-                {
-                    await Dispatcher.InvokeAsync(() =>
-                    {
-                        RemoveLiveVoiceMessage();
-
-                        AppMessage.Show(
-                            "Could not prepare the captured voice audio.");
-                    });
-
-                    return;
-                }
-
-                Debug.WriteLine(
-                    "WAV MEMORY BYTES = " +
-                    wavBytes.Length);
-
-                // =================================================
-                // DEEPGRAM DIRECT STT
-                // =================================================
-
-                Stopwatch timer =
-                    Stopwatch.StartNew();
-
-                Debug.WriteLine(
-                    "========================================");
-
-                Debug.WriteLine(
-                    "DEEPGRAM DIRECT STT START");
-
-                string finalText =
-                    await TranscribeWithOpenRouterAsync(
-                        wavBytes);
-
-                timer.Stop();
-
-                Debug.WriteLine(
-                    "DEEPGRAM STT TIME = " +
-                    timer.ElapsedMilliseconds +
-                    " ms");
-
-                Debug.WriteLine(
-                    "DEEPGRAM FINAL TEXT = [" +
-                    finalText +
-                    "]");
-
-                Debug.WriteLine(
-                    "========================================");
-
-                // =================================================
-                // NO TEXT
-                // =================================================
-
-                if (string.IsNullOrWhiteSpace(
-                    finalText))
-                {
-                    await Dispatcher.InvokeAsync(() =>
-                    {
-                        RemoveLiveVoiceMessage();
-
-                        AppMessage.Show(
-                            "No speech was detected in the voice input.");
-                    });
-
-                    return;
-                }
-
-                // =================================================
-                // CLEAN TEXT
-                // =================================================
-
-                finalText =
-                    finalText.Trim();
-
-                liveVoiceTranscript =
-                    finalText;
-
-
-                // =================================================
-                // CHATGPT WEBVIEW
-                //
-                // Existing ChatGPT JS send functionality.
-                // No new recording / STT logic.
-                // =================================================
-
-                if (_chatGPTView)
-                {
-                    await Dispatcher.InvokeAsync(() =>
-                    {
-                        RemoveLiveVoiceMessage();
-                    });
-
-                    Debug.WriteLine(
-                        "SENDING VOICE TEXT TO CHATGPT WEBVIEW...");
-
-                    await ChatGPTWebViewHost.SendQuestionAsync(
-                        finalText);
-
-                    return;
-                }
-
-
-                // =================================================
-                // EXISTING CHAT UI
-                // =================================================
-
-                Border thinkingBubble =
-                    null;
-
-                await Dispatcher.InvokeAsync(() =>
-                {
-                    RemoveLiveVoiceMessage();
-
-                    AddUserMessage(
-                        finalText);
-
-                    thinkingBubble =
-                        AddAIMessage("");
-                });
-
-                // =================================================
-                // SEND TO EXISTING AI
-                // =================================================
-
-                Debug.WriteLine(
-                    "SENDING COMPLETE VOICE TEXT TO AI...");
-
-                _ = SendQuestion(
-                    finalText,
-                    thinkingBubble);
             }
             catch (Exception ex)
             {
                 Debug.WriteLine(
-                    "VOICE PROCESSING ERROR:");
+                    "VOICE RECORDING STOP ERROR:");
 
                 Debug.WriteLine(
                     ex.ToString());
@@ -892,7 +811,7 @@ namespace AiInterviewAssistant
                     RemoveLiveVoiceMessage();
 
                     AppMessage.Show(
-                        "Voice processing error:\n\n" +
+                        "Voice recording error:\n\n" +
                         ex.Message);
                 });
             }
@@ -909,7 +828,6 @@ namespace AiInterviewAssistant
                 catch
                 {
                 }
-
 
                 // =================================================
                 // DISPOSE LOCAL MICROPHONE
@@ -933,9 +851,10 @@ namespace AiInterviewAssistant
                 localVoiceRecordingFormat = null;
                 localVoiceStopped = true;
 
-
                 // =================================================
                 // CLEAR AUDIO BUFFER
+                //
+                // No STT/VAD processing happens here.
                 // =================================================
 
                 lock (voiceAudioLock)

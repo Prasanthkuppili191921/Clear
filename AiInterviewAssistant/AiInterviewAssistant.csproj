@@ -158,9 +158,9 @@
       <HintPath>..\packages\org.k2fsa.sherpa.onnx.1.13.5\lib\net45\sherpa-onnx.dll</HintPath>
     </Reference>
     <None Include="..\packages\org.k2fsa.sherpa.onnx.runtime.win-x64.1.13.5\runtimes\win-x64\native\sherpa-onnx-c-api.dll">
-  <Link>sherpa-onnx-c-api.dll</Link>
-  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-</None>
+      <Link>sherpa-onnx-c-api.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <Reference Include="System" />
     <Reference Include="System.Buffers, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Buffers.4.6.1\lib\net462\System.Buffers.dll</HintPath>
@@ -328,8 +328,10 @@
     <Compile Include="MainWindow\Voice\MainWindow.AutoVoiceDetection.cs" />
     <Compile Include="MainWindow\Voice\MainWindow.LocalVoiceCapture.cs" />
     <Compile Include="MainWindow\Voice\Mainwindow.SileroVadService.cs" />
+    <Compile Include="MainWindow\Voice\Mainwindow.SileroVadSession.cs" />
     <Compile Include="MainWindow\Voice\MainWindow.Voice.Audio.cs" />
     <Compile Include="MainWindow\Voice\MainWindow.Voice.Core.cs" />
+    <Compile Include="MainWindow\Voice\MainWindow.Voice.QuestionQueue.cs" />
     <Compile Include="MainWindow\Voice\MainWindow.Voice.Recording.cs" />
     <Compile Include="MainWindow\Voice\MainWindow.Voice.Transcription.cs" />
     <Compile Include="MainWindow\Voice\MainWindow.Voice.UI.cs" />
