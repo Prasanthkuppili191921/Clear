@@ -310,6 +310,7 @@
       <DependentUpon>ChatGPTWebView.xaml</DependentUpon>
     </Compile>
     <Compile Include="HotKeysRegister.cs" />
+    <Compile Include="InterviewSessionLogger.cs" />
     <Compile Include="MainWindow\AI\MainWindow.AI.ChatUI.cs" />
     <Compile Include="MainWindow\AI\MainWindow.AI.Core.cs" />
     <Compile Include="MainWindow\AI\MainWindow.AI.Prompt.cs" />
@@ -487,6 +488,15 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Native\soxr.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="InterviewTemplates\InterviewSessionTemplate.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+     <Content Include="InterviewTemplates\InterviewQuestionTemplate.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="InterviewTemplates\InterviewSession.css">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

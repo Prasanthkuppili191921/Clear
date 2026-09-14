@@ -1,0 +1,319 @@
+﻿/* =========================================================
+   INTERVIEW SESSION
+   ========================================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 30px;
+    background: #f4f6f8;
+    font-family: Tahoma, Arial, sans-serif;
+    color: #17324d;
+}
+
+
+    /* =========================================================
+   TOP STICKY HEADER COVER
+   ========================================================= */
+
+    body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 40px;
+        background: #f4f6f8;
+        z-index: 1001;
+        pointer-events: none;
+    }
+
+
+/* =========================================================
+   MAIN CONTAINER
+   ========================================================= */
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+
+/* =========================================================
+   SESSION HEADER
+   ========================================================= */
+
+.session-header {
+    position: sticky;
+    top: 30px;
+    z-index: 1002;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    border: 1px solid #d9e0e7;
+    border-left: 5px solid #4FAFE8;
+    border-radius: 16px;
+    padding: 16px 26px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+}
+
+
+/* =========================================================
+   SESSION TITLE
+   ========================================================= */
+
+.session-title {
+    font-family: Tahoma, Arial, sans-serif;
+    font-size: 24px;
+    line-height: 1.3;
+    font-weight: 700;
+    color: #17324d;
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   SESSION INFORMATION
+   ========================================================= */
+
+.session-info {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 28px;
+    margin-left: auto;
+    font-family: Tahoma, Arial, sans-serif;
+    font-size: 13px;
+    line-height: 1.3;
+    font-weight: 400;
+    color: #6b7f91;
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   QUESTION / ANSWER CARD
+   ========================================================= */
+
+.qa {
+    background: #ffffff;
+    border: 1px solid #d9e0e7;
+    border-left: 5px solid #4FAFE8;
+    border-radius: 16px;
+    padding: 24px 32px;
+    margin-bottom: 22px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+    height: auto;
+    /* Card itself must never scroll */
+    overflow: visible;
+    page-break-inside: avoid;
+}
+
+
+/* =========================================================
+   QUESTION HEADER
+   ========================================================= */
+
+.qa-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 14px;
+    margin-bottom: 18px;
+    border-bottom: 1px solid #e3e8ed;
+}
+
+
+/* =========================================================
+   QUESTION NUMBER
+   ========================================================= */
+
+.question-number {
+    font-family: Tahoma, Arial, sans-serif;
+    font-size: 19px;
+    line-height: 1.3;
+    font-weight: 700;
+    color: #17324d;
+}
+
+
+/* =========================================================
+   QUESTION TIMESTAMP
+   ========================================================= */
+
+.timestamp {
+    font-family: Tahoma, Arial, sans-serif;
+    font-size: 13px;
+    line-height: 1.3;
+    font-weight: 400;
+    color: #718096;
+}
+
+
+/* =========================================================
+   QUESTION / ANSWER LABEL
+   ========================================================= */
+
+.label {
+    font-family: Tahoma, Arial, sans-serif;
+    font-size: 13px;
+    line-height: 1.2;
+    font-weight: 700;
+    letter-spacing: 0.7px;
+    color: #526b82;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+
+/* =========================================================
+   QUESTION TEXT
+   ========================================================= */
+
+.question {
+    font-family: Tahoma, Arial, sans-serif;
+    font-size: 17px;
+    line-height: 1.5;
+    font-weight: 700;
+    color: #172b3a;
+    margin: 0 0 18px !important;
+    padding: 0 !important;
+    height: auto;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    /* Preserve question line breaks */
+    white-space: pre-line;
+}
+
+
+/* =========================================================
+   ANSWER TEXT
+   ========================================================= */
+
+/*
+   Each answer is an independent scroll container.
+
+   Short answer
+       -> No scrollbar
+
+   Long answer
+       -> Only that answer scrolls
+
+   Question/card height does NOT create scrolling.
+*/
+
+.answer {
+    font-family: Tahoma, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    font-weight: 400;
+    color: #294c6b;
+    margin: 0 !important;
+    padding: 0 10px 0 0 !important;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    /* Only answer has height limitation */
+    max-height: 280px;
+    /* Only answer scrolls */
+    overflow-y: auto;
+    overflow-x: hidden;
+    /*
+       Preserve line breaks from AI response.
+
+       IMPORTANT:
+       Do not use white-space: pre-wrap here
+       unless spaces/tabs also need preservation.
+    */
+    white-space: pre-line;
+}
+
+
+    /* =========================================================
+   ANSWER PARAGRAPHS
+   ========================================================= */
+
+    .answer p {
+        margin-top: 0;
+        margin-bottom: 0;
+    }
+
+
+    /* =========================================================
+   ANSWER SCROLLBAR
+   ========================================================= */
+
+    .answer::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    .answer::-webkit-scrollbar-track {
+        background: #eef1f4;
+        border-radius: 10px;
+    }
+
+    .answer::-webkit-scrollbar-thumb {
+        background: #aeb9c5;
+        border-radius: 10px;
+    }
+
+        .answer::-webkit-scrollbar-thumb:hover {
+            background: #8997a6;
+        }
+
+
+/* =========================================================
+   RESPONSIVE - TABLET
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+    .session-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .session-info {
+        justify-content: flex-start;
+        margin-left: 0;
+        gap: 18px;
+        flex-wrap: wrap;
+    }
+}
+
+
+/* =========================================================
+   RESPONSIVE - MOBILE
+   ========================================================= */
+
+@media (max-width: 800px) {
+
+    body {
+        padding: 18px;
+    }
+
+    .session-header {
+        padding: 14px 22px;
+    }
+
+    .session-title {
+        font-size: 22px;
+    }
+
+    .qa {
+        padding: 20px 24px;
+    }
+
+    .question {
+        font-size: 16px;
+    }
+
+    .answer {
+        font-size: 15px;
+    }
+}

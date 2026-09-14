@@ -16,6 +16,15 @@ namespace AiInterviewAssistant
             try
             {
                 // =========================================================
+                // INTERVIEW SESSION
+                // =========================================================
+
+                if (_interviewSessionLogger != null)
+                {
+                    _interviewSessionLogger.EndSession();
+                }
+
+                // =========================================================
                 // WINDOW MOVEMENT
                 // =========================================================
 

@@ -823,10 +823,18 @@ namespace AiInterviewAssistant
                                     fullAnswer))
                             {
                                 string finalAnswer =
-    fullAnswer.Trim();
+                                    fullAnswer.Trim();
 
                                 latestAiText =
                                     finalAnswer;
+
+                                // =====================================================
+                                // INTERVIEW SESSION LOG
+                                // =====================================================
+
+                                _interviewSessionLogger?.LogQuestionAnswer(
+                                    question,
+                                    finalAnswer);
 
                                 await Dispatcher.InvokeAsync(
                                     () =>

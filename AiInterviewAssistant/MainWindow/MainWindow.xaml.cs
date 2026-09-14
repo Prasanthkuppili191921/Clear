@@ -129,6 +129,12 @@ namespace AiInterviewAssistant
 
         private bool _smartAnswerEnabled = false;
 
+        // =========================================================
+        // INTERVIEW SESSION
+        // =========================================================
+
+        private InterviewSessionLogger _interviewSessionLogger;
+
         public bool IsSmartAnswerEnabled
         {
             get
@@ -165,6 +171,12 @@ namespace AiInterviewAssistant
         public MainWindow()
         {
             InitializeComponent();
+
+            // =====================================================
+            // INTERVIEW SESSION LOGGER
+            // =====================================================
+
+            _interviewSessionLogger = new InterviewSessionLogger();
 
             ChatScrollViewer.PreviewMouseWheel +=
                 ChatScrollViewer_PreviewMouseWheel;
