@@ -37,9 +37,13 @@ namespace AiInterviewAssistant
                     "Short",
                     StringComparison.OrdinalIgnoreCase))
             {
+                //return
+                //    "Answer briefly. Keep the response suitable for approximately " +
+                //    "15 to 30 seconds of speaking.";
+
                 return
-                    "Answer briefly. Keep the response suitable for approximately " +
-                    "15 to 30 seconds of speaking.";
+                   "Give a balanced, complete interview answer suitable for approximately " +
+                   "30 to 60 seconds of speaking.";
             }
 
 
@@ -58,9 +62,13 @@ namespace AiInterviewAssistant
                     "Short",
                     StringComparison.OrdinalIgnoreCase))
             {
+                //return
+                //    "Give a concise interview answer. " +
+                //    "Keep it direct and easy to speak.";
+
                 return
-                    "Give a concise interview answer. " +
-                    "Keep it direct and easy to speak.";
+                    "Give a balanced, complete interview answer suitable for approximately " +
+                    "30 to 60 seconds of speaking.";
             }
 
 
