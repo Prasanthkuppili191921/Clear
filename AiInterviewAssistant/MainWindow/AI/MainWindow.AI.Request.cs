@@ -823,12 +823,10 @@ namespace AiInterviewAssistant
                                     fullAnswer))
                             {
                                 string finalAnswer =
-                                    fullAnswer.Trim();
-
+    fullAnswer.Trim();
 
                                 latestAiText =
                                     finalAnswer;
-
 
                                 await Dispatcher.InvokeAsync(
                                     () =>
@@ -838,6 +836,33 @@ namespace AiInterviewAssistant
                                             finalAnswer);
                                     });
 
+                                // =====================================================
+                                // DEBUG - AI FINAL RESPONSE
+                                // =====================================================
+
+                                Debug.WriteLine(
+                                    "=================================================");
+
+                                Debug.WriteLine(
+                                    "AI RESPONSE COMPLETED");
+
+                                Debug.WriteLine(
+                                    "QUESTION:");
+
+                                Debug.WriteLine(
+                                    question);
+
+                                Debug.WriteLine(
+                                    "");
+
+                                Debug.WriteLine(
+                                    "ANSWER:");
+
+                                Debug.WriteLine(
+                                    finalAnswer);
+
+                                Debug.WriteLine(
+                                    "=================================================");
 
                                 // =============================================
                                 // ADD ASSISTANT RESPONSE TO HISTORY

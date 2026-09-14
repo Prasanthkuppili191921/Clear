@@ -85,149 +85,214 @@ namespace AiInterviewAssistant
         // =========================================================
 
         private string BuildSystemPrompt(
-            AppSettings settings,
-            string languageInstruction)
+    AppSettings settings,
+    string languageInstruction)
         {
-            string customPrompt =
-                settings == null
-                    ? ""
-                    : settings.SystemPrompt;
-
-
             string prompt;
 
-
             // =========================================================
-            // DEFAULT SYSTEM PROMPT
+            // BASE SYSTEM PROMPT
             // =========================================================
 
-            if (string.IsNullOrWhiteSpace(
-                customPrompt))
+            if (string.IsNullOrWhiteSpace(settings.SystemPrompt))
             {
                 prompt =
                     "You are a helpful software development assistant. " +
 
-                    "Answer the user's current question accurately and clearly. " +
+                    "Answer the user's current question accurately, clearly, and directly. " +
 
-                    "Use the previous conversation only when it is relevant to the current question. " +
+                    // =================================================
+                    // CONVERSATION CONTEXT
+                    // =================================================
 
-                    "Do not assume the user wants an interview-style answer unless explicitly instructed. " +
+                    "The conversation history contains previous user questions and " +
+                    "assistant answers. Treat this conversation history as an important " +
+                    "source of context for understanding the current question. " +
 
-                    "For technical questions, provide the appropriate technical explanation, " +
-                    "code, examples, or reasoning requested by the user. " +
+                    "Before answering, determine whether the current question is " +
+                    "standalone or whether it depends on the previous conversation. " +
 
-                    "Keep the answer focused on the question.";
+                    "When the current question is a continuation of an earlier discussion, " +
+                    "infer the relevant topic, subject, technology, problem, requirement, " +
+                    "constraints, and intent from the conversation history and answer " +
+                    "accordingly. " +
+
+                    "Do not require the user to repeat information that is already available " +
+                    "in the conversation history. " +
+
+                    "A short or incomplete question may still be a continuation of the " +
+                    "previous discussion. Interpret it using the most relevant coherent " +
+                    "conversation context rather than treating it as a new unrelated request. " +
+
+                    // =================================================
+                    // CONTEXT SELECTION
+                    // =================================================
+
+                    "When multiple topics exist in the conversation history, determine " +
+                    "which previous topic is semantically relevant to the current question. " +
+
+                    "Prefer the most recent coherent discussion that logically connects " +
+                    "to the current question. " +
+
+                    "Do not select context merely because a word happens to match. " +
+                    "Use the meaning, intent, subject, and relationship between the messages. " +
+
+                    // =================================================
+                    // CURRENT QUESTION PRIORITY
+                    // =================================================
+
+                    "The current question always has the highest priority. " +
+
+                    "Previous conversation provides context for interpreting the current " +
+                    "question, but must not override a clearly new request. " +
+
+                    "If the user clearly starts a new topic, answer the new topic without " +
+                    "incorrectly carrying unrelated context from an earlier discussion. " +
+
+                    // =================================================
+                    // FOLLOW-UP QUESTIONS
+                    // =================================================
+
+                    "If the current question depends on information discussed earlier, " +
+                    "continue that discussion naturally and answer the intended follow-up. " +
+
+                    "Do not assume that every short question starts a new topic. " +
+
+                    "Determine the relationship between messages dynamically from their " +
+                    "meaning and surrounding conversation. " +
+
+                    "Do not rely on predefined follow-up phrases, keywords, fixed patterns, " +
+                    "or hard-coded examples to determine whether a question is a follow-up. " +
+
+                    // =================================================
+                    // RESUME CONTEXT PRIORITY
+                    // =================================================
+
+                    "Candidate resume information may be provided as additional background " +
+                    "context. However, resume information must not replace or override the " +
+                    "active conversation context when the user is discussing a technical topic. " +
+
+                    "Use the candidate resume when the current question is clearly about " +
+                    "the candidate's experience, skills, projects, responsibilities, " +
+                    "technologies, career background, or resume. " +
+
+                    "Do not switch from an active technical conversation to resume information " +
+                    "merely because the current question is short or ambiguous. " +
+
+                    "When an ambiguous question can reasonably be interpreted as a continuation " +
+                    "of the active technical discussion, prefer that technical conversation " +
+                    "context over unrelated resume information. " +
+
+                    // =================================================
+                    // TECHNICAL ANSWERING
+                    // =================================================
+
+                    "For technical questions, provide the appropriate explanation, code, " +
+                    "examples, reasoning, comparisons, troubleshooting steps, or " +
+                    "implementation details requested by the user. " +
+
+                    "When code is requested, provide practical, correct, and directly usable " +
+                    "code that matches the technology and context being discussed. " +
+
+                    "Keep the answer focused on the current request and avoid unnecessarily " +
+                    "repeating information that has already been established.";
             }
             else
             {
-                prompt =
-                    customPrompt;
+                prompt = settings.SystemPrompt;
+
+                // =====================================================
+                // DYNAMIC CONVERSATION CONTEXT RULES
+                // =====================================================
+
+                prompt +=
+                    "\n\n" +
+                    "CONVERSATION CONTEXT RULES:\n" +
+
+                    "The conversation history contains previous user questions and " +
+                    "assistant answers. Use that history intelligently to understand " +
+                    "the current question.\n\n" +
+
+                    "Determine whether the current question is standalone or a " +
+                    "continuation of an earlier discussion. If it is a continuation, " +
+                    "infer the relevant topic, subject, technology, problem, requirement, " +
+                    "constraints, and intent from the conversation history.\n\n" +
+
+                    "Do not require the user to repeat information that is already " +
+                    "available in the conversation history.\n\n" +
+
+                    "A short or incomplete question may still depend on the previous " +
+                    "conversation. Interpret it using the most relevant coherent context " +
+                    "rather than automatically treating it as a new topic.\n\n" +
+
+                    "When multiple topics exist, determine the relevant topic based on " +
+                    "semantic meaning, intent, subject, and conversation continuity. " +
+                    "Do not select context merely because of matching words.\n\n" +
+
+                    "The current question always has the highest priority. Previous " +
+                    "conversation should provide context but must not override a clearly " +
+                    "new request.\n\n" +
+
+                    "Do not rely on predefined follow-up phrases, keywords, fixed patterns, " +
+                    "or hard-coded examples. Determine message relationships dynamically " +
+                    "from their meaning and surrounding conversation.\n\n" +
+
+                    "Candidate resume information is additional background context. " +
+                    "Use it when the current question is clearly about the candidate's " +
+                    "experience, skills, projects, responsibilities, technologies, career, " +
+                    "or resume.\n\n" +
+
+                    "Do not use unrelated resume information to answer a short or ambiguous " +
+                    "question when there is an active technical discussion in the conversation. " +
+
+                    "When an ambiguous question can reasonably be interpreted as a continuation " +
+                    "of the active technical discussion, prefer that technical conversation " +
+                    "context.\n\n" +
+
+                    "For technical questions, provide the appropriate explanation, code, " +
+                    "examples, reasoning, comparisons, troubleshooting steps, or " +
+                    "implementation details requested by the user.";
             }
 
-
             // =========================================================
-            // LANGUAGE REQUIREMENT
+            // LANGUAGE INSTRUCTION
             // =========================================================
 
-            if (!string.IsNullOrWhiteSpace(
-                    languageInstruction))
+            if (!string.IsNullOrWhiteSpace(languageInstruction))
             {
                 prompt +=
-                    "\n\nLanguage requirement:\n" +
+                    "\n\n" +
                     languageInstruction;
             }
-
 
             // =========================================================
             // RESUME CONTEXT
             // =========================================================
 
-            string resumeText =
-                settings == null
-                    ? ""
-                    : ResumeContextBuilder.Build(
-                        settings.ResumeText);
-
-
-            if (!string.IsNullOrWhiteSpace(
-                resumeText))
+            if (!string.IsNullOrWhiteSpace(settings.ResumeText))
             {
                 prompt +=
                     "\n\n" +
-                    "====================================================\n" +
-                    "CANDIDATE RESUME CONTEXT\n" +
-                    "====================================================\n\n" +
-
-                    "Use the following resume as the primary source of truth " +
-                    "for questions about the candidate's personal experience, " +
-                    "projects, companies, roles, responsibilities, skills, " +
-                    "technologies and achievements.\n\n" +
-
-                    "Resume rules:\n" +
-
-                    "- Answer experience-related questions in first person, " +
-                    "as if the candidate is speaking directly to the interviewer.\n" +
-
-                    "- When the resume contains a relevant project, technology " +
-                    "or responsibility, use it as the practical example.\n" +
-
-                    "- Do not invent companies, projects, responsibilities, " +
-                    "technologies, achievements or experience that are not " +
-                    "supported by the resume.\n" +
-
-                    "- If the interviewer asks about something that is not " +
-                    "mentioned in the resume, do not falsely claim that the " +
-                    "candidate has that experience.\n" +
-
-                    "- For general technical questions, answer normally using " +
-                    "the candidate's known background where relevant.\n\n" +
-
-                    "RESUME:\n" +
-                    resumeText +
-
-                    "\n\n" +
-                    "====================================================\n" +
-                    "END CANDIDATE RESUME CONTEXT\n" +
-                    "====================================================";
+                    "CANDIDATE RESUME CONTEXT:\n" +
+                    "The following information is the candidate's resume. " +
+                    "Use this information when the current question is related to " +
+                    "the candidate's experience, skills, projects, responsibilities, " +
+                    "technologies, career background, or resume. " +
+                    "Do not use resume information as the subject of an unrelated " +
+                    "technical question.\n\n" +
+                    settings.ResumeText;
             }
 
-
             // =========================================================
-            // CODE FORMATTING REQUIREMENT
+            // CODE FORMATTING
             // =========================================================
 
             prompt +=
-                "\n\nCODE FORMATTING REQUIREMENT:\n" +
-
-                "Whenever you provide SQL, C#, JavaScript, TypeScript, " +
-                "HTML, CSS, JSON, XML, XAML, PowerShell or VB.NET code, " +
-                "ALWAYS put the code inside a fenced Markdown code block " +
-                "using the correct language identifier.\n\n" +
-
-                "Examples:\n" +
-
-                "```sql\n" +
-                "SELECT * FROM Employee;\n" +
-                "```\n\n" +
-
-                "```csharp\n" +
-                "var result = GetData();\n" +
-                "```\n\n" +
-
-                "```json\n" +
-                "{ \"name\": \"John\" }\n" +
-                "```\n\n" +
-
-                "Do not place programming code as plain paragraphs when " +
-                "a fenced code block can be used.\n" +
-
-                "For SQL questions, put the SQL query in a fenced " +
-                "```sql code block first, followed by any explanation.";
-
-
-            // =========================================================
-            // RETURN FINAL SYSTEM PROMPT
-            // =========================================================
+                "\n\n" +
+                "CODE FORMATTING RULES:\n" +
+                "When providing code, always use proper Markdown fenced code blocks " +
+                "with the appropriate programming language identifier. " +
+                "Keep code readable, correctly formatted, and directly usable.";
 
             return prompt;
         }
@@ -243,9 +308,8 @@ namespace AiInterviewAssistant
             List<object> messages =
                 new List<object>();
 
-
             // =========================================================
-            // FIND CURRENT QUESTION
+            // FIND CURRENT USER QUESTION
             // =========================================================
 
             string currentQuestion =
@@ -253,7 +317,6 @@ namespace AiInterviewAssistant
 
             int currentQuestionIndex =
                 -1;
-
 
             if (conversationHistory != null)
             {
@@ -264,20 +327,16 @@ namespace AiInterviewAssistant
                     object item =
                         conversationHistory[i];
 
-
                     if (item == null)
                         continue;
-
 
                     try
                     {
                         dynamic message =
                             item;
 
-
                         string role =
                             message.role?.ToString();
-
 
                         if (string.Equals(
                             role,
@@ -288,30 +347,21 @@ namespace AiInterviewAssistant
                                 message.content?.ToString()
                                 ?? string.Empty;
 
-
                             currentQuestionIndex =
                                 i;
-
 
                             break;
                         }
                     }
                     catch
                     {
+                        // Ignore invalid history item
                     }
                 }
             }
 
-
             // =========================================================
             // BUILD SYSTEM PROMPT
-            //
-            // IMPORTANT:
-            // Smart ON and Smart OFF both use the SAME base
-            // System Prompt, Resume Context and Code Formatting.
-            //
-            // Smart ON only adds SmartAnswerService.
-            // Answer Mode is NOT added here.
             // =========================================================
 
             string systemPrompt =
@@ -319,15 +369,10 @@ namespace AiInterviewAssistant
                     settings,
                     languageInstruction);
 
-
             // =========================================================
             // SMART ANSWER
             //
-            // IMPORTANT:
-            // SmartAnswerService is used ONLY when Smart Answer
-            // is enabled.
-            //
-            // Answer Mode / Response Length are NOT added.
+            // Leave existing Smart Answer behavior untouched.
             // =========================================================
 
             if (_smartAnswerEnabled &&
@@ -339,9 +384,8 @@ namespace AiInterviewAssistant
                         currentQuestion);
             }
 
-
             // =========================================================
-            // ADD SYSTEM MESSAGE
+            // SYSTEM MESSAGE
             // =========================================================
 
             messages.Add(
@@ -351,9 +395,8 @@ namespace AiInterviewAssistant
                     content = systemPrompt
                 });
 
-
             // =========================================================
-            // NO HISTORY
+            // NO CONVERSATION HISTORY
             // =========================================================
 
             if (conversationHistory == null ||
@@ -361,7 +404,6 @@ namespace AiInterviewAssistant
             {
                 return messages;
             }
-
 
             // =========================================================
             // NO CURRENT QUESTION
@@ -372,21 +414,23 @@ namespace AiInterviewAssistant
                 return messages;
             }
 
-
             // =========================================================
-            // FIND START OF LAST 4 QUESTIONS
+            // FIND LAST 3 COMPLETE CONVERSATION TURNS
             //
-            // Current question = 4th question.
-            // Include previous 3 questions.
+            // A turn is:
+            //
+            // USER
+            // ASSISTANT
+            //
+            // We collect complete turns backwards so the current
+            // conversation context is always preserved.
             // =========================================================
 
-            int startIndex =
-                currentQuestionIndex;
+            List<int> turnStartIndexes =
+                new List<int>();
 
-
-            int previousQuestionsFound =
-                0;
-
+            int assistantIndex =
+                -1;
 
             for (int i = currentQuestionIndex - 1;
                  i >= 0;
@@ -395,63 +439,139 @@ namespace AiInterviewAssistant
                 object item =
                     conversationHistory[i];
 
-
                 if (item == null)
                     continue;
 
+                string role =
+                    string.Empty;
 
                 try
                 {
                     dynamic message =
                         item;
 
-
-                    string role =
-                        message.role?.ToString();
-
-
-                    if (string.Equals(
-                        role,
-                        "user",
-                        StringComparison.OrdinalIgnoreCase))
-                    {
-                        previousQuestionsFound++;
-
-
-                        if (previousQuestionsFound == 3)
-                        {
-                            startIndex =
-                                i;
-
-                            break;
-                        }
-                    }
+                    role =
+                        message.role?.ToString()
+                        ?? string.Empty;
                 }
                 catch
                 {
+                    continue;
+                }
+
+                // -----------------------------------------------------
+                // We found the assistant answer belonging to a
+                // previous user question.
+                // -----------------------------------------------------
+
+                if (assistantIndex < 0 &&
+                    string.Equals(
+                        role,
+                        "assistant",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    assistantIndex =
+                        i;
+
+                    continue;
+                }
+
+                // -----------------------------------------------------
+                // Once an assistant answer was found, the next user
+                // message before it is the start of that conversation
+                // turn.
+                // -----------------------------------------------------
+
+                if (assistantIndex >= 0 &&
+                    string.Equals(
+                        role,
+                        "user",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    turnStartIndexes.Add(i);
+
+                    assistantIndex = -1;
+
+                    if (turnStartIndexes.Count >= 3)
+                    {
+                        break;
+                    }
                 }
             }
 
+            // =========================================================
+            // DETERMINE HISTORY START
+            // =========================================================
+
+            int startIndex =
+                currentQuestionIndex;
+
+            if (turnStartIndexes.Count > 0)
+            {
+                startIndex =
+                    turnStartIndexes[
+                        turnStartIndexes.Count - 1];
+            }
 
             // =========================================================
-            // ADD LAST 4 QUESTIONS + ANSWERS
+            // ADD PREVIOUS COMPLETE TURNS
             // =========================================================
 
             for (int i = startIndex;
-                 i <= currentQuestionIndex;
+                 i < currentQuestionIndex;
                  i++)
             {
                 object historyMessage =
                     conversationHistory[i];
 
+                if (historyMessage == null)
+                    continue;
 
-                if (historyMessage != null)
+                try
                 {
-                    messages.Add(
-                        historyMessage);
+                    dynamic message =
+                        historyMessage;
+
+                    string role =
+                        message.role?.ToString();
+
+                    // Only actual user/assistant conversation
+                    // messages are sent to the model.
+                    if (string.Equals(
+                            role,
+                            "user",
+                            StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(
+                            role,
+                            "assistant",
+                            StringComparison.OrdinalIgnoreCase))
+                    {
+                        messages.Add(
+                            historyMessage);
+                    }
+                }
+                catch
+                {
+                    // Ignore malformed history item
                 }
             }
 
+            // =========================================================
+            // ALWAYS ADD CURRENT QUESTION LAST
+            // =========================================================
+
+            object currentMessage =
+                conversationHistory[currentQuestionIndex];
+
+            if (currentMessage != null)
+            {
+                messages.Add(
+                    currentMessage);
+            }
+
+            // =========================================================
+            // RETURN FINAL MESSAGE LIST
+            // =========================================================
 
             return messages;
         }
