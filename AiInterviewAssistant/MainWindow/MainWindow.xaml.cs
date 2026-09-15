@@ -225,6 +225,18 @@ namespace AiInterviewAssistant
                     StringComparison.OrdinalIgnoreCase);
 
             // =====================================================
+            // SMART ANSWER VISIBILITY
+            // =====================================================
+
+            if (SmartAnswerButton != null)
+            {
+                SmartAnswerButton.Visibility =
+                    _chatGPTView
+                        ? Visibility.Visible
+                        : Visibility.Collapsed;
+            }
+
+            // =====================================================
             // SMART ANSWER STATE
             // =====================================================
 

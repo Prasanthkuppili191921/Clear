@@ -410,8 +410,6 @@ namespace AiInterviewAssistant.Privacy
 
                 if (enabled)
                 {
-                    window.Cursor =
-                        Cursors.Arrow;
                 }
             }
             catch
@@ -591,9 +589,6 @@ namespace AiInterviewAssistant.Privacy
                             element);
                     }
 
-
-                    element.Cursor =
-                        Cursors.Arrow;
                 }
                 else
                 {
@@ -601,8 +596,6 @@ namespace AiInterviewAssistant.Privacy
                         element,
                         out Cursor original))
                     {
-                        element.Cursor =
-                            original;
                     }
 
 

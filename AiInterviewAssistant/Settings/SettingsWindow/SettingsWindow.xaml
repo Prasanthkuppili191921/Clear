@@ -278,9 +278,6 @@
             <Setter Property="HorizontalContentAlignment"
                     Value="Left"/>
 
-            <Setter Property="Cursor"
-                    Value="Hand"/>
-
             <Setter Property="FontSize"
                     Value="13"/>
 
@@ -348,9 +345,6 @@
 
             <Setter Property="BorderThickness"
                     Value="0"/>
-
-            <Setter Property="Cursor"
-                    Value="Hand"/>
 
             <Setter Property="FontSize"
                     Value="13"/>
@@ -449,9 +443,6 @@
             <Setter Property="BorderThickness"
                     Value="0"/>
 
-            <Setter Property="Cursor"
-                    Value="Hand"/>
-
             <Setter Property="IsHitTestVisible"
                     Value="True"/>
 
@@ -532,9 +523,6 @@
 
             <Setter Property="BorderThickness"
                     Value="0"/>
-
-            <Setter Property="Cursor"
-                    Value="Hand"/>
 
             <Setter Property="Focusable"
                     Value="True"/>
@@ -684,8 +672,7 @@
                             FontWeight="SemiBold"
                             Style="{StaticResource SettingsCloseButtonStyle}"
                             Click="CloseButton_Click"
-                            Panel.ZIndex="5000"
-                            ToolTip="Close"/>
+                            Panel.ZIndex="5000"/>
 
                     </Grid>
 
@@ -729,43 +716,37 @@
                                     x:Name="ResumeNavButton"
                                     Content="📄   Resume"
                                     Style="{StaticResource NavigationButtonStyle}"
-                                    Click="ResumeNavButton_Click"
-                                    ToolTip="Resume"/>
+                                    Click="ResumeNavButton_Click"/>
 
                                 <Button
                                     x:Name="GeneralNavButton"
                                     Content="⚙   General"
                                     Style="{StaticResource NavigationButtonStyle}"
-                                    Click="GeneralNavButton_Click"
-                                    ToolTip="General"/>
+                                    Click="GeneralNavButton_Click"/>
 
                                 <Button
                                     x:Name="AiNavButton"
                                     Content="🤖   AI"
                                     Style="{StaticResource NavigationButtonStyle}"
-                                    Click="AiNavButton_Click"
-                                    ToolTip="AI"/>
+                                    Click="AiNavButton_Click"/>
 
                                 <Button
                                     x:Name="VoiceNavButton"
                                     Content="🎤   Voice"
                                     Style="{StaticResource NavigationButtonStyle}"
-                                    Click="VoiceNavButton_Click"
-                                    ToolTip="Voice"/>
+                                    Click="VoiceNavButton_Click"/>
 
                                 <Button
                                     x:Name="HotkeysNavButton"
                                     Content="⌨   Hotkeys"
                                     Style="{StaticResource NavigationButtonStyle}"
-                                    Click="HotkeysNavButton_Click"
-                                    ToolTip="Hotkeys"/>
+                                    Click="HotkeysNavButton_Click"/>
 
                                 <Button
                                     x:Name="AppearanceNavButton"
                                     Content="🎨   Appearance"
                                     Style="{StaticResource NavigationButtonStyle}"
-                                    Click="AppearanceNavButton_Click"
-                                    ToolTip="Appearance"/>
+                                    Click="AppearanceNavButton_Click"/>
 
                             </StackPanel>
 

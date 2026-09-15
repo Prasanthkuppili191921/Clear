@@ -12,15 +12,20 @@ namespace AiInterviewAssistant
         // FIELDS
         // =========================================================
 
-        private readonly object _sync = new object();
+        private readonly object _sync =
+            new object();
 
-        private readonly string _sessionFilePath;
+        private string _sessionFilePath;
+
         private readonly string _questionTemplate;
+
+        private readonly string _interviewSessionsFolder;
 
         // Complete HTML is maintained in memory during the session.
         private string _sessionHtml;
 
         private bool _sessionEnded;
+
         private int _questionNumber;
 
 
@@ -145,103 +150,39 @@ namespace AiInterviewAssistant
 
 
                 // -------------------------------------------------
-                // InterviewSessions root
+                // Store InterviewSessions path only.
+                //
+                // IMPORTANT:
+                //
+                // DO NOT create the folder here.
                 // -------------------------------------------------
 
-                string interviewSessionsFolder =
+                _interviewSessionsFolder =
                     Path.Combine(
                         mainFolder,
                         "InterviewSessions");
 
 
                 // -------------------------------------------------
-                // Date folder
+                // Session file does NOT exist yet.
                 //
-                // Example:
-                //
-                // 14-09-2026
+                // It will be created only when the first valid
+                // AI response is logged.
                 // -------------------------------------------------
-
-                string dateFolder =
-                    DateTime.Now.ToString("dd-MM-yyyy");
-
-
-                string sessionFolder =
-                    Path.Combine(
-                        interviewSessionsFolder,
-                        dateFolder);
-
-
-                Directory.CreateDirectory(
-                    sessionFolder);
-
-
-                // -------------------------------------------------
-                // Session file name
-                //
-                // Example:
-                //
-                // Interview_14-09-2026_21-13.html
-                // -------------------------------------------------
-
-                string timestamp =
-                    DateTime.Now.ToString(
-                        "dd-MM-yyyy_HH-mm");
-
-
-                string sessionFilePath =
-                    Path.Combine(
-                        sessionFolder,
-                        $"Interview_{timestamp}.html");
-
-
-                // -------------------------------------------------
-                // Prevent overwrite
-                //
-                // Same minute:
-                //
-                // Interview_14-09-2026_21-13.html
-                // Interview_14-09-2026_21-13_01.html
-                // Interview_14-09-2026_21-13_02.html
-                // -------------------------------------------------
-
-                int suffix = 1;
-
-                while (File.Exists(sessionFilePath))
-                {
-                    sessionFilePath =
-                        Path.Combine(
-                            sessionFolder,
-                            $"Interview_{timestamp}_{suffix:00}.html");
-
-                    suffix++;
-                }
-
 
                 _sessionFilePath =
-                    sessionFilePath;
+                    string.Empty;
 
 
                 // -------------------------------------------------
-                // Session start time
+                // Prepare initial HTML in memory.
                 //
-                // Only HH:mm
+                // No disk write happens here.
                 // -------------------------------------------------
 
                 string startTime =
                     DateTime.Now.ToString("HH:mm");
 
-
-                // -------------------------------------------------
-                // Build initial HTML
-                //
-                // Keep:
-                //
-                // {{QA_CONTENT}}
-                // {{END_TIME}}
-                //
-                // in memory until required.
-                // -------------------------------------------------
 
                 _sessionHtml =
                     sessionTemplate
@@ -253,15 +194,9 @@ namespace AiInterviewAssistant
                             startTime);
 
 
-                // -------------------------------------------------
-                // Create initial session file
-                // -------------------------------------------------
-
-                SaveSessionFile();
-
-
                 Debug.WriteLine(
-                    $"Interview session started: {_sessionFilePath}");
+                    "Interview session logger initialized. " +
+                    "No report file created yet.");
             }
             catch (Exception ex)
             {
@@ -272,9 +207,17 @@ namespace AiInterviewAssistant
                 Debug.WriteLine(
                     $"InterviewSessionLogger initialization failed: {ex}");
 
-                _sessionFilePath = string.Empty;
-                _questionTemplate = string.Empty;
-                _sessionHtml = string.Empty;
+                _sessionFilePath =
+                    string.Empty;
+
+                _questionTemplate =
+                    string.Empty;
+
+                _interviewSessionsFolder =
+                    string.Empty;
+
+                _sessionHtml =
+                    string.Empty;
             }
         }
 
@@ -298,14 +241,6 @@ namespace AiInterviewAssistant
                 return;
 
 
-            // -----------------------------------------------------
-            // Logger initialization failed
-            // -----------------------------------------------------
-
-            if (string.IsNullOrWhiteSpace(_sessionFilePath))
-                return;
-
-
             lock (_sync)
             {
                 // -------------------------------------------------
@@ -318,6 +253,31 @@ namespace AiInterviewAssistant
 
                 try
                 {
+                    // -------------------------------------------------
+                    // FIRST AI RESPONSE
+                    //
+                    // Create folder/file only now.
+                    // -------------------------------------------------
+
+                    if (string.IsNullOrWhiteSpace(
+                        _sessionFilePath))
+                    {
+                        CreateSessionFilePath();
+                    }
+
+
+                    // -------------------------------------------------
+                    // If session file could not be initialized,
+                    // do not continue.
+                    // -------------------------------------------------
+
+                    if (string.IsNullOrWhiteSpace(
+                        _sessionFilePath))
+                    {
+                        return;
+                    }
+
+
                     // -------------------------------------------------
                     // Increment question number
                     // -------------------------------------------------
@@ -377,10 +337,10 @@ namespace AiInterviewAssistant
 
 
                     // -------------------------------------------------
-                    // Save complete session.
+                    // Save immediately.
                     //
-                    // File.WriteAllText automatically recreates the
-                    // file if it does not exist.
+                    // This protects the session if the application
+                    // suddenly closes after this response.
                     // -------------------------------------------------
 
                     SaveSessionFile();
@@ -403,17 +363,132 @@ namespace AiInterviewAssistant
 
 
         // =========================================================
+        // CREATE SESSION FILE
+        // =========================================================
+
+        private void CreateSessionFilePath()
+        {
+            // -----------------------------------------------------
+            // Already created
+            // -----------------------------------------------------
+
+            if (!string.IsNullOrWhiteSpace(
+                _sessionFilePath))
+            {
+                return;
+            }
+
+
+            // -----------------------------------------------------
+            // Validate root path
+            // -----------------------------------------------------
+
+            if (string.IsNullOrWhiteSpace(
+                _interviewSessionsFolder))
+            {
+                return;
+            }
+
+
+            // -----------------------------------------------------
+            // Today's date folder
+            //
+            // Example:
+            //
+            // 15-09-2026
+            // -----------------------------------------------------
+
+            string dateFolder =
+                DateTime.Now.ToString(
+                    "dd-MM-yyyy");
+
+
+            string sessionFolder =
+                Path.Combine(
+                    _interviewSessionsFolder,
+                    dateFolder);
+
+
+            // -----------------------------------------------------
+            // Create folder only now.
+            // -----------------------------------------------------
+
+            Directory.CreateDirectory(
+                sessionFolder);
+
+
+            // -----------------------------------------------------
+            // Session file name
+            //
+            // Example:
+            //
+            // Interview_15-09-2026_13-25.html
+            // -----------------------------------------------------
+
+            string timestamp =
+                DateTime.Now.ToString(
+                    "dd-MM-yyyy_HH-mm");
+
+
+            string sessionFilePath =
+                Path.Combine(
+                    sessionFolder,
+                    $"Interview_{timestamp}.html");
+
+
+            // -----------------------------------------------------
+            // Prevent overwrite when multiple sessions start
+            // within the same minute.
+            //
+            // Example:
+            //
+            // Interview_15-09-2026_13-25.html
+            // Interview_15-09-2026_13-25_01.html
+            // Interview_15-09-2026_13-25_02.html
+            // -----------------------------------------------------
+
+            int suffix = 1;
+
+
+            while (File.Exists(
+                sessionFilePath))
+            {
+                sessionFilePath =
+                    Path.Combine(
+                        sessionFolder,
+                        $"Interview_{timestamp}_{suffix:00}.html");
+
+                suffix++;
+            }
+
+
+            _sessionFilePath =
+                sessionFilePath;
+
+
+            Debug.WriteLine(
+                $"Interview session file created: {_sessionFilePath}");
+        }
+
+
+        // =========================================================
         // END SESSION
         // =========================================================
 
         public void EndSession()
         {
             // -----------------------------------------------------
-            // No session file/path
+            // IMPORTANT:
+            //
+            // If no AI response was logged, there is no session
+            // file. Therefore do nothing.
             // -----------------------------------------------------
 
-            if (string.IsNullOrWhiteSpace(_sessionFilePath))
+            if (string.IsNullOrWhiteSpace(
+                _sessionFilePath))
+            {
                 return;
+            }
 
 
             lock (_sync)
@@ -431,6 +506,22 @@ namespace AiInterviewAssistant
 
                 try
                 {
+                    // -------------------------------------------------
+                    // If file was removed externally, do not recreate
+                    // an empty report during application shutdown.
+                    // -------------------------------------------------
+
+                    if (!File.Exists(
+                        _sessionFilePath))
+                    {
+                        Debug.WriteLine(
+                            "Interview session file no longer exists. " +
+                            "Skipping EndSession save.");
+
+                        return;
+                    }
+
+
                     // -------------------------------------------------
                     // Remove remaining QA placeholder.
                     // -------------------------------------------------
@@ -486,16 +577,29 @@ namespace AiInterviewAssistant
 
         private void SaveSessionFile()
         {
-            if (string.IsNullOrWhiteSpace(_sessionFilePath))
+            // -----------------------------------------------------
+            // No session yet
+            // -----------------------------------------------------
+
+            if (string.IsNullOrWhiteSpace(
+                _sessionFilePath))
+            {
                 return;
+            }
 
 
-            if (string.IsNullOrWhiteSpace(_sessionHtml))
+            if (string.IsNullOrWhiteSpace(
+                _sessionHtml))
+            {
                 return;
+            }
 
 
             // -----------------------------------------------------
             // Make sure parent folder exists.
+            //
+            // Normally it already exists because
+            // CreateSessionFilePath() created it.
             // -----------------------------------------------------
 
             string directory =
@@ -503,17 +607,19 @@ namespace AiInterviewAssistant
                     _sessionFilePath);
 
 
-            if (!string.IsNullOrWhiteSpace(directory))
+            if (!string.IsNullOrWhiteSpace(
+                directory))
             {
-                Directory.CreateDirectory(directory);
+                Directory.CreateDirectory(
+                    directory);
             }
 
 
             // -----------------------------------------------------
-            // Write the complete HTML.
+            // Write complete HTML.
             //
-            // If the file was deleted for any reason, this creates
-            // it again.
+            // Every successful AI response gets immediately
+            // persisted to disk.
             // -----------------------------------------------------
 
             File.WriteAllText(

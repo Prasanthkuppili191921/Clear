@@ -1,3 +1,4 @@
+using AiInterviewAssistant.Reports;
 using NAudio.Wave;
 using Newtonsoft.Json;
 using System;
@@ -300,6 +301,34 @@ namespace AiInterviewAssistant
                 AppMessage.Show(
                     "Voice button error:\n\n" +
                     ex.Message);
+            }
+        }
+
+        // =========================================================
+        // REPORTS BUTTON
+        // =========================================================
+
+
+        private void ReportsButton_Click(
+            object sender,
+            RoutedEventArgs e)
+        {
+            try
+            {
+                InterviewReportsWindow reportsWindow =
+                    new InterviewReportsWindow();
+
+                reportsWindow.Owner = this;
+
+                reportsWindow.WindowStartupLocation =
+                    WindowStartupLocation.CenterOwner;
+
+                reportsWindow.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(
+                    $"Reports window error: {ex}");
             }
         }
     }

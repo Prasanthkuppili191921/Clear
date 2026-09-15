@@ -1,0 +1,33 @@
+﻿/* =========================================================
+   WPF WEBBROWSER - INTERVIEW REPORT SCROLLBAR
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   PAGE SCROLLBAR
+   --------------------------------------------------------- */
+
+html,
+body {
+    scrollbar-face-color: #AEB9C5;
+    scrollbar-track-color: #F4F6F8;
+    scrollbar-arrow-color: #F4F6F8;
+    scrollbar-shadow-color: #AEB9C5;
+    scrollbar-highlight-color: #F4F6F8;
+    scrollbar-3dlight-color: #F4F6F8;
+    scrollbar-darkshadow-color: #AEB9C5;
+}
+
+
+/* ---------------------------------------------------------
+   ANSWER SCROLLBAR
+   --------------------------------------------------------- */
+
+.answer {
+    scrollbar-face-color: #AEB9C5;
+    scrollbar-track-color: #F4F6F8;
+    scrollbar-arrow-color: #F4F6F8;
+    scrollbar-shadow-color: #AEB9C5;
+    scrollbar-highlight-color: #F4F6F8;
+    scrollbar-3dlight-color: #F4F6F8;
+    scrollbar-darkshadow-color: #AEB9C5;
+}

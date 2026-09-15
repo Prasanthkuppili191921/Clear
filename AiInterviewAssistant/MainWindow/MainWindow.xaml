@@ -828,8 +828,7 @@
                                     <Thumb
                                         Width="5"
                                         Background="#66778494"
-                                        BorderThickness="0"
-                                        Cursor="Hand">
+                                        BorderThickness="0">
 
                                         <Thumb.Template>
 
@@ -1065,6 +1064,23 @@
                             Checked="HideToggleButton_Checked"
                             Unchecked="HideToggleButton_Unchecked"
                             Visibility="Collapsed"/>
+
+                        <!-- =================================================
+                         REPORTS BUTTON
+                         ================================================= -->
+
+                        <Button
+                            x:Name="ReportsButton"
+                            Width="38"
+                            Height="38"
+                            Margin="0,0,2,0"
+                            Content="📄"
+                            FontSize="19"
+                            Foreground="{DynamicResource PrimaryTextBrush}"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Style="{StaticResource TransparentIconButton}"
+                        Click="ReportsButton_Click"/>
 
 
                         <!-- =================================================

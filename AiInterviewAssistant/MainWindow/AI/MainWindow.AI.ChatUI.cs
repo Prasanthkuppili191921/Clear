@@ -344,12 +344,6 @@ namespace AiInterviewAssistant
                                 190,
                                 195)),
 
-                    Cursor =
-                        Cursors.Hand,
-
-                    ToolTip =
-                        "Copy answer",
-
                     Visibility =
                         Visibility.Collapsed,
 

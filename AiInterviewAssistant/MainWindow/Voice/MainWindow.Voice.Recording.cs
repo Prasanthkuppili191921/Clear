@@ -302,9 +302,6 @@ namespace AiInterviewAssistant
                                 190,
                                 45,
                                 45));
-
-                    VoiceButton.ToolTip =
-                        "Stop Voice Input";
                 }
 
 

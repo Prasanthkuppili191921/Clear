@@ -282,9 +282,6 @@
             <Setter Property="FontWeight"
                     Value="SemiBold"/>
 
-            <Setter Property="Cursor"
-                    Value="Hand"/>
-
             <Setter Property="Focusable"
                     Value="True"/>
 

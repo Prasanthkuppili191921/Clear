@@ -12,6 +12,14 @@ body {
     background: #f4f6f8;
     font-family: Tahoma, Arial, sans-serif;
     color: #17324d;
+    /* IE / WPF WebBrowser scrollbar */
+    scrollbar-face-color: #aeb9c5;
+    scrollbar-track-color: transparent;
+    scrollbar-arrow-color: transparent;
+    scrollbar-shadow-color: transparent;
+    scrollbar-highlight-color: transparent;
+    scrollbar-3dlight-color: transparent;
+    scrollbar-darkshadow-color: transparent;
 }
 
 
@@ -29,6 +37,42 @@ body {
         background: #f4f6f8;
         z-index: 1001;
         pointer-events: none;
+    }
+
+
+/* =========================================================
+   MODERN BROWSER PAGE SCROLLBAR
+   Chrome / Edge / Firefox
+   ========================================================= */
+
+html {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(120, 135, 150, 0.55) transparent;
+}
+
+
+    /* Chrome / Edge */
+
+    html::-webkit-scrollbar {
+        width: 7px;
+        height: 7px;
+    }
+
+    html::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    html::-webkit-scrollbar-thumb {
+        background: rgba(120, 135, 150, 0.55);
+        border-radius: 10px;
+    }
+
+        html::-webkit-scrollbar-thumb:hover {
+            background: rgba(95, 110, 125, 0.75);
+        }
+
+    html::-webkit-scrollbar-corner {
+        background: transparent;
     }
 
 
@@ -230,6 +274,14 @@ body {
        unless spaces/tabs also need preservation.
     */
     white-space: pre-line;
+    /* IE / WPF WebBrowser scrollbar */
+    scrollbar-face-color: #aeb9c5;
+    scrollbar-track-color: transparent;
+    scrollbar-arrow-color: transparent;
+    scrollbar-shadow-color: transparent;
+    scrollbar-highlight-color: transparent;
+    scrollbar-3dlight-color: transparent;
+    scrollbar-darkshadow-color: transparent;
 }
 
 
@@ -243,27 +295,41 @@ body {
     }
 
 
-    /* =========================================================
+/* =========================================================
    ANSWER SCROLLBAR
+   Chrome / Edge / Firefox
    ========================================================= */
+
+.answer {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(120, 135, 150, 0.55) transparent;
+}
+
+
+    /* Chrome / Edge */
 
     .answer::-webkit-scrollbar {
         width: 5px;
+        height: 5px;
     }
 
     .answer::-webkit-scrollbar-track {
-        background: #eef1f4;
+        background: transparent;
         border-radius: 10px;
     }
 
     .answer::-webkit-scrollbar-thumb {
-        background: #aeb9c5;
+        background: rgba(120, 135, 150, 0.55);
         border-radius: 10px;
     }
 
         .answer::-webkit-scrollbar-thumb:hover {
-            background: #8997a6;
+            background: rgba(95, 110, 125, 0.75);
         }
+
+    .answer::-webkit-scrollbar-corner {
+        background: transparent;
+    }
 
 
 /* =========================================================

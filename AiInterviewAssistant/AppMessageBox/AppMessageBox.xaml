@@ -31,7 +31,6 @@
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="Background" Value="{StaticResource BlueBrush}"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Cursor" Value="Hand"/>
 
             <Setter Property="Template">
 

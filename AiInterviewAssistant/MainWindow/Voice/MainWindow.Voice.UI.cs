@@ -283,8 +283,6 @@ namespace AiInterviewAssistant
                 return;
 
             VoiceButton.Background = null;
-            VoiceButton.ToolTip =
-                "Voice Input";
         }
 
         private void ResetVoiceUI()
@@ -341,10 +339,6 @@ namespace AiInterviewAssistant
                 if (VoiceButton == null)
                     return;
 
-                VoiceButton.ToolTip =
-                    enabled
-                        ? "Stop Voice Input"
-                        : "Start Voice Input";
             }
             catch (Exception ex)
             {
