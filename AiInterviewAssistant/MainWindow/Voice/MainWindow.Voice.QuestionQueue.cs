@@ -868,6 +868,10 @@ namespace AiInterviewAssistant
 
                     thinkingBubble =
                         AddAIMessage("");
+
+                    StartAITypingAnimation(
+                        thinkingBubble,
+                        "");
                 });
 
                 // =================================================
