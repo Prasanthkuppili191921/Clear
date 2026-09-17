@@ -44,10 +44,6 @@ namespace AiInterviewAssistant
                     return;
                 }
 
-                // =====================================================
-                // EXISTING VOICE MODE
-                // =====================================================
-
                 if (isVoiceRecording &&
                     voiceRecorder != null)
                 {
@@ -58,6 +54,16 @@ namespace AiInterviewAssistant
                 if (voiceStopping)
                 {
                     return;
+                }
+
+                // =====================================================
+                // NEW VOICE CYCLE MUST BE PREPARED BEFORE STARTING
+                // THROUGH THIS VOICE TOGGLE PATH AS WELL.
+                // =====================================================
+
+                if (!_chatGPTView)
+                {
+                    PrepareVoiceCycleForNewRecording();
                 }
 
                 StartVoiceRecording();
@@ -638,8 +644,8 @@ namespace AiInterviewAssistant
         // =========================================================
 
         private async void VoiceRecorder_RecordingStopped(
-            object sender,
-            StoppedEventArgs e)
+    object sender,
+    StoppedEventArgs e)
         {
             WasapiLoopbackCapture recorder =
                 voiceRecorder;
@@ -703,27 +709,31 @@ namespace AiInterviewAssistant
                     "========================================");
 
                 // =================================================
-                // IMPORTANT
-                //
-                // Normal Voice mode:
-                //
-                // SileroVadSession has already detected speech
-                // and queued each question.
-                //
-                // Voice OFF must NOT process the complete
-                // recording again.
-                //
-                // Existing queued questions are allowed to finish
-                // through VoiceQuestionQueue.
+                // LOCAL VOICE
                 // =================================================
 
                 if (!_chatGPTView)
                 {
                     // =====================================================
-                    // AUDIO CAPTURE IS NOW REALLY STOPPED.
+                    // FINAL VAD FLUSH
                     //
-                    // Therefore all final DataAvailable events have already
-                    // reached Silero VAD.
+                    // IMPORTANT:
+                    //
+                    // SileroVadSession.Stop() performs the final
+                    // DrainSpeechSegments().
+                    //
+                    // SpeechSegmentReady is raised synchronously
+                    // during Stop().
+                    //
+                    // Therefore:
+                    //
+                    // 1. Stop VAD first
+                    // 2. Let final SpeechSegmentReady callback execute
+                    // 3. Unsubscribe
+                    // 4. Dispose VAD
+                    // 5. Build session WAV
+                    //
+                    // DO NOT unsubscribe before Stop().
                     // =====================================================
 
                     try
@@ -732,10 +742,10 @@ namespace AiInterviewAssistant
                         {
                             if (voiceVadSession != null)
                             {
+                                voiceVadSession.Stop();
+
                                 voiceVadSession.SpeechSegmentReady -=
                                     VoiceVadSession_SpeechSegmentReady;
-
-                                voiceVadSession.Stop();
 
                                 voiceVadSession.Dispose();
 
@@ -755,6 +765,10 @@ namespace AiInterviewAssistant
 
                     Debug.WriteLine(
                         "VOICE STOP: FINALIZING CURRENT VOICE SESSION");
+
+                    // =====================================================
+                    // BUILD SESSION FROM VAD SPEECH SEGMENTS
+                    // =====================================================
 
                     byte[] sessionWav =
                         BuildVoiceSessionWav();

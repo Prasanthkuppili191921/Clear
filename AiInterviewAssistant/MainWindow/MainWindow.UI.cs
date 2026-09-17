@@ -278,6 +278,12 @@ namespace AiInterviewAssistant
                     TextInputPanel.Visibility =
                         Visibility.Collapsed;
 
+                    // IMPORTANT:
+                    // New Voice ON starts a new recording, but the current
+                    // voice cycle must NOT be discarded.
+                    // Cancel only currently running STT / AI if required.
+                    PrepareVoiceCycleForNewRecording();
+
                     StartVoiceRecording();
 
                     return;

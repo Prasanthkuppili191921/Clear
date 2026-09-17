@@ -387,6 +387,7 @@ namespace AiInterviewAssistant
                                 // Allow the detected speech/audio to settle
                                 await Task.Delay(500);
 
+                                PrepareVoiceCycleForNewRecording();
                                 StartVoiceRecording();
 
                                 Debug.WriteLine(

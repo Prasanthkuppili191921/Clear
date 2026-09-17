@@ -4,6 +4,7 @@ using System;
 using System.Diagnostics;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AiInterviewAssistant
@@ -13,7 +14,9 @@ namespace AiInterviewAssistant
         private const string OpenRouterSpeechToTextEndpoint =
             "https://openrouter.ai/api/v1/chat/completions";
 
-        private async Task<string> TranscribeWithOpenRouterAsync(byte[] audioBytes)
+        private async Task<string> TranscribeWithOpenRouterAsync(
+            byte[] audioBytes,
+            CancellationToken cancellationToken)
         {
             if (audioBytes == null || audioBytes.Length == 0)
                 return string.Empty;
@@ -156,9 +159,10 @@ namespace AiInterviewAssistant
                     Stopwatch httpTimer = Stopwatch.StartNew();
 
                     using (HttpResponseMessage response =
-                           await voiceHttpClient.SendAsync(
-                               request,
-                               HttpCompletionOption.ResponseHeadersRead))
+                          await voiceHttpClient.SendAsync(
+                                request,
+                                HttpCompletionOption.ResponseHeadersRead,
+                                cancellationToken))
                     {
                         httpTimer.Stop();
 

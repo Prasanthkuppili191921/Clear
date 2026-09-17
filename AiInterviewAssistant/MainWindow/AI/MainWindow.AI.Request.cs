@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
+using System.IO;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
@@ -21,7 +22,8 @@ namespace AiInterviewAssistant
     string question,
     Border thinkingBubble,
     CancellationToken cancellationToken,
-    string answerMode)
+    string answerMode,
+    bool voiceCycleRequest = false)
         {
             // =====================================================
             // PREVENT DUPLICATE AI REQUESTS
@@ -38,12 +40,13 @@ namespace AiInterviewAssistant
                 return;
             }
 
-
             DateTime requestStart = DateTime.Now;
             DateTime? headersTime = null;
             DateTime? streamTime = null;
             bool firstTokenReceived = false;
 
+            object voiceUserHistoryEntry = null;
+            bool voiceHistoryCommitted = false;
 
             try
             {
@@ -54,7 +57,6 @@ namespace AiInterviewAssistant
                     "AI TIMING: REQUEST START = " +
                     requestStart.ToString("HH:mm:ss.fff"));
 
-
                 // =====================================================
                 // LOAD SETTINGS
                 // =====================================================
@@ -63,14 +65,12 @@ namespace AiInterviewAssistant
                     SettingsService.Load()
                     ?? new AppSettings();
 
-
                 // =====================================================
                 // API KEY
                 // =====================================================
 
                 string apiKey =
                     settings.OpenRouterApiKey;
-
 
                 if (string.IsNullOrWhiteSpace(apiKey))
                 {
@@ -81,9 +81,7 @@ namespace AiInterviewAssistant
                     return;
                 }
 
-
                 apiKey = apiKey.Trim();
-
 
                 // =====================================================
                 // MODEL
@@ -92,14 +90,12 @@ namespace AiInterviewAssistant
                 string routerModel =
                     settings.AnswerModel;
 
-
                 if (string.IsNullOrWhiteSpace(routerModel))
                 {
                     routerModel =
                         ConfigurationManager
                             .AppSettings["OpenRouterModel"];
                 }
-
 
                 if (string.IsNullOrWhiteSpace(routerModel))
                 {
@@ -110,15 +106,12 @@ namespace AiInterviewAssistant
                     return;
                 }
 
-
                 routerModel =
                     routerModel.Trim();
-
 
                 Debug.WriteLine(
                     "AI TIMING: MODEL = " +
                     routerModel);
-
 
                 // =====================================================
                 // TEMPERATURE
@@ -127,38 +120,29 @@ namespace AiInterviewAssistant
                 double temperature =
                     settings.Temperature;
 
-
                 if (temperature < 0)
                     temperature = 0;
-
 
                 if (temperature > 2)
                     temperature = 2;
 
-
                 // =====================================================
                 // RESPONSE LENGTH
-                //
-                // Smart ON:
-                // DO NOT load/use Response Length.
-                //
-                // Smart OFF:
-                // Existing Response Length behavior remains.
                 // =====================================================
 
                 string responseLength = null;
-
 
                 if (!_smartAnswerEnabled)
                 {
                     responseLength =
                         settings.ResponseLength;
 
-
-                    if (string.IsNullOrWhiteSpace(responseLength))
+                    if (string.IsNullOrWhiteSpace(
+                        responseLength))
+                    {
                         responseLength = "Medium";
+                    }
                 }
-
 
                 // =====================================================
                 // LANGUAGE
@@ -167,27 +151,14 @@ namespace AiInterviewAssistant
                 string languageInstruction =
                     "Answer in natural professional English.";
 
-
                 // =====================================================
                 // ANSWER MODE / SMART ANSWER
                 // =====================================================
 
                 string finalQuestion;
 
-
                 if (_smartAnswerEnabled)
                 {
-                    // -------------------------------------------------
-                    // SMART ANSWER ON
-                    //
-                    // IMPORTANT:
-                    // Do NOT send Answer Mode.
-                    // Do NOT send Response Length.
-                    //
-                    // SmartAnswerService is added through
-                    // BuildMessages().
-                    // -------------------------------------------------
-
                     finalQuestion =
                         languageInstruction +
                         "\n\n" +
@@ -196,17 +167,10 @@ namespace AiInterviewAssistant
                 }
                 else
                 {
-                    // -------------------------------------------------
-                    // SMART ANSWER OFF
-                    //
-                    // Existing behavior remains unchanged.
-                    // -------------------------------------------------
-
                     string modeInstruction =
                         BuildAnswerModeInstruction(
                             answerMode,
                             responseLength);
-
 
                     finalQuestion =
                         modeInstruction +
@@ -216,7 +180,6 @@ namespace AiInterviewAssistant
                         "Interview question:\n" +
                         question;
                 }
-
 
                 // =====================================================
                 // ONLINE TEST MODE
@@ -243,18 +206,18 @@ namespace AiInterviewAssistant
                         question;
                 }
 
-
                 // =====================================================
                 // ADD USER MESSAGE TO HISTORY
                 // =====================================================
 
-                conversationHistory.Add(
-                    new
-                    {
-                        role = "user",
-                        content = finalQuestion
-                    });
+                voiceUserHistoryEntry = new
+                {
+                    role = "user",
+                    content = finalQuestion
+                };
 
+                conversationHistory.Add(
+                    voiceUserHistoryEntry);
 
                 // =====================================================
                 // TIMEOUT
@@ -263,10 +226,8 @@ namespace AiInterviewAssistant
                 int timeoutSeconds =
                     settings.AiTimeout;
 
-
                 if (timeoutSeconds <= 0)
                     timeoutSeconds = 90;
-
 
                 // =====================================================
                 // REQUEST OBJECT
@@ -288,15 +249,12 @@ namespace AiInterviewAssistant
                         stream = true
                     };
 
-
                 string json =
                     JsonConvert.SerializeObject(request);
-
 
                 Debug.WriteLine(
                     "AI TIMING: REQUEST JSON READY = " +
                     DateTime.Now.ToString("HH:mm:ss.fff"));
-
 
                 // =====================================================
                 // DEBUG
@@ -328,13 +286,16 @@ namespace AiInterviewAssistant
                         answerMode);
 
                     Debug.WriteLine(
+                        "Voice Cycle Request: " +
+                        voiceCycleRequest);
+
+                    Debug.WriteLine(
                         "Question: " +
                         question);
 
                     Debug.WriteLine(
                         "================================");
                 }
-
 
                 // =====================================================
                 // HTTP REQUEST
@@ -351,7 +312,6 @@ namespace AiInterviewAssistant
                             Encoding.UTF8,
                             "application/json");
 
-
                     // =================================================
                     // AUTHORIZATION
                     // =================================================
@@ -362,7 +322,6 @@ namespace AiInterviewAssistant
                                 "Bearer",
                                 apiKey);
 
-
                     // =================================================
                     // OPENROUTER HEADERS
                     // =================================================
@@ -371,16 +330,13 @@ namespace AiInterviewAssistant
                         "HTTP-Referer",
                         "http://localhost");
 
-
                     requestMessage.Headers.TryAddWithoutValidation(
                         "X-Title",
                         "AI Interview Assistant");
 
-
                     Debug.WriteLine(
                         "AI TIMING: BEFORE SEND = " +
                         DateTime.Now.ToString("HH:mm:ss.fff"));
-
 
                     // =================================================
                     // SEND
@@ -393,13 +349,26 @@ namespace AiInterviewAssistant
                                cancellationToken)
                            .ConfigureAwait(false))
                     {
-                        headersTime = DateTime.Now;
+                        // =================================================
+                        // IMPORTANT:
+                        // SendAsync can return immediately around the same
+                        // time cancellation is requested.
+                        // Do not continue with the response if cancelled.
+                        // =================================================
 
+                        if (cancellationToken.IsCancellationRequested)
+                        {
+                            Debug.WriteLine(
+                                "AI REQUEST: Cancelled after SendAsync.");
+
+                            return;
+                        }
+
+                        headersTime = DateTime.Now;
 
                         Debug.WriteLine(
                             "AI TIMING: RESPONSE HEADERS = " +
                             headersTime.Value.ToString("HH:mm:ss.fff"));
-
 
                         Debug.WriteLine(
                             "AI TIMING: HEADERS DELAY = " +
@@ -407,11 +376,9 @@ namespace AiInterviewAssistant
                                 .TotalSeconds.ToString("F2") +
                             " sec");
 
-
                         Debug.WriteLine(
                             "AI DEBUG 2: SendAsync completed | Status = " +
                             (int)response.StatusCode);
-
 
                         // =================================================
                         // 401
@@ -424,21 +391,20 @@ namespace AiInterviewAssistant
                                     .ReadAsStringAsync()
                                     .ConfigureAwait(false);
 
+                            if (cancellationToken.IsCancellationRequested)
+                                return;
 
                             Debug.WriteLine(
                                 "AI 401 ERROR: " +
                                 error);
-
 
                             await UpdateAIMessageOnUI(
                                 thinkingBubble,
                                 "OpenRouter authentication failed:\n\n" +
                                 error);
 
-
                             return;
                         }
-
 
                         // =================================================
                         // 429
@@ -451,16 +417,16 @@ namespace AiInterviewAssistant
                                     .ReadAsStringAsync()
                                     .ConfigureAwait(false);
 
+                            if (cancellationToken.IsCancellationRequested)
+                                return;
 
                             await UpdateAIMessageOnUI(
                                 thinkingBubble,
                                 "AI rate limit reached.\n\n" +
                                 error);
 
-
                             return;
                         }
-
 
                         // =================================================
                         // 400
@@ -473,16 +439,16 @@ namespace AiInterviewAssistant
                                     .ReadAsStringAsync()
                                     .ConfigureAwait(false);
 
+                            if (cancellationToken.IsCancellationRequested)
+                                return;
 
                             await UpdateAIMessageOnUI(
                                 thinkingBubble,
                                 "AI request error:\n\n" +
                                 error);
 
-
                             return;
                         }
-
 
                         // =================================================
                         // OTHER HTTP ERROR
@@ -495,6 +461,8 @@ namespace AiInterviewAssistant
                                     .ReadAsStringAsync()
                                     .ConfigureAwait(false);
 
+                            if (cancellationToken.IsCancellationRequested)
+                                return;
 
                             await UpdateAIMessageOnUI(
                                 thinkingBubble,
@@ -503,10 +471,8 @@ namespace AiInterviewAssistant
                                 "):\n\n" +
                                 error);
 
-
                             return;
                         }
-
 
                         // =================================================
                         // STREAM
@@ -522,13 +488,19 @@ namespace AiInterviewAssistant
                                    stream,
                                    Encoding.UTF8))
                         {
-                            streamTime = DateTime.Now;
+                            if (cancellationToken.IsCancellationRequested)
+                            {
+                                Debug.WriteLine(
+                                    "AI STREAM: Cancelled before stream processing.");
 
+                                return;
+                            }
+
+                            streamTime = DateTime.Now;
 
                             Debug.WriteLine(
                                 "AI TIMING: STREAM OPENED = " +
                                 streamTime.Value.ToString("HH:mm:ss.fff"));
-
 
                             Debug.WriteLine(
                                 "AI TIMING: STREAM OPEN DELAY = " +
@@ -536,9 +508,7 @@ namespace AiInterviewAssistant
                                     .TotalSeconds.ToString("F2") +
                                 " sec");
 
-
                             string fullAnswer = "";
-
 
                             // =================================================
                             // READ SSE
@@ -546,31 +516,52 @@ namespace AiInterviewAssistant
 
                             while (true)
                             {
-                                if (cancellationToken
-                                    .IsCancellationRequested)
+                                // =================================================
+                                // CANCELLATION CHECK
+                                // =================================================
+
+                                if (cancellationToken.IsCancellationRequested)
                                 {
                                     Debug.WriteLine(
                                         "AI STREAM: Cancellation requested.");
 
-
-                                    await UpdateAIMessageOnUI(
-                                        thinkingBubble,
-                                        "Generation stopped.");
-
+                                    // Voice-cycle cancellation is silent.
+                                    // Manual Stop keeps existing behavior.
+                                    if (!voiceCycleRequest)
+                                    {
+                                        await UpdateAIMessageOnUI(
+                                            thinkingBubble,
+                                            "Generation stopped.");
+                                    }
 
                                     return;
                                 }
 
-
                                 string line;
-
 
                                 try
                                 {
                                     line =
-                                        await reader
-                                            .ReadLineAsync()
+                                        await ReadLineWithCancellationAsync(
+                                            reader,
+                                            cancellationToken)
                                             .ConfigureAwait(false);
+                                }
+                                catch (OperationCanceledException)
+                                {
+                                    Debug.WriteLine(
+                                        "AI STREAM: Read cancelled.");
+
+                                    // Voice-cycle cancellation is silent.
+                                    // Manual Stop keeps existing behavior.
+                                    if (!voiceCycleRequest)
+                                    {
+                                        await UpdateAIMessageOnUI(
+                                            thinkingBubble,
+                                            "Generation stopped.");
+                                    }
+
+                                    return;
                                 }
                                 catch (System.IO.IOException ioEx)
                                 {
@@ -578,18 +569,26 @@ namespace AiInterviewAssistant
                                         "AI STREAM IO ERROR: " +
                                         ioEx.ToString());
 
+                                    // IMPORTANT:
+                                    // IO exception caused by cancellation
+                                    // must not be treated as a real error.
+                                    if (cancellationToken.IsCancellationRequested)
+                                    {
+                                        Debug.WriteLine(
+                                            "AI STREAM: IO error occurred after cancellation.");
+
+                                        return;
+                                    }
 
                                     if (!string.IsNullOrWhiteSpace(
-                                            fullAnswer))
+                                        fullAnswer))
                                     {
                                         break;
                                     }
 
-
                                     await UpdateAIMessageOnUI(
                                         thinkingBubble,
                                         "AI connection was interrupted.");
-
 
                                     return;
                                 }
@@ -599,22 +598,44 @@ namespace AiInterviewAssistant
                                         "AI STREAM WEB ERROR: " +
                                         webEx.ToString());
 
+                                    // IMPORTANT:
+                                    // Web exception caused by cancellation
+                                    // must not be treated as a real error.
+                                    if (cancellationToken.IsCancellationRequested)
+                                    {
+                                        Debug.WriteLine(
+                                            "AI STREAM: Web error occurred after cancellation.");
+
+                                        return;
+                                    }
 
                                     if (!string.IsNullOrWhiteSpace(
-                                            fullAnswer))
+                                        fullAnswer))
                                     {
                                         break;
                                     }
-
 
                                     await UpdateAIMessageOnUI(
                                         thinkingBubble,
                                         "AI connection was interrupted.");
 
-
                                     return;
                                 }
 
+                                // =================================================
+                                // IMPORTANT:
+                                // Cancellation may happen immediately after
+                                // ReadLine returns.
+                                // Never process that line.
+                                // =================================================
+
+                                if (cancellationToken.IsCancellationRequested)
+                                {
+                                    Debug.WriteLine(
+                                        "AI STREAM: Line ignored after cancellation.");
+
+                                    return;
+                                }
 
                                 // =================================================
                                 // END STREAM
@@ -625,10 +646,8 @@ namespace AiInterviewAssistant
                                     Debug.WriteLine(
                                         "AI STREAM: End of stream.");
 
-
                                     break;
                                 }
-
 
                                 // =================================================
                                 // IGNORE EMPTY
@@ -637,22 +656,19 @@ namespace AiInterviewAssistant
                                 if (string.IsNullOrWhiteSpace(line))
                                     continue;
 
-
                                 // =================================================
                                 // ONLY SSE DATA
                                 // =================================================
 
                                 if (!line.StartsWith(
-                                        "data:",
-                                        StringComparison.OrdinalIgnoreCase))
+                                    "data:",
+                                    StringComparison.OrdinalIgnoreCase))
                                 {
                                     continue;
                                 }
 
-
                                 string data =
                                     line.Substring(5).Trim();
-
 
                                 // =================================================
                                 // DONE
@@ -663,10 +679,8 @@ namespace AiInterviewAssistant
                                     Debug.WriteLine(
                                         "AI STREAM: [DONE]");
 
-
                                     break;
                                 }
-
 
                                 // =================================================
                                 // JSON
@@ -678,9 +692,7 @@ namespace AiInterviewAssistant
                                         JsonConvert
                                             .DeserializeObject(data);
 
-
                                     string token = "";
-
 
                                     if (result != null &&
                                         result.choices != null &&
@@ -688,7 +700,6 @@ namespace AiInterviewAssistant
                                     {
                                         dynamic choice =
                                             result.choices[0];
-
 
                                         // -----------------------------------------
                                         // DELTA CONTENT
@@ -708,7 +719,6 @@ namespace AiInterviewAssistant
                                         catch
                                         {
                                         }
-
 
                                         // -----------------------------------------
                                         // MESSAGE CONTENT
@@ -733,13 +743,24 @@ namespace AiInterviewAssistant
                                         }
                                     }
 
-
                                     // =================================================
                                     // TOKEN
                                     // =================================================
 
                                     if (!string.IsNullOrEmpty(token))
                                     {
+                                        // ---------------------------------------------
+                                        // CRITICAL CANCELLATION CHECK
+                                        // ---------------------------------------------
+
+                                        if (cancellationToken.IsCancellationRequested)
+                                        {
+                                            Debug.WriteLine(
+                                                "AI STREAM: Token ignored after cancellation.");
+
+                                            return;
+                                        }
+
                                         // ---------------------------------------------
                                         // FIRST TOKEN TIMING
                                         // ---------------------------------------------
@@ -748,16 +769,13 @@ namespace AiInterviewAssistant
                                         {
                                             firstTokenReceived = true;
 
-
                                             DateTime firstTokenTime =
                                                 DateTime.Now;
-
 
                                             Debug.WriteLine(
                                                 "AI TIMING: FIRST TOKEN = " +
                                                 firstTokenTime
                                                     .ToString("HH:mm:ss.fff"));
-
 
                                             Debug.WriteLine(
                                                 "AI TIMING: FIRST TOKEN DELAY = " +
@@ -765,7 +783,6 @@ namespace AiInterviewAssistant
                                                     .TotalSeconds
                                                     .ToString("F2") +
                                                 " sec");
-
 
                                             if (headersTime.HasValue)
                                             {
@@ -779,22 +796,40 @@ namespace AiInterviewAssistant
                                             }
                                         }
 
+                                        // ---------------------------------------------
+                                        // APPEND TOKEN
+                                        // ---------------------------------------------
 
                                         fullAnswer +=
                                             token;
 
-
                                         latestAiText =
                                             fullAnswer;
 
+                                        // ---------------------------------------------
+                                        // UI UPDATE
+                                        // ---------------------------------------------
 
                                         string targetText =
                                             fullAnswer;
 
-
                                         Dispatcher.BeginInvoke(
                                             new Action(() =>
                                             {
+                                                // IMPORTANT:
+                                                // This callback may have been queued
+                                                // before Voice ON cancellation.
+                                                //
+                                                // Never display an old token after
+                                                // the voice-cycle generation is cancelled.
+                                                if (cancellationToken.IsCancellationRequested)
+                                                {
+                                                    Debug.WriteLine(
+                                                        "AI STREAM: Queued UI update ignored after cancellation.");
+
+                                                    return;
+                                                }
+
                                                 aiTargetText =
                                                     targetText;
                                             }));
@@ -814,39 +849,107 @@ namespace AiInterviewAssistant
                                 }
                             }
 
+                            // =====================================================
+                            // CRITICAL FINAL CANCELLATION CHECK
+                            //
+                            // Voice ON may cancel the request after [DONE] or
+                            // after the final token but before this section.
+                            //
+                            // Do NOT commit the answer in that case.
+                            // =====================================================
 
-                            // =================================================
+                            if (cancellationToken.IsCancellationRequested)
+                            {
+                                Debug.WriteLine(
+                                    "AI STREAM: Cancellation requested before final response commit.");
+
+                                return;
+                            }
+
+                            // =====================================================
                             // FINAL ANSWER
-                            // =================================================
+                            // =====================================================
 
                             if (!string.IsNullOrWhiteSpace(
-                                    fullAnswer))
+                                fullAnswer))
                             {
+                                // -------------------------------------------------
+                                // DOUBLE CHECK before committing anything.
+                                // -------------------------------------------------
+
+                                if (cancellationToken.IsCancellationRequested)
+                                {
+                                    Debug.WriteLine(
+                                        "AI STREAM: Final answer commit cancelled.");
+
+                                    return;
+                                }
+
                                 string finalAnswer =
                                     fullAnswer.Trim();
 
                                 latestAiText =
                                     finalAnswer;
 
-                                // =====================================================
+                                // =================================================
                                 // INTERVIEW SESSION LOG
-                                // =====================================================
+                                // =================================================
+
+                                if (cancellationToken.IsCancellationRequested)
+                                {
+                                    Debug.WriteLine(
+                                        "AI STREAM: Cancelled before session logging.");
+
+                                    return;
+                                }
 
                                 _interviewSessionLogger?.LogQuestionAnswer(
                                     question,
                                     finalAnswer);
 
+                                // =================================================
+                                // FINAL UI UPDATE
+                                // =================================================
+
+                                if (cancellationToken.IsCancellationRequested)
+                                {
+                                    Debug.WriteLine(
+                                        "AI STREAM: Cancelled before final UI update.");
+
+                                    return;
+                                }
+
                                 await Dispatcher.InvokeAsync(
                                     () =>
                                     {
+                                        if (cancellationToken.IsCancellationRequested)
+                                        {
+                                            Debug.WriteLine(
+                                                "AI STREAM: Final UI callback ignored after cancellation.");
+
+                                            return;
+                                        }
+
                                         StopAITypingAnimation(
                                             thinkingBubble,
                                             finalAnswer);
                                     });
 
-                                // =====================================================
+                                // =================================================
+                                // FINAL CANCELLATION CHECK
+                                // =================================================
+
+                                if (cancellationToken.IsCancellationRequested)
+                                {
+                                    Debug.WriteLine(
+                                        "AI STREAM: Cancelled before history commit.");
+
+                                    return;
+                                }
+
+                                // =================================================
                                 // DEBUG - AI FINAL RESPONSE
-                                // =====================================================
+                                // =================================================
 
                                 Debug.WriteLine(
                                     "=================================================");
@@ -876,6 +979,14 @@ namespace AiInterviewAssistant
                                 // ADD ASSISTANT RESPONSE TO HISTORY
                                 // =============================================
 
+                                if (cancellationToken.IsCancellationRequested)
+                                {
+                                    Debug.WriteLine(
+                                        "AI STREAM: Cancelled before assistant history commit.");
+
+                                    return;
+                                }
+
                                 conversationHistory.Add(
                                     new
                                     {
@@ -883,6 +994,9 @@ namespace AiInterviewAssistant
                                         content = finalAnswer
                                     });
 
+                                // Voice-cycle user history entry is now
+                                // permanently committed.
+                                voiceHistoryCommitted = true;
 
                                 Debug.WriteLine(
                                     "AI TIMING: TOTAL RESPONSE TIME = " +
@@ -891,39 +1005,39 @@ namespace AiInterviewAssistant
                                         .ToString("F2") +
                                     " sec");
 
-
                                 Debug.WriteLine(
                                     "AI STREAM: SUCCESS");
-
 
                                 Debug.WriteLine(
                                     "=================================================");
 
-
                                 return;
                             }
-
 
                             // =================================================
                             // NO ANSWER
                             // =================================================
 
-                            if (cancellationToken
-                                .IsCancellationRequested)
+                            if (cancellationToken.IsCancellationRequested)
                             {
-                                await UpdateAIMessageOnUI(
-                                    thinkingBubble,
-                                    "Generation stopped.");
+                                Debug.WriteLine(
+                                    "AI STREAM: Cancelled with no answer.");
 
+                                // Do not show "Generation stopped."
+                                // for voice-cycle cancellation.
+                                if (!voiceCycleRequest)
+                                {
+                                    await UpdateAIMessageOnUI(
+                                        thinkingBubble,
+                                        "Generation stopped.");
+                                }
 
                                 return;
                             }
 
-
                             await UpdateAIMessageOnUI(
                                 thinkingBubble,
                                 "AI connection was interrupted.");
-
 
                             return;
                         }
@@ -935,12 +1049,16 @@ namespace AiInterviewAssistant
                 Debug.WriteLine(
                     "AI REQUEST: OperationCanceledException");
 
-
                 if (cancellationToken.IsCancellationRequested)
                 {
-                    await UpdateAIMessageOnUI(
-                        thinkingBubble,
-                        "Generation stopped.");
+                    // Voice cycle cancellation is intentionally silent.
+                    // The retained question will be used by the next cycle.
+                    if (!voiceCycleRequest)
+                    {
+                        await UpdateAIMessageOnUI(
+                            thinkingBubble,
+                            "Generation stopped.");
+                    }
                 }
                 else
                 {
@@ -951,15 +1069,31 @@ namespace AiInterviewAssistant
             }
             catch (Exception ex)
             {
+                // =====================================================
+                // IMPORTANT:
+                // A cancellation can surface as another exception type
+                // from HttpClient/stream disposal.
+                // Never show an error for an already-cancelled request.
+                // =====================================================
+
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    Debug.WriteLine(
+                        "AI FINAL ERROR IGNORED BECAUSE REQUEST WAS CANCELLED.");
+
+                    Debug.WriteLine(
+                        ex.ToString());
+
+                    return;
+                }
+
                 Debug.WriteLine(
                     "AI FINAL ERROR: " +
                     ex.ToString());
 
-
                 string errorMessage =
                     "AI request failed:\n\n" +
                     ex.Message;
-
 
                 if (ex.InnerException != null)
                 {
@@ -968,7 +1102,6 @@ namespace AiInterviewAssistant
                         ex.InnerException.Message;
                 }
 
-
                 await UpdateAIMessageOnUI(
                     thinkingBubble,
                     errorMessage);
@@ -976,13 +1109,27 @@ namespace AiInterviewAssistant
             finally
             {
                 // =====================================================
+                // VOICE CYCLE HISTORY CLEANUP
+                // =====================================================
+
+                if (voiceCycleRequest &&
+                    !voiceHistoryCommitted &&
+                    voiceUserHistoryEntry != null)
+                {
+                    conversationHistory.Remove(
+                        voiceUserHistoryEntry);
+
+                    Debug.WriteLine(
+                        "VOICE CYCLE: Cancelled/failed AI history entry removed.");
+                }
+
+                // =====================================================
                 // RELEASE REQUEST LOCK
                 // =====================================================
 
                 System.Threading.Interlocked.Exchange(
                     ref _aiRequestInProgress,
                     0);
-
 
                 // =====================================================
                 // RETURN FOCUS TO QUESTION TEXTBOX
@@ -994,34 +1141,69 @@ namespace AiInterviewAssistant
                         if (QuestionTextBox == null)
                             return;
 
-
                         QuestionTextBox.IsEnabled =
                             true;
 
-
                         QuestionTextBox.Focus();
-
 
                         QuestionTextBox.CaretIndex =
                             QuestionTextBox.Text?.Length ?? 0;
                     });
-
 
                 Debug.WriteLine(
                     "AI TIMING: REQUEST END = " +
                     DateTime.Now.ToString("HH:mm:ss.fff"));
             }
         }
+
+        private async Task<string> ReadLineWithCancellationAsync(
+            StreamReader reader,
+            CancellationToken cancellationToken)
+        {
+            Task<string> readTask = reader.ReadLineAsync();
+
+            if (!cancellationToken.CanBeCanceled)
+            {
+                return await readTask.ConfigureAwait(false);
+            }
+
+            Task cancellationTask = Task.Delay(
+                Timeout.Infinite,
+                cancellationToken);
+
+            Task completedTask = await Task.WhenAny(
+                readTask,
+                cancellationTask).ConfigureAwait(false);
+
+            if (completedTask != readTask)
+            {
+                // Make sure any exception from the underlying read
+                // is observed after the stream gets disposed.
+                _ = readTask.ContinueWith(
+                    t =>
+                    {
+                        var ignored = t.Exception;
+                    },
+                    CancellationToken.None,
+                    TaskContinuationOptions.OnlyOnFaulted |
+                    TaskContinuationOptions.ExecuteSynchronously,
+                    TaskScheduler.Default);
+
+                throw new OperationCanceledException(
+                    cancellationToken);
+            }
+
+            return await readTask.ConfigureAwait(false);
+        }
+
         // =========================================================
         // CLEAR CONVERSATION
         // =========================================================
-
 
         private void ClearConversation()
         {
             if (aiTypingTimer != null)
                 aiTypingTimer.Stop();
-
 
             aiTypingTimer = null;
 
@@ -1033,17 +1215,15 @@ namespace AiInterviewAssistant
 
             latestAiText = "";
 
-
             conversationHistory.Clear();
-
 
             AppSettings settings =
                 SettingsService.Load()
                 ?? new AppSettings();
 
+            string languageInstruction =
+                "Answer in natural professional English.";
 
-            string languageInstruction = "Answer in natural professional English.";
-           
             conversationHistory.Add(
                 new
                 {
@@ -1055,12 +1235,10 @@ namespace AiInterviewAssistant
                             languageInstruction)
                 });
 
-
             if (ChatPanel != null)
             {
                 ChatPanel.Children.Clear();
             }
-
 
             if (QuestionTextBox != null)
             {
@@ -1072,7 +1250,6 @@ namespace AiInterviewAssistant
                 QuestionTextBox.Focus();
             }
 
-
             if (SendButton != null)
             {
                 SendButton.IsEnabled =
@@ -1082,22 +1259,18 @@ namespace AiInterviewAssistant
                     Visibility.Visible;
             }
 
-
             if (StopButton != null)
             {
                 StopButton.Visibility =
                     Visibility.Collapsed;
             }
 
-
             isGenerating = false;
         }
-
 
         // =========================================================
         // SEND QUESTION
         // =========================================================
-
 
         private async Task SendQuestion(
             string question = null,
@@ -1129,7 +1302,6 @@ namespace AiInterviewAssistant
                     return;
 
                 question = question.Trim();
-
 
                 // =====================================================
                 // SET GENERATING STATE
@@ -1393,7 +1565,6 @@ namespace AiInterviewAssistant
 
                     isGenerating = false;
                 });
-
             }
         }
     }
