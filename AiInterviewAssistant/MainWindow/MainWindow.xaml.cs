@@ -12,6 +12,7 @@ using System.Windows.Interop;
 using System.Windows.Threading;
 using Tesseract;
 using MessageBox = System.Windows.MessageBox;
+using AiInterviewAssistant.AutoVoice;
 
 namespace AiInterviewAssistant
 {
@@ -135,6 +136,8 @@ namespace AiInterviewAssistant
 
         private InterviewSessionLogger _interviewSessionLogger;
 
+        private readonly AutoVoiceManager _autoVoiceManager;
+
         public bool IsSmartAnswerEnabled
         {
             get
@@ -172,6 +175,27 @@ namespace AiInterviewAssistant
         {
             InitializeComponent();
 
+            _autoVoiceManager =
+                new AutoVoiceManager(
+                    Dispatcher,
+                    () => isVoiceRecording,
+                    () => voiceStopping,
+
+                    // Prepare queue/cycle
+                    () => PrepareVoiceCycleForNewRecording(),
+
+                    // Start current voice cycle
+                    () => StartVoiceCycleFromCurrentCapture(),
+
+                    // Stop current voice cycle only
+                    () => FinalizeVoiceCycleOnly(),
+
+                    // Start continuous Wasapi capture
+                    () => StartContinuousVoiceCapture(),
+
+                    // Stop continuous Wasapi capture
+                    () => StopContinuousVoiceCapture());
+
             // =====================================================
             // INTERVIEW SESSION LOGGER
             // =====================================================
@@ -181,7 +205,7 @@ namespace AiInterviewAssistant
             ChatScrollViewer.PreviewMouseWheel +=
                 ChatScrollViewer_PreviewMouseWheel;
 
-
+           
             // =====================================================
             // PRIVACY MANAGER
             // =====================================================
@@ -305,17 +329,17 @@ namespace AiInterviewAssistant
     object sender,
     RoutedEventArgs e)
         {
-            try
-            {
-                if (_chatGPTView &&
-                    IsSmartAnswerEnabled)
-                {
-                    StartAutoVoiceDetection();
-                }
-            }
-            catch
-            {
-            }
+            //try
+            //{
+            //    if (_chatGPTView &&
+            //        IsSmartAnswerEnabled)
+            //    {
+            //        StartAutoVoiceDetection();
+            //    }
+            //}
+            //catch
+            //{
+            //}
         }
 
         private void MainWindow_Loaded(
@@ -811,8 +835,9 @@ namespace AiInterviewAssistant
                             if (SmartAnswerButton == null)
                                 return;
 
-                            SmartAnswerButton.IsChecked =
-                                !SmartAnswerButton.IsChecked;
+                            //SmartAnswerButton.IsChecked =
+                            //    !SmartAnswerButton.IsChecked;
+                            SmartAnswerButton.IsChecked = false;
                         }
                         catch
                         {
@@ -1637,21 +1662,24 @@ namespace AiInterviewAssistant
         // SMART ANSWER ON
         // =========================================================
 
-        private async void SmartAnswerButton_Checked(
+        private void SmartAnswerButton_Checked(
      object sender,
      RoutedEventArgs e)
         {
             try
             {
-                _smartAnswerEnabled = true;
+                _smartAnswerEnabled = false;
 
-                // Auto Voice Detection only in ChatGPTView
-                if (_chatGPTView)
-                {
-                    await ChatGPTWebViewHost.SetComposerVisibleAsync(true);
+                if (SmartAnswerButton != null)
+                    SmartAnswerButton.IsChecked = false;
 
-                    //StartAutoVoiceDetection();
-                }
+                //// Auto Voice Detection only in ChatGPTView
+                //if (_chatGPTView)
+                //{
+                //    await ChatGPTWebViewHost.SetComposerVisibleAsync(true);
+
+                //    //StartAutoVoiceDetection();
+                //}
             }
             catch
             {
@@ -1663,7 +1691,7 @@ namespace AiInterviewAssistant
         // SMART ANSWER OFF
         // =========================================================
 
-        private async void SmartAnswerButton_Unchecked(
+        private void SmartAnswerButton_Unchecked(
      object sender,
      RoutedEventArgs e)
         {
@@ -1671,12 +1699,12 @@ namespace AiInterviewAssistant
             {
                 _smartAnswerEnabled = false;
 
-                StopAutoVoiceDetection();
+                //StopAutoVoiceDetection();
 
-                if (_chatGPTView)
-                {
-                    await ChatGPTWebViewHost.SetComposerVisibleAsync(false);
-                }
+                //if (_chatGPTView)
+                //{
+                //    await ChatGPTWebViewHost.SetComposerVisibleAsync(false);
+                //}
             }
             catch
             {
@@ -1688,8 +1716,8 @@ namespace AiInterviewAssistant
         // =========================================================
 
         private void SmartAnswerToggleButton_Checked(
-            object sender,
-            RoutedEventArgs e)
+    object sender,
+    RoutedEventArgs e)
         {
             try
             {
@@ -1697,19 +1725,23 @@ namespace AiInterviewAssistant
                     SettingsService.Load()
                     ?? new AppSettings();
 
-                settings.SmartAnswerEnabled = true;
+                settings.SmartAnswerEnabled = false;
 
                 SettingsService.Save(settings);
 
                 currentSettings = settings;
 
-                Debug.WriteLine(
-                    "SMART ANSWER: ON");
+                _smartAnswerEnabled = false;
+
+                if (SmartAnswerButton != null)
+                    SmartAnswerButton.IsChecked = false;
+
+                Debug.WriteLine("SMART ANSWER: DISABLED");
             }
             catch (Exception ex)
             {
                 Debug.WriteLine(
-                    "SMART ANSWER ON ERROR: " +
+                    "SMART ANSWER DISABLE ERROR: " +
                     ex.ToString());
             }
         }

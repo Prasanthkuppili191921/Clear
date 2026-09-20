@@ -306,6 +306,7 @@
       <DependentUpon>AppMessageBox.xaml</DependentUpon>
     </Compile>
     <Compile Include="AppSettings.cs" />
+    <Compile Include="AutoVoice\AutoVoiceManager.cs" />
     <Compile Include="ChatGPTHost\ChatGPTWebView.xaml.cs">
       <DependentUpon>ChatGPTWebView.xaml</DependentUpon>
     </Compile>

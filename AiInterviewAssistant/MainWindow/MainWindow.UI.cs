@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -242,8 +243,8 @@ namespace AiInterviewAssistant
         // =========================================================
 
         private void VoiceButton_Click(
-            object sender,
-            RoutedEventArgs e)
+    object sender,
+    RoutedEventArgs e)
         {
             try
             {
@@ -256,32 +257,21 @@ namespace AiInterviewAssistant
                     }
 
                     _ = ChatGPTWebViewHost.ToggleVoiceAsync();
+
                     return;
                 }
 
+
                 // =====================================================
-                // EXISTING VOICE FUNCTIONALITY
-                //
-                // ChatGPTView=false
-                //
-                // DO NOT CHANGE THIS FLOW.
+                // LOCAL VOICE
                 // =====================================================
 
-                // -----------------------------------------
-                // START VOICE
-                // -----------------------------------------
-
-                if (!isVoiceRecording &&
-                    voiceRecorder == null &&
-                    !voiceStopping)
+                if (!isVoiceRecording)
                 {
                     TextInputPanel.Visibility =
                         Visibility.Collapsed;
 
-                    // IMPORTANT:
-                    // New Voice ON starts a new recording, but the current
-                    // voice cycle must NOT be discarded.
-                    // Cancel only currently running STT / AI if required.
+
                     PrepareVoiceCycleForNewRecording();
 
                     StartVoiceRecording();
@@ -289,12 +279,12 @@ namespace AiInterviewAssistant
                     return;
                 }
 
-                // -----------------------------------------
-                // STOP VOICE
-                // -----------------------------------------
+
+                // =====================================================
+                // VOICE OFF
+                // =====================================================
 
                 if (isVoiceRecording &&
-                    voiceRecorder != null &&
                     !voiceStopping)
                 {
                     StopVoiceRecording();
@@ -335,6 +325,47 @@ namespace AiInterviewAssistant
             {
                 System.Diagnostics.Debug.WriteLine(
                     $"Reports window error: {ex}");
+            }
+        }
+
+        // =========================================================
+        // AUTO VOICE ON
+        // =========================================================
+
+        private void AutoVoiceButton_Checked(
+            object sender,
+            RoutedEventArgs e)
+        {
+            try
+            {
+                _autoVoiceManager?.Enable();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(
+                    "AUTO VOICE ON ERROR: " +
+                    ex);
+            }
+        }
+
+
+        // =========================================================
+        // AUTO VOICE OFF
+        // =========================================================
+
+        private void AutoVoiceButton_Unchecked(
+            object sender,
+            RoutedEventArgs e)
+        {
+            try
+            {
+                _autoVoiceManager?.Disable();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(
+                    "AUTO VOICE OFF ERROR: " +
+                    ex);
             }
         }
     }

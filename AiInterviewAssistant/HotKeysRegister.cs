@@ -541,17 +541,17 @@ namespace AiInterviewAssistant
                     MOD_NOREPEAT,
                     VK_M);
 
-                // =================================================
-                // CTRL + SHIFT + S
-                // SMART ANSWER ON / OFF
-                // =================================================
+                //// =================================================
+                //// CTRL + SHIFT + S
+                //// SMART ANSWER ON / OFF
+                //// =================================================
 
-                RegisterSingleHotkey(
-                    SMART_ANSWER_HOTKEY_ID,
-                    MOD_CONTROL |
-                    MOD_SHIFT |
-                    MOD_NOREPEAT,
-                    VK_S);
+                //RegisterSingleHotkey(
+                //    SMART_ANSWER_HOTKEY_ID,
+                //    MOD_CONTROL |
+                //    MOD_SHIFT |
+                //    MOD_NOREPEAT,
+                //    VK_S);
 
                 // =================================================
                 // CTRL + SHIFT + BACKSPACE
@@ -1661,14 +1661,14 @@ namespace AiInterviewAssistant
                     // SMART ANSWER ON / OFF
                     // =============================================
 
-                    case SMART_ANSWER_HOTKEY_ID:
+                    //case SMART_ANSWER_HOTKEY_ID:
 
-                        Execute(
-                            _smartAnswer);
+                    //    Execute(
+                    //        _smartAnswer);
 
-                        handled = true;
+                    //    handled = true;
 
-                        break;
+                    //    break;
 
                     // =============================================
                     // CTRL + SHIFT + BACKSPACE

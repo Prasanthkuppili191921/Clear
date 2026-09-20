@@ -10,6 +10,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using MessageBox = System.Windows.Forms.MessageBox;
+using System.Collections.Generic;
 
 namespace AiInterviewAssistant
 {
@@ -25,6 +26,22 @@ namespace AiInterviewAssistant
 
         private DateTime voiceLastDiagnostic =
             DateTime.MinValue;
+
+        // =========================================================
+        // CONTINUOUS AUTO VOICE PRE-BUFFER
+        // =========================================================
+
+        private readonly object autoVoicePreBufferLock =
+            new object();
+
+        private byte[] autoVoicePreBuffer;
+
+        private int autoVoicePreBufferWritePosition;
+
+        private int autoVoicePreBufferCount;
+
+        private const double AutoVoicePreBufferSeconds =
+            2.0;
 
         // =========================================================
         // TOGGLE VOICE
@@ -44,27 +61,43 @@ namespace AiInterviewAssistant
                     return;
                 }
 
-                if (isVoiceRecording &&
-                    voiceRecorder != null)
+
+                // =====================================================
+                // VOICE OFF
+                // =====================================================
+
+                if (isVoiceRecording)
                 {
                     StopVoiceRecording();
                     return;
                 }
+
 
                 if (voiceStopping)
                 {
                     return;
                 }
 
+
                 // =====================================================
-                // NEW VOICE CYCLE MUST BE PREPARED BEFORE STARTING
-                // THROUGH THIS VOICE TOGGLE PATH AS WELL.
+                // NEW VOICE CYCLE
                 // =====================================================
 
                 if (!_chatGPTView)
                 {
                     PrepareVoiceCycleForNewRecording();
                 }
+
+
+                // =====================================================
+                // IMPORTANT:
+                //
+                // If Auto Voice is already ON,
+                // WasapiLoopbackCapture is already running.
+                //
+                // StartVoiceRecording() will NOT create
+                // another capture.
+                // =====================================================
 
                 StartVoiceRecording();
             }
@@ -83,7 +116,8 @@ namespace AiInterviewAssistant
 
         private void StartVoiceRecording()
         {
-            if (!_chatGPTView && !IsVoiceInputEnabled())
+            if (!_chatGPTView &&
+                !IsVoiceInputEnabled())
             {
                 AppMessage.Show(
                     "Voice Input is currently disabled.\n\n" +
@@ -94,12 +128,6 @@ namespace AiInterviewAssistant
                 return;
             }
 
-            if (voiceRecorder != null ||
-                isVoiceRecording ||
-                voiceStopping)
-            {
-                return;
-            }
 
             if (!Dispatcher.CheckAccess())
             {
@@ -112,30 +140,243 @@ namespace AiInterviewAssistant
                 return;
             }
 
+
             try
             {
-                // =================================================
-                // VOICE MODE
-                // =================================================
+                // =====================================================
+                // CAPTURE MUST EXIST
+                //
+                // Auto Voice ON:
+                //     capture already exists.
+                //
+                // Manual Voice:
+                //     create capture here.
+                // =====================================================
 
+                if (voiceRecorder == null)
+                {
+                    StartContinuousVoiceCapture();
+                }
+
+
+                if (voiceRecorder == null)
+                {
+                    Debug.WriteLine(
+                        "VOICE: CAPTURE NOT AVAILABLE");
+
+                    return;
+                }
+
+
+                // =====================================================
+                // ALREADY IN A VOICE CYCLE
+                // =====================================================
+
+                if (isVoiceRecording)
+                {
+                    return;
+                }
+
+
+                if (voiceStopping)
+                {
+                    return;
+                }
+
+
+                // =====================================================
+                // START NEW VOICE CYCLE
+                // =====================================================
+
+                StartVoiceCycleFromCurrentCapture();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(
+                    "VOICE START ERROR: " +
+                    ex);
+
+
+                CleanupVoiceRecorder();
+
+                RemoveLiveVoiceMessage();
+
+                ResetVoiceUI();
+
+
+                AppMessage.Show(
+                    "System audio capture error:\n\n" +
+                    ex.Message);
+            }
+        }
+
+        // =========================================================
+        // START CONTINUOUS SYSTEM AUDIO CAPTURE
+        // =========================================================
+
+        private void StartContinuousVoiceCapture()
+        {
+            if (!Dispatcher.CheckAccess())
+            {
+                Dispatcher.BeginInvoke(
+                    new Action(() =>
+                    {
+                        StartContinuousVoiceCapture();
+                    }));
+
+                return;
+            }
+
+
+            if (voiceRecorder != null)
+            {
+                return;
+            }
+
+
+            try
+            {
                 voiceStopping = false;
+
+
+                // =====================================================
+                // CREATE WASAPI LOOPBACK CAPTURE
+                // =====================================================
+
+                voiceRecorder =
+                    new WasapiLoopbackCapture();
+
+
+                voiceRecordingFormat =
+                    voiceRecorder.WaveFormat;
+
+
+                Debug.WriteLine(
+                    "SYSTEM AUDIO FORMAT: " +
+                    voiceRecordingFormat);
+
+
+                // =====================================================
+                // INITIALIZE ROLLING PRE-BUFFER
+                // =====================================================
+
+                InitializeAutoVoicePreBuffer(
+                    voiceRecordingFormat);
+
+
+                // =====================================================
+                // EVENTS
+                // =====================================================
+
+                voiceRecorder.DataAvailable +=
+                    VoiceRecorder_DataAvailable;
+
+
+                voiceRecorder.RecordingStopped +=
+                    VoiceRecorder_RecordingStopped;
+
+
+                // =====================================================
+                // START CAPTURE
+                // =====================================================
+
+                voiceRecorder.StartRecording();
+
+
+                Debug.WriteLine(
+                    "CONTINUOUS SYSTEM AUDIO CAPTURE STARTED");
+            }
+            catch
+            {
+                try
+                {
+                    if (voiceRecorder != null)
+                    {
+                        voiceRecorder.DataAvailable -=
+                            VoiceRecorder_DataAvailable;
+
+                        voiceRecorder.RecordingStopped -=
+                            VoiceRecorder_RecordingStopped;
+
+                        voiceRecorder.Dispose();
+                    }
+                }
+                catch
+                {
+                }
+
+
+                voiceRecorder = null;
+
+                voiceRecordingFormat = null;
+
+                throw;
+            }
+        }
+
+        // =========================================================
+        // START VOICE CYCLE
+        //
+        // IMPORTANT:
+        // This DOES NOT start WasapiLoopbackCapture.
+        //
+        // Capture is already running continuously.
+        // =========================================================
+
+        private void StartVoiceCycleFromCurrentCapture()
+        {
+            if (!Dispatcher.CheckAccess())
+            {
+                Dispatcher.BeginInvoke(
+                    new Action(() =>
+                    {
+                        StartVoiceCycleFromCurrentCapture();
+                    }));
+
+                return;
+            }
+
+
+            if (voiceRecorder == null)
+            {
+                return;
+            }
+
+
+            if (isVoiceRecording)
+            {
+                return;
+            }
+
+
+            if (voiceStopping)
+            {
+                return;
+            }
+
+
+            try
+            {
+                voiceStopping = false;
+
                 isVoiceRecording = false;
+
 
                 liveVoiceTranscript =
                     string.Empty;
 
-                voiceRecordingFormat =
-                    null;
 
                 voiceTotalBytes = 0;
+
                 voiceNonZeroBytes = 0;
+
                 voiceLastDiagnostic =
                     DateTime.Now;
 
 
-                // =================================================
+                // =====================================================
                 // STT CHECK
-                // =================================================
+                // =====================================================
 
                 if (!InitializeSpeechToText())
                 {
@@ -143,103 +384,51 @@ namespace AiInterviewAssistant
                 }
 
 
-                // =================================================
-                // NEW AUDIO BUFFER
-                // =================================================
+                // =====================================================
+                // NEW CYCLE BUFFER
+                // =====================================================
 
                 lock (voiceAudioLock)
                 {
+                    try
+                    {
+                        voiceAudioBuffer?.Dispose();
+                    }
+                    catch
+                    {
+                    }
+
+
                     voiceAudioBuffer =
-                        new System.IO.MemoryStream();
+                        new MemoryStream();
+
+
+                    // =================================================
+                    // IMPORTANT:
+                    //
+                    // Copy the last 2 seconds BEFORE detection.
+                    //
+                    // This protects the first words of the question.
+                    // =================================================
+
+                    byte[] preBuffer =
+                        GetAutoVoicePreBufferSnapshot();
+
+
+                    if (preBuffer != null &&
+                        preBuffer.Length > 0)
+                    {
+                        voiceAudioBuffer.Write(
+                            preBuffer,
+                            0,
+                            preBuffer.Length);
+                    }
                 }
 
 
-                // =================================================
-                // WINDOWS SYSTEM AUDIO
-                // =================================================
-
-                voiceRecorder =
-                    new WasapiLoopbackCapture();
-
-
-                // =================================================
-                // FORMAT
-                // =================================================
-
-                voiceRecordingFormat =
-                    voiceRecorder.WaveFormat;
-
-                Debug.WriteLine(
-                    "SYSTEM AUDIO FORMAT: " +
-                    voiceRecordingFormat);
-
-
-                // =================================================
-                // AUDIO DATA
-                // =================================================
-
-                voiceRecorder.DataAvailable +=
-                    VoiceRecorder_DataAvailable;
-
-
-                // =================================================
-                // STOP EVENT
-                // =================================================
-
-                voiceRecorder.RecordingStopped +=
-                    VoiceRecorder_RecordingStopped;
-
-
-                // =================================================
-                // START SYSTEM AUDIO
-                // =================================================
-
-                voiceRecorder.StartRecording();
-
-
-                //// =================================================
-                //// START LOCAL MICROPHONE
-                //// =================================================
-
-                //localVoiceStopped = true;
-
-                //if (IsLocalVoiceEnabled())
-                //{
-                //    try
-                //    {
-                //        localVoiceRecorder =
-                //            new LocalVoiceCapture();
-
-                //        localVoiceRecorder.RecordingStopped +=
-                //            localVoiceRecorder_RecordingStopped;
-
-                //        localVoiceStopped = false;
-
-                //        localVoiceRecorder.Start();
-
-                //        localVoiceRecordingFormat =
-                //            localVoiceRecorder.WaveFormat;
-
-                //        Debug.WriteLine(
-                //            "LOCAL MICROPHONE CAPTURE STARTED");
-
-                //        Debug.WriteLine(
-                //            "LOCAL MICROPHONE FORMAT: " +
-                //            localVoiceRecordingFormat);
-                //    }
-                //    catch (Exception ex)
-                //    {
-                //        Debug.WriteLine(
-                //            "LOCAL MICROPHONE START ERROR: " +
-                //            ex.Message);
-
-                //        localVoiceStopped = true;
-                //    }
-                //}
-
-                // =========================================================
-                // START CONTINUOUS SILERO VAD
-                // =========================================================
+                // =====================================================
+                // START NEW VAD SESSION
+                // =====================================================
 
                 if (!_chatGPTView)
                 {
@@ -250,43 +439,103 @@ namespace AiInterviewAssistant
                             voiceSessionSpeechSegments.Clear();
                         }
 
-                        voiceVadSession =
-                            new SileroVadSession();
 
-                        voiceVadSession.SpeechSegmentReady +=
-                            VoiceVadSession_SpeechSegmentReady;
+                        lock (voiceVadLock)
+                        {
+                            if (voiceVadSession != null)
+                            {
+                                try
+                                {
+                                    voiceVadSession.Stop();
+                                }
+                                catch
+                                {
+                                }
 
-                        voiceVadSession.Start(
-                            voiceRecordingFormat);
+                                voiceVadSession.SpeechSegmentReady -=
+                                    VoiceVadSession_SpeechSegmentReady;
 
-                        System.Diagnostics.Debug.WriteLine(
-                            "SILERO VAD SESSION STARTED");
+                                voiceVadSession.Dispose();
+
+                                voiceVadSession = null;
+                            }
+
+
+                            voiceVadSession =
+                                new SileroVadSession();
+
+
+                            voiceVadSession.SpeechSegmentReady +=
+                                VoiceVadSession_SpeechSegmentReady;
+
+
+                            voiceVadSession.Start(
+                                voiceRecordingFormat);
+                        }
+
+
+                        Debug.WriteLine(
+                            "SILERO VAD SESSION STARTED FOR NEW VOICE CYCLE");
+
+
+                        // =================================================
+                        // FEED PRE-BUFFER INTO VAD
+                        //
+                        // This is what prevents the first words from
+                        // being lost by VAD.
+                        // =================================================
+
+                        byte[] preBuffer =
+                            GetAutoVoicePreBufferSnapshot();
+
+
+                        if (preBuffer != null &&
+                            preBuffer.Length > 0)
+                        {
+                            lock (voiceVadLock)
+                            {
+                                if (voiceVadSession != null)
+                                {
+                                    voiceVadSession.AcceptAudio(
+                                        preBuffer,
+                                        preBuffer.Length);
+                                }
+                            }
+                        }
                     }
                     catch (Exception ex)
                     {
                         voiceVadSession = null;
 
-                        System.Diagnostics.Debug.WriteLine(
-                            "SILERO VAD SESSION START ERROR: " +
+                        Debug.WriteLine(
+                            "SILERO VAD START ERROR: " +
                             ex);
                     }
                 }
 
-                // =========================================================
-                // START QUESTION QUEUE
-                // =========================================================
+
+                // =====================================================
+                // QUESTION QUEUE
+                //
+                // EXISTING QUEUE LOGIC UNCHANGED.
+                // =====================================================
 
                 if (!_chatGPTView)
                 {
                     StartVoiceQuestionQueue();
                 }
 
+
+                // =====================================================
+                // NOW VOICE CYCLE IS ACTIVE
+                // =====================================================
+
                 isVoiceRecording = true;
 
 
-                // =================================================
+                // =====================================================
                 // UI
-                // =================================================
+                // =====================================================
 
                 SetVoiceInputMode(true);
 
@@ -296,14 +545,10 @@ namespace AiInterviewAssistant
                     "Listening...");
 
 
-                // =================================================
-                // BUTTON
-                // =================================================
-
                 if (VoiceButton != null)
                 {
                     VoiceButton.Background =
-                        new System.Windows.Media.SolidColorBrush(
+                        new SolidColorBrush(
                             System.Windows.Media.Color.FromRgb(
                                 190,
                                 45,
@@ -311,9 +556,9 @@ namespace AiInterviewAssistant
                 }
 
 
-                // =================================================
+                // =====================================================
                 // PULSE
-                // =================================================
+                // =====================================================
 
                 if (VoicePulseScale != null &&
                     voicePulseAnimation != null)
@@ -329,22 +574,256 @@ namespace AiInterviewAssistant
 
 
                 Debug.WriteLine(
-                    "VOICE RECORDING STARTED");
+                    "VOICE CYCLE STARTED");
 
                 Debug.WriteLine(
-                    "========================================");
+                    "CONTINUOUS CAPTURE REMAINS RUNNING");
             }
             catch (Exception ex)
             {
-                CleanupVoiceRecorder();
+                isVoiceRecording = false;
 
-                RemoveLiveVoiceMessage();
+                voiceStopping = false;
 
-                ResetVoiceUI();
+                Debug.WriteLine(
+                    "VOICE CYCLE START ERROR: " +
+                    ex);
 
-                AppMessage.Show(
-                    "System audio capture error:\n\n" +
-                    ex.Message);
+                throw;
+            }
+        }
+
+        // =========================================================
+        // INITIALIZE ROLLING PRE-BUFFER
+        // =========================================================
+
+        private void InitializeAutoVoicePreBuffer(
+            WaveFormat format)
+        {
+            if (format == null)
+                return;
+
+
+            int bytesPerSecond =
+                Math.Max(
+                    1,
+                    format.AverageBytesPerSecond);
+
+
+            int bufferSize =
+                (int)(
+                    bytesPerSecond *
+                    AutoVoicePreBufferSeconds);
+
+
+            // Keep enough room for the requested duration.
+            bufferSize =
+                Math.Max(
+                    bufferSize,
+                    format.BlockAlign * 1024);
+
+
+            lock (autoVoicePreBufferLock)
+            {
+                autoVoicePreBuffer =
+                    new byte[bufferSize];
+
+                autoVoicePreBufferWritePosition =
+                    0;
+
+                autoVoicePreBufferCount =
+                    0;
+            }
+
+
+            Debug.WriteLine(
+                "AUTO VOICE PRE-BUFFER = " +
+                AutoVoicePreBufferSeconds +
+                " sec | " +
+                bufferSize +
+                " bytes");
+        }
+
+
+        // =========================================================
+        // APPEND AUDIO TO ROLLING PRE-BUFFER
+        // =========================================================
+
+        private void AppendToAutoVoicePreBuffer(
+            byte[] buffer,
+            int bytesRecorded)
+        {
+            if (buffer == null ||
+                bytesRecorded <= 0)
+            {
+                return;
+            }
+
+
+            lock (autoVoicePreBufferLock)
+            {
+                if (autoVoicePreBuffer == null ||
+                    autoVoicePreBuffer.Length == 0)
+                {
+                    return;
+                }
+
+
+                int remaining =
+                    bytesRecorded;
+
+                int sourceOffset =
+                    0;
+
+
+                while (remaining > 0)
+                {
+                    int copyLength =
+                        Math.Min(
+                            remaining,
+                            autoVoicePreBuffer.Length);
+
+
+                    int firstPart =
+                        Math.Min(
+                            copyLength,
+                            autoVoicePreBuffer.Length -
+                            autoVoicePreBufferWritePosition);
+
+
+                    Buffer.BlockCopy(
+                        buffer,
+                        sourceOffset,
+                        autoVoicePreBuffer,
+                        autoVoicePreBufferWritePosition,
+                        firstPart);
+
+
+                    int secondPart =
+                        copyLength -
+                        firstPart;
+
+
+                    if (secondPart > 0)
+                    {
+                        Buffer.BlockCopy(
+                            buffer,
+                            sourceOffset +
+                            firstPart,
+                            autoVoicePreBuffer,
+                            0,
+                            secondPart);
+                    }
+
+
+                    autoVoicePreBufferWritePosition =
+                        (
+                            autoVoicePreBufferWritePosition +
+                            copyLength
+                        ) %
+                        autoVoicePreBuffer.Length;
+
+
+                    autoVoicePreBufferCount =
+                        Math.Min(
+                            autoVoicePreBufferCount +
+                            copyLength,
+                            autoVoicePreBuffer.Length);
+
+
+                    sourceOffset +=
+                        copyLength;
+
+                    remaining -=
+                        copyLength;
+                }
+            }
+        }
+
+
+        // =========================================================
+        // GET PRE-BUFFER SNAPSHOT
+        // =========================================================
+
+        private byte[] GetAutoVoicePreBufferSnapshot()
+        {
+            lock (autoVoicePreBufferLock)
+            {
+                if (autoVoicePreBuffer == null ||
+                    autoVoicePreBufferCount <= 0)
+                {
+                    return null;
+                }
+
+
+                byte[] result =
+                    new byte[
+                        autoVoicePreBufferCount];
+
+
+                int start =
+                    autoVoicePreBufferWritePosition -
+                    autoVoicePreBufferCount;
+
+
+                if (start < 0)
+                {
+                    start +=
+                        autoVoicePreBuffer.Length;
+                }
+
+
+                int firstPart =
+                    Math.Min(
+                        autoVoicePreBufferCount,
+                        autoVoicePreBuffer.Length -
+                        start);
+
+
+                Buffer.BlockCopy(
+                    autoVoicePreBuffer,
+                    start,
+                    result,
+                    0,
+                    firstPart);
+
+
+                int secondPart =
+                    autoVoicePreBufferCount -
+                    firstPart;
+
+
+                if (secondPart > 0)
+                {
+                    Buffer.BlockCopy(
+                        autoVoicePreBuffer,
+                        0,
+                        result,
+                        firstPart,
+                        secondPart);
+                }
+
+
+                return result;
+            }
+        }
+
+
+        // =========================================================
+        // CLEAR PRE-BUFFER
+        // =========================================================
+
+        private void ClearAutoVoicePreBuffer()
+        {
+            lock (autoVoicePreBufferLock)
+            {
+                autoVoicePreBuffer = null;
+
+                autoVoicePreBufferWritePosition =
+                    0;
+
+                autoVoicePreBufferCount =
+                    0;
             }
         }
 
@@ -363,6 +842,20 @@ namespace AiInterviewAssistant
                     e.BytesRecorded <= 0)
                 {
                     return;
+                }
+
+                // =========================================================
+                // ALWAYS MAINTAIN ROLLING PRE-BUFFER
+                //
+                // This runs even when Voice Cycle is OFF.
+                // =========================================================
+
+                if (e.Buffer != null &&
+                    e.BytesRecorded > 0)
+                {
+                    AppendToAutoVoicePreBuffer(
+                        e.Buffer,
+                        e.BytesRecorded);
                 }
 
                 voiceTotalBytes +=
@@ -396,18 +889,26 @@ namespace AiInterviewAssistant
                     nonZero;
 
 
-                // =================================================
-                // BUFFER
-                // =================================================
+                // =========================================================
+                // AUTO VOICE DETECTION
+                // =========================================================
 
-                lock (voiceAudioLock)
+                if (_autoVoiceManager != null &&
+                    e.Buffer != null &&
+                    e.BytesRecorded > 0 &&
+                    voiceRecordingFormat != null)
                 {
-                    if (voiceAudioBuffer != null)
+                    try
                     {
-                        voiceAudioBuffer.Write(
+                        _autoVoiceManager.ProcessAudio(
                             e.Buffer,
-                            0,
-                            e.BytesRecorded);
+                            e.BytesRecorded,
+                            voiceRecordingFormat);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine(
+                            "AUTO VOICE AUDIO PROCESS ERROR: " + ex);
                     }
                 }
 
@@ -491,57 +992,59 @@ namespace AiInterviewAssistant
                 return;
             }
 
+
             // =========================================================
-            // CHECK SYSTEM AUDIO RECORDER
+            // NO ACTIVE VOICE CYCLE
             // =========================================================
 
-            if (voiceRecorder == null)
+            if (!isVoiceRecording)
             {
                 return;
             }
+
 
             if (voiceStopping)
             {
                 return;
             }
 
+
             // =========================================================
-            // MARK STOPPING
+            // AUTO VOICE / CONTINUOUS CAPTURE
+            //
+            // Stop ONLY current voice cycle.
+            //
+            // DO NOT stop WasapiLoopbackCapture.
+            // =========================================================
+
+            if (_autoVoiceManager != null &&
+                voiceRecorder != null)
+            {
+                FinalizeVoiceCycleOnly();
+
+                return;
+            }
+
+
+            // =========================================================
+            // NORMAL MANUAL MODE
+            //
+            // Existing capture-stop behavior.
             // =========================================================
 
             voiceStopping = true;
 
-            // =========================================================
-            // IMPORTANT
-            //
-            // Keep isVoiceRecording = true until
-            // WasapiLoopbackCapture raises RecordingStopped.
-            //
-            // This allows the final DataAvailable event to reach
-            // Silero VAD before the VAD session is flushed.
-            // =========================================================
-
             isVoiceRecording = true;
 
-            // =========================================================
-            // IMMEDIATELY RESTORE VOICE BUTTON UI
-            // =========================================================
 
             ResetVoiceUI();
-
-            // =========================================================
-            // SHOW PROCESSING
-            // =========================================================
 
             UpdateLiveVoiceMessage(
                 "Processing...");
 
+
             try
             {
-                // =====================================================
-                // STOP LOCAL MICROPHONE
-                // =====================================================
-
                 if (localVoiceRecorder != null &&
                     localVoiceRecorder.IsRecording)
                 {
@@ -549,12 +1052,8 @@ namespace AiInterviewAssistant
                     {
                         localVoiceRecorder.Stop();
                     }
-                    catch (Exception ex)
+                    catch
                     {
-                        Debug.WriteLine(
-                            "Stop local microphone error: " +
-                            ex.Message);
-
                         localVoiceStopped = true;
                     }
                 }
@@ -563,36 +1062,255 @@ namespace AiInterviewAssistant
                     localVoiceStopped = true;
                 }
 
-                // =====================================================
-                // IMPORTANT:
-                //
-                // DO NOT STOP SILERO VAD HERE.
-                //
-                // WasapiLoopbackCapture may still send its final
-                // DataAvailable event.
-                //
-                // VAD will be stopped/flushed inside
-                // VoiceRecorder_RecordingStopped().
-                // =====================================================
 
-                // =====================================================
-                // STOP SYSTEM AUDIO
-                // =====================================================
-
-                voiceRecorder.StopRecording();
+                if (voiceRecorder != null)
+                {
+                    voiceRecorder.StopRecording();
+                }
             }
             catch (Exception ex)
             {
                 Debug.WriteLine(
                     "Stop voice error: " +
-                    ex.Message);
+                    ex);
+
 
                 voiceStopping = false;
+
                 isVoiceRecording = false;
 
                 ResetVoiceUI();
 
                 RemoveLiveVoiceMessage();
+            }
+        }
+
+        // =========================================================
+        // FINALIZE CURRENT VOICE CYCLE ONLY
+        //
+        // IMPORTANT:
+        //
+        // WasapiLoopbackCapture continues running.
+        //
+        // Only the current question/voice cycle is closed.
+        // =========================================================
+
+        private void FinalizeVoiceCycleOnly()
+        {
+            if (!Dispatcher.CheckAccess())
+            {
+                Dispatcher.BeginInvoke(
+                    new Action(() =>
+                    {
+                        FinalizeVoiceCycleOnly();
+                    }));
+
+                return;
+            }
+
+
+            if (!isVoiceRecording)
+            {
+                return;
+            }
+
+
+            if (voiceStopping)
+            {
+                return;
+            }
+
+
+            voiceStopping = true;
+
+
+            Debug.WriteLine(
+                "VOICE CYCLE: FINALIZING");
+
+
+            // =========================================================
+            // UI OFF
+            // =========================================================
+
+            ResetVoiceUI();
+
+            UpdateLiveVoiceMessage(
+                "Processing...");
+
+
+            try
+            {
+                // =====================================================
+                // STOP / FLUSH CURRENT VAD
+                //
+                // This produces the final speech segment including
+                // the silence tail that occurred before detection.
+                // =====================================================
+
+                if (!_chatGPTView)
+                {
+                    try
+                    {
+                        lock (voiceVadLock)
+                        {
+                            if (voiceVadSession != null)
+                            {
+                                voiceVadSession.Stop();
+
+
+                                voiceVadSession.SpeechSegmentReady -=
+                                    VoiceVadSession_SpeechSegmentReady;
+
+
+                                voiceVadSession.Dispose();
+
+                                voiceVadSession = null;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine(
+                            "SILERO VAD CYCLE STOP ERROR: " +
+                            ex);
+                    }
+
+
+                    // =================================================
+                    // BUILD FINAL QUESTION AUDIO
+                    // =================================================
+
+                    byte[] sessionWav =
+                        BuildVoiceSessionWav();
+
+
+                    if (sessionWav != null &&
+                        sessionWav.Length > 44)
+                    {
+                        Debug.WriteLine(
+                            "VOICE SESSION WAV READY | SIZE = " +
+                            sessionWav.Length);
+
+
+                        // =================================================
+                        // EXISTING QUEUE
+                        //
+                        // DO NOT CHANGE QUEUE IMPLEMENTATION.
+                        // =================================================
+
+                        EnqueueVoiceSession(
+                            sessionWav);
+                    }
+                    else
+                    {
+                        Debug.WriteLine(
+                            "VOICE SESSION: NO SPEECH DETECTED");
+                    }
+
+
+                    RemoveLiveVoiceMessage();
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(
+                    "VOICE CYCLE FINALIZE ERROR: " +
+                    ex);
+
+
+                RemoveLiveVoiceMessage();
+            }
+            finally
+            {
+                // =====================================================
+                // CURRENT CYCLE CLOSED
+                //
+                // CAPTURE IS STILL RUNNING.
+                // =====================================================
+
+                isVoiceRecording = false;
+
+                voiceStopping = false;
+
+
+                // =====================================================
+                // DO NOT CLEAR voiceRecordingFormat
+                //
+                // Continuous capture still needs it.
+                // =====================================================
+
+                lock (voiceAudioLock)
+                {
+                    try
+                    {
+                        voiceAudioBuffer?.Dispose();
+                    }
+                    catch
+                    {
+                    }
+
+
+                    voiceAudioBuffer = null;
+                }
+
+
+                Debug.WriteLine(
+                    "VOICE CYCLE: COMPLETED");
+
+                Debug.WriteLine(
+                    "VOICE CYCLE: CONTINUOUS CAPTURE STILL RUNNING");
+            }
+        }
+
+        // =========================================================
+        // STOP CONTINUOUS SYSTEM AUDIO CAPTURE
+        //
+        // This is called only when Auto Voice is turned OFF
+        // or application is shutting down.
+        //
+        // This is the ONLY place where continuous Auto Voice
+        // capture is stopped.
+        // =========================================================
+
+        private void StopContinuousVoiceCapture()
+        {
+            if (!Dispatcher.CheckAccess())
+            {
+                Dispatcher.BeginInvoke(
+                    new Action(() =>
+                    {
+                        StopContinuousVoiceCapture();
+                    }));
+
+                return;
+            }
+
+
+            WasapiLoopbackCapture recorder =
+                voiceRecorder;
+
+
+            if (recorder == null)
+            {
+                ClearAutoVoicePreBuffer();
+
+                return;
+            }
+
+
+            Debug.WriteLine(
+                "CONTINUOUS CAPTURE: STOP REQUESTED");
+
+
+            try
+            {
+                recorder.StopRecording();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(
+                    "CONTINUOUS CAPTURE STOP ERROR: " +
+                    ex);
             }
         }
 
@@ -891,6 +1609,8 @@ namespace AiInterviewAssistant
 
                 voiceStopping = false;
 
+                ClearAutoVoicePreBuffer();
+
                 // =================================================
                 // RESET UI
                 // =================================================
@@ -899,6 +1619,7 @@ namespace AiInterviewAssistant
                 {
                     ResetVoiceUI();
                 });
+               
             }
         }
 
