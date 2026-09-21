@@ -23,13 +23,18 @@ namespace AiInterviewAssistant.AutoVoice
 
         private bool cycleStartPending;
 
-        private DateTime lastAudioDetectedUtc =
+        private DateTime lastSpeechDetectedUtc =
             DateTime.MinValue;
 
-        private const int SilenceTimeoutMs = 850;
+        private DateTime speechStartedUtc =
+            DateTime.MinValue;
 
-        private const float RmsThreshold = 0.005f;
-        private const float PeakThreshold = 0.010f;
+        private const int SpeechConfirmationMs = 250;
+        private const int SilenceTimeoutMs = 900;
+
+        private SileroVadSession autoVoiceVadSession;
+
+        private bool vadStarted;
 
 
         public AutoVoiceManager(
@@ -44,32 +49,17 @@ namespace AiInterviewAssistant.AutoVoice
         {
             this.dispatcher = dispatcher;
 
-            this.isVoiceRecording =
-                isVoiceRecording;
+            this.isVoiceRecording = isVoiceRecording;
+            this.isVoiceStopping = isVoiceStopping;
 
-            this.isVoiceStopping =
-                isVoiceStopping;
+            this.prepareVoiceCycle = prepareVoiceCycle;
+            this.startVoiceCycle = startVoiceCycle;
+            this.stopVoiceCycle = stopVoiceCycle;
 
-            this.prepareVoiceCycle =
-                prepareVoiceCycle;
-
-            this.startVoiceCycle =
-                startVoiceCycle;
-
-            this.stopVoiceCycle =
-                stopVoiceCycle;
-
-            this.startVoiceCapture =
-                startVoiceCapture;
-
-            this.stopVoiceCapture =
-                stopVoiceCapture;
+            this.startVoiceCapture = startVoiceCapture;
+            this.stopVoiceCapture = stopVoiceCapture;
         }
 
-
-        // =========================================================
-        // ENABLE AUTO VOICE
-        // =========================================================
 
         public void Enable()
         {
@@ -80,7 +70,10 @@ namespace AiInterviewAssistant.AutoVoice
 
             cycleStartPending = false;
 
-            lastAudioDetectedUtc =
+            lastSpeechDetectedUtc =
+                DateTime.MinValue;
+
+            speechStartedUtc =
                 DateTime.MinValue;
 
             Debug.WriteLine(
@@ -101,14 +94,6 @@ namespace AiInterviewAssistant.AutoVoice
                         Debug.WriteLine(
                             "AUTO VOICE: STARTING CONTINUOUS CAPTURE");
 
-                        // IMPORTANT:
-                        //
-                        // This starts ONLY WasapiLoopbackCapture.
-                        //
-                        // It does NOT start a voice cycle.
-                        // Voice icon must remain OFF until
-                        // actual system audio is detected.
-
                         startVoiceCapture();
                     }
                     catch (Exception ex)
@@ -121,10 +106,6 @@ namespace AiInterviewAssistant.AutoVoice
         }
 
 
-        // =========================================================
-        // DISABLE AUTO VOICE
-        // =========================================================
-
         public void Disable()
         {
             if (disposed)
@@ -134,7 +115,10 @@ namespace AiInterviewAssistant.AutoVoice
 
             cycleStartPending = false;
 
-            lastAudioDetectedUtc =
+            lastSpeechDetectedUtc =
+                DateTime.MinValue;
+
+            speechStartedUtc =
                 DateTime.MinValue;
 
 
@@ -147,10 +131,6 @@ namespace AiInterviewAssistant.AutoVoice
                 {
                     try
                     {
-                        // -----------------------------------------
-                        // FINISH ACTIVE VOICE CYCLE
-                        // -----------------------------------------
-
                         if (isVoiceRecording() &&
                             !isVoiceStopping())
                         {
@@ -161,9 +141,8 @@ namespace AiInterviewAssistant.AutoVoice
                         }
 
 
-                        // -----------------------------------------
-                        // STOP CONTINUOUS CAPTURE
-                        // -----------------------------------------
+                        StopVad();
+
 
                         Debug.WriteLine(
                             "AUTO VOICE: OFF -> STOP CONTINUOUS CAPTURE");
@@ -180,10 +159,6 @@ namespace AiInterviewAssistant.AutoVoice
         }
 
 
-        // =========================================================
-        // AUDIO DATA
-        // =========================================================
-
         public void ProcessAudio(
             byte[] buffer,
             int bytesRecorded,
@@ -195,6 +170,7 @@ namespace AiInterviewAssistant.AutoVoice
                 return;
             }
 
+
             if (buffer == null ||
                 bytesRecorded <= 0 ||
                 format == null)
@@ -203,129 +179,249 @@ namespace AiInterviewAssistant.AutoVoice
             }
 
 
-            float level;
-
             try
             {
-                level =
-                    CalculateAudioLevel(
-                        buffer,
-                        bytesRecorded,
-                        format);
+                /*
+                 * Start Silero VAD once when continuous
+                 * system-audio capture starts.
+                 */
+                if (!vadStarted)
+                {
+                    StartVad(format);
+                }
+
+
+                if (autoVoiceVadSession == null)
+                    return;
+
+
+                /*
+                 * Feed raw WASAPI loopback audio directly
+                 * into Silero VAD.
+                 */
+                autoVoiceVadSession.AcceptAudio(
+                    buffer,
+                    bytesRecorded);
+
+
+                /*
+                 * IMPORTANT:
+                 *
+                 * IsSpeechDetected() is the LIVE speech
+                 * state exposed by SherpaOnnx.
+                 *
+                 * Do NOT use IsEmpty() here.
+                 *
+                 * IsEmpty() only tells us whether a
+                 * completed speech segment is queued.
+                 */
+                if (autoVoiceVadSession.IsSpeechDetected)
+                {
+                    ProcessSpeechDetected();
+                }
+                //else
+                //{
+                //    TryStopVoice();
+                //}
             }
             catch (Exception ex)
             {
                 Debug.WriteLine(
-                    "AUTO VOICE: AUDIO LEVEL ERROR: " +
+                    "AUTO VOICE: AUDIO PROCESSING ERROR: " +
                     ex);
-
-                return;
             }
-
-
-            //bool audioDetected =
-            //    level >= RmsThreshold ||
-            //    level >= PeakThreshold;
-
-            bool audioDetected =
-                level >= RmsThreshold;
-
-
-            // =====================================================
-            // SYSTEM VOICE DETECTED
-            // =====================================================
-
-            if (audioDetected)
-            {
-                lastAudioDetectedUtc =
-                    DateTime.UtcNow;
-
-
-                // ---------------------------------------------
-                // Already recording this voice cycle
-                // ---------------------------------------------
-
-                if (isVoiceRecording())
-                {
-                    return;
-                }
-
-
-                // ---------------------------------------------
-                // Start request already queued
-                // ---------------------------------------------
-
-                if (cycleStartPending)
-                {
-                    return;
-                }
-
-
-                cycleStartPending = true;
-
-
-                Debug.WriteLine(
-                    "AUTO VOICE: SYSTEM AUDIO DETECTED");
-
-
-                dispatcher.BeginInvoke(
-                    new Action(() =>
-                    {
-                        try
-                        {
-                            if (disposed ||
-                                !autoVoiceEnabled)
-                            {
-                                return;
-                            }
-
-                            if (isVoiceRecording())
-                            {
-                                return;
-                            }
-
-                            if (isVoiceStopping())
-                            {
-                                return;
-                            }
-
-
-                            Debug.WriteLine(
-                                "AUTO VOICE: STARTING VOICE CYCLE");
-
-
-                            prepareVoiceCycle();
-
-                            startVoiceCycle();
-                        }
-                        catch (Exception ex)
-                        {
-                            Debug.WriteLine(
-                                "AUTO VOICE: VOICE CYCLE START ERROR: " +
-                                ex);
-                        }
-                        finally
-                        {
-                            cycleStartPending = false;
-                        }
-                    }));
-
-
-                return;
-            }
-
-
-            // =====================================================
-            // SILENCE
-            // =====================================================
-
-            TryStopVoice();
         }
 
 
-        // =========================================================
-        // SILENCE CHECK
-        // =========================================================
+        private void StartVad(
+            NAudio.Wave.WaveFormat format)
+        {
+            if (disposed ||
+                !autoVoiceEnabled ||
+                vadStarted)
+            {
+                return;
+            }
+
+
+            try
+            {
+                StopVad();
+
+
+                autoVoiceVadSession =
+                    new SileroVadSession();
+
+
+                autoVoiceVadSession.Start(
+                    format);
+
+
+                vadStarted = true;
+
+
+                Debug.WriteLine(
+                    "AUTO VOICE: SILERO VAD STARTED");
+            }
+            catch (Exception ex)
+            {
+                vadStarted = false;
+
+
+                Debug.WriteLine(
+                    "AUTO VOICE: SILERO VAD START ERROR: " +
+                    ex);
+
+
+                if (autoVoiceVadSession != null)
+                {
+                    try
+                    {
+                        autoVoiceVadSession.Dispose();
+                    }
+                    catch
+                    {
+                    }
+
+
+                    autoVoiceVadSession = null;
+                }
+            }
+        }
+
+
+        private void ProcessSpeechDetected()
+        {
+            if (disposed ||
+                !autoVoiceEnabled)
+            {
+                return;
+            }
+
+
+            DateTime nowUtc =
+                DateTime.UtcNow;
+
+
+            /*
+             * Every confirmed/live speech chunk refreshes
+             * the last speech time.
+             */
+            lastSpeechDetectedUtc =
+                nowUtc;
+
+
+            /*
+             * If a voice cycle is already recording,
+             * do not start another cycle.
+             */
+            if (isVoiceRecording())
+            {
+                speechStartedUtc =
+                    DateTime.MinValue;
+
+                return;
+            }
+
+
+            /*
+             * A start request is already waiting on the
+             * Dispatcher.
+             */
+            if (cycleStartPending)
+                return;
+
+
+            /*
+             * First speech detection.
+             *
+             * We intentionally wait for the configured
+             * confirmation duration before starting the
+             * voice cycle.
+             */
+            if (speechStartedUtc ==
+                DateTime.MinValue)
+            {
+                speechStartedUtc =
+                    nowUtc;
+
+
+                Debug.WriteLine(
+                    "AUTO VOICE: SILERO SPEECH DETECTED - WAITING FOR CONFIRMATION");
+
+                return;
+            }
+
+
+            double speechMs =
+                (nowUtc - speechStartedUtc)
+                .TotalMilliseconds;
+
+
+            if (speechMs <
+                SpeechConfirmationMs)
+            {
+                return;
+            }
+
+
+            cycleStartPending = true;
+
+
+            Debug.WriteLine(
+                "AUTO VOICE: SPEECH CONFIRMED - " +
+                speechMs.ToString("0") +
+                " ms");
+
+
+            dispatcher.BeginInvoke(
+                new Action(() =>
+                {
+                    try
+                    {
+                        if (disposed ||
+                            !autoVoiceEnabled)
+                        {
+                            return;
+                        }
+
+
+                        if (isVoiceRecording())
+                            return;
+
+
+                        if (isVoiceStopping())
+                            return;
+
+
+                        Debug.WriteLine(
+                            "AUTO VOICE: STARTING VOICE CYCLE");
+
+
+                        /*
+                         * IMPORTANT:
+                         *
+                         * Existing Voice Cycle logic is
+                         * preserved.
+                         */
+                        prepareVoiceCycle();
+
+                        startVoiceCycle();
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine(
+                            "AUTO VOICE: VOICE CYCLE START ERROR: " +
+                            ex);
+                    }
+                    finally
+                    {
+                        cycleStartPending =
+                            false;
+                    }
+                }));
+        }
+
 
         private void TryStopVoice()
         {
@@ -335,17 +431,22 @@ namespace AiInterviewAssistant.AutoVoice
                 return;
             }
 
+
+            /*
+             * Nothing to stop.
+             */
             if (!isVoiceRecording())
-            {
                 return;
-            }
+
 
             if (isVoiceStopping())
-            {
                 return;
-            }
 
-            if (lastAudioDetectedUtc ==
+
+            /*
+             * No speech has ever been detected.
+             */
+            if (lastSpeechDetectedUtc ==
                 DateTime.MinValue)
             {
                 return;
@@ -353,12 +454,15 @@ namespace AiInterviewAssistant.AutoVoice
 
 
             double silenceMs =
-                (
-                    DateTime.UtcNow -
-                    lastAudioDetectedUtc
-                ).TotalMilliseconds;
+                (DateTime.UtcNow -
+                 lastSpeechDetectedUtc)
+                .TotalMilliseconds;
 
 
+            /*
+             * Keep the voice cycle alive during the
+             * configured silence timeout.
+             */
             if (silenceMs <
                 SilenceTimeoutMs)
             {
@@ -377,22 +481,23 @@ namespace AiInterviewAssistant.AutoVoice
                             return;
                         }
 
+
                         if (!isVoiceRecording())
-                        {
                             return;
-                        }
+
 
                         if (isVoiceStopping())
-                        {
                             return;
-                        }
 
 
+                        /*
+                         * Re-check silence on the UI
+                         * thread before actually stopping.
+                         */
                         double currentSilenceMs =
-                            (
-                                DateTime.UtcNow -
-                                lastAudioDetectedUtc
-                            ).TotalMilliseconds;
+                            (DateTime.UtcNow -
+                             lastSpeechDetectedUtc)
+                            .TotalMilliseconds;
 
 
                         if (currentSilenceMs <
@@ -410,6 +515,17 @@ namespace AiInterviewAssistant.AutoVoice
                             "AUTO VOICE: FINISHING VOICE CYCLE");
 
 
+                        speechStartedUtc =
+                            DateTime.MinValue;
+
+                        lastSpeechDetectedUtc =
+                            DateTime.MinValue;
+
+
+                        /*
+                         * Existing Voice Cycle stop
+                         * logic is preserved.
+                         */
                         stopVoiceCycle();
                     }
                     catch (Exception ex)
@@ -422,163 +538,57 @@ namespace AiInterviewAssistant.AutoVoice
         }
 
 
-        // =========================================================
-        // AUDIO LEVEL
-        // =========================================================
-
-        private float CalculateAudioLevel(
-            byte[] buffer,
-            int bytesRecorded,
-            NAudio.Wave.WaveFormat format)
+        private void StopVad()
         {
-            if (format.Encoding ==
-                NAudio.Wave.WaveFormatEncoding.IeeeFloat &&
-                format.BitsPerSample == 32)
+            try
             {
-                int sampleCount =
-                    bytesRecorded / 4;
-
-                if (sampleCount <= 0)
-                    return 0f;
-
-
-                double sumSquares = 0.0;
-
-                float peak = 0f;
-
-
-                for (int i = 0;
-                     i < sampleCount;
-                     i++)
+                if (autoVoiceVadSession != null)
                 {
-                    int offset =
-                        i * 4;
+                    autoVoiceVadSession.Stop();
 
-                    if (offset + 3 >=
-                        bytesRecorded)
-                    {
-                        break;
-                    }
+                    autoVoiceVadSession.Dispose();
 
-
-                    float sample =
-                        BitConverter.ToSingle(
-                            buffer,
-                            offset);
-
-
-                    float abs =
-                        Math.Abs(sample);
-
-
-                    if (abs > peak)
-                    {
-                        peak = abs;
-                    }
-
-
-                    sumSquares +=
-                        sample * sample;
+                    autoVoiceVadSession =
+                        null;
                 }
-
-
-                float rms =
-                    (float)Math.Sqrt(
-                        sumSquares /
-                        sampleCount);
-
-
-                return Math.Max(
-                    rms,
-                    peak);
             }
-
-
-            if (format.Encoding ==
-                NAudio.Wave.WaveFormatEncoding.Pcm &&
-                format.BitsPerSample == 16)
+            catch (Exception ex)
             {
-                int sampleCount =
-                    bytesRecorded / 2;
+                Debug.WriteLine(
+                    "AUTO VOICE: VAD STOP ERROR: " +
+                    ex);
 
-                if (sampleCount <= 0)
-                    return 0f;
-
-
-                double sumSquares = 0.0;
-
-                float peak = 0f;
-
-
-                for (int i = 0;
-                     i < sampleCount;
-                     i++)
-                {
-                    int offset =
-                        i * 2;
-
-                    if (offset + 1 >=
-                        bytesRecorded)
-                    {
-                        break;
-                    }
-
-
-                    short value =
-                        BitConverter.ToInt16(
-                            buffer,
-                            offset);
-
-
-                    float sample =
-                        value / 32768f;
-
-
-                    float abs =
-                        Math.Abs(sample);
-
-
-                    if (abs > peak)
-                    {
-                        peak = abs;
-                    }
-
-
-                    sumSquares +=
-                        sample * sample;
-                }
-
-
-                float rms =
-                    (float)Math.Sqrt(
-                        sumSquares /
-                        sampleCount);
-
-
-                return Math.Max(
-                    rms,
-                    peak);
+                autoVoiceVadSession =
+                    null;
             }
-
-
-            return 0f;
+            finally
+            {
+                vadStarted = false;
+            }
         }
 
-
-        // =========================================================
-        // DISPOSE
-        // =========================================================
 
         public void Dispose()
         {
             if (disposed)
                 return;
 
+
             disposed = true;
 
             autoVoiceEnabled = false;
 
             cycleStartPending = false;
+
+            speechStartedUtc =
+                DateTime.MinValue;
+
+            lastSpeechDetectedUtc =
+                DateTime.MinValue;
+
+
+            StopVad();
+
 
             Debug.WriteLine(
                 "AUTO VOICE: DISPOSED");

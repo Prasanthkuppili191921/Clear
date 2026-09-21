@@ -32,6 +32,28 @@ namespace AiInterviewAssistant
 
         public event EventHandler<byte[]> SpeechSegmentReady;
 
+        public bool IsSpeechDetected
+        {
+            get
+            {
+                if (!started ||
+                    disposed ||
+                    vad == null)
+                {
+                    return false;
+                }
+
+                try
+                {
+                    return vad.IsSpeechDetected();
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+        }
+
         // =========================================================
         // START
         // =========================================================
