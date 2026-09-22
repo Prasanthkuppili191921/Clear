@@ -205,7 +205,7 @@ namespace AiInterviewAssistant
             ChatScrollViewer.PreviewMouseWheel +=
                 ChatScrollViewer_PreviewMouseWheel;
 
-           
+
             // =====================================================
             // PRIVACY MANAGER
             // =====================================================
@@ -838,6 +838,26 @@ namespace AiInterviewAssistant
                             //SmartAnswerButton.IsChecked =
                             //    !SmartAnswerButton.IsChecked;
                             SmartAnswerButton.IsChecked = false;
+                        }
+                        catch
+                        {
+                        }
+                    },
+
+                    // =================================================
+                    // CTRL + SHIFT + A
+                    // AUTO VOICE ON / OFF
+                    // =================================================
+
+                    () =>
+                    {
+                        try
+                        {
+                            if (AutoVoiceButton == null)
+                                return;
+
+                            AutoVoiceButton.IsChecked =
+                                !AutoVoiceButton.IsChecked;
                         }
                         catch
                         {

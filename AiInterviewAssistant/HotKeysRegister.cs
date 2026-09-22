@@ -143,6 +143,8 @@ namespace AiInterviewAssistant
 
         private const uint VK_BACK = 0x08;
 
+        private const uint VK_A = 0x41;
+
 
         // =========================================================
         // HOTKEY IDS
@@ -172,6 +174,8 @@ namespace AiInterviewAssistant
         public const int SMART_ANSWER_HOTKEY_ID = 9115;
 
         public const int CLEAR_CHAT_HOTKEY_ID = 9116;
+
+        public const int AUTO_VOICE_HOTKEY_ID = 9117;
 
 
         // =========================================================
@@ -224,6 +228,8 @@ namespace AiInterviewAssistant
         private static Action _smartAnswer;
 
         private static Action _clearChat;
+
+        private static Action _autoVoice;
 
 
         // =========================================================
@@ -303,6 +309,7 @@ namespace AiInterviewAssistant
             Action settings,
             Action message,
             Action smartAnswer,
+            Action autoVoice,
             Action clearChat)
         {
             try
@@ -371,6 +378,9 @@ namespace AiInterviewAssistant
 
                 _smartAnswer =
                     smartAnswer;
+
+                _autoVoice = 
+                    autoVoice;
 
                 _clearChat =
                     clearChat;
@@ -561,6 +571,18 @@ namespace AiInterviewAssistant
                     MOD_SHIFT |
                     MOD_NOREPEAT,
                     VK_BACK);
+
+                // =================================================
+                // CTRL + SHIFT + A
+                // AUTO VOICE ON / OFF
+                // =================================================
+
+                RegisterSingleHotkey(
+                    AUTO_VOICE_HOTKEY_ID,
+                    MOD_CONTROL |
+                    MOD_SHIFT | 
+                    MOD_NOREPEAT,
+                    VK_A);
 
 
                 // =================================================
@@ -1769,6 +1791,20 @@ namespace AiInterviewAssistant
                         handled = true;
 
                         break;
+
+                    // =============================================
+                    // CTRL + SHIFT + A
+                    // AUTO VOICE ON / OFF
+                    // =============================================
+
+                    case AUTO_VOICE_HOTKEY_ID:
+
+                        Execute(
+                            _autoVoice);
+
+                        handled = true;
+
+                        break;
                 }
             }
             catch
@@ -1975,6 +2011,9 @@ namespace AiInterviewAssistant
                     null;
 
                 _smartAnswer =
+                    null;
+
+                _autoVoice = 
                     null;
 
                 _clearChat =
