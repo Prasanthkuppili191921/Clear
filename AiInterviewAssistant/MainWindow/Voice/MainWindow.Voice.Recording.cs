@@ -83,10 +83,7 @@ namespace AiInterviewAssistant
                 // NEW VOICE CYCLE
                 // =====================================================
 
-                if (!_chatGPTView)
-                {
-                    PrepareVoiceCycleForNewRecording();
-                }
+                PrepareVoiceCycleForNewRecording();
 
 
                 // =====================================================
@@ -116,8 +113,7 @@ namespace AiInterviewAssistant
 
         private void StartVoiceRecording()
         {
-            if (!_chatGPTView &&
-                !IsVoiceInputEnabled())
+            if (!IsVoiceInputEnabled())
             {
                 AppMessage.Show(
                     "Voice Input is currently disabled.\n\n" +
@@ -430,87 +426,84 @@ namespace AiInterviewAssistant
                 // START NEW VAD SESSION
                 // =====================================================
 
-                if (!_chatGPTView)
+                try
                 {
-                    try
+                    lock (voiceSessionLock)
                     {
-                        lock (voiceSessionLock)
+                        voiceSessionSpeechSegments.Clear();
+                    }
+
+
+                    lock (voiceVadLock)
+                    {
+                        if (voiceVadSession != null)
                         {
-                            voiceSessionSpeechSegments.Clear();
+                            try
+                            {
+                                voiceVadSession.Stop();
+                            }
+                            catch
+                            {
+                            }
+
+                            voiceVadSession.SpeechSegmentReady -=
+                                VoiceVadSession_SpeechSegmentReady;
+
+                            voiceVadSession.Dispose();
+
+                            voiceVadSession = null;
                         }
 
 
+                        voiceVadSession =
+                            new SileroVadSession();
+
+
+                        voiceVadSession.SpeechSegmentReady +=
+                            VoiceVadSession_SpeechSegmentReady;
+
+
+                        voiceVadSession.Start(
+                            voiceRecordingFormat);
+                    }
+
+
+                    Debug.WriteLine(
+                        "SILERO VAD SESSION STARTED FOR NEW VOICE CYCLE");
+
+
+                    // =================================================
+                    // FEED PRE-BUFFER INTO VAD
+                    //
+                    // This is what prevents the first words from
+                    // being lost by VAD.
+                    // =================================================
+
+                    byte[] preBuffer =
+                        GetAutoVoicePreBufferSnapshot();
+
+
+                    if (preBuffer != null &&
+                        preBuffer.Length > 0)
+                    {
                         lock (voiceVadLock)
                         {
                             if (voiceVadSession != null)
                             {
-                                try
-                                {
-                                    voiceVadSession.Stop();
-                                }
-                                catch
-                                {
-                                }
-
-                                voiceVadSession.SpeechSegmentReady -=
-                                    VoiceVadSession_SpeechSegmentReady;
-
-                                voiceVadSession.Dispose();
-
-                                voiceVadSession = null;
-                            }
-
-
-                            voiceVadSession =
-                                new SileroVadSession();
-
-
-                            voiceVadSession.SpeechSegmentReady +=
-                                VoiceVadSession_SpeechSegmentReady;
-
-
-                            voiceVadSession.Start(
-                                voiceRecordingFormat);
-                        }
-
-
-                        Debug.WriteLine(
-                            "SILERO VAD SESSION STARTED FOR NEW VOICE CYCLE");
-
-
-                        // =================================================
-                        // FEED PRE-BUFFER INTO VAD
-                        //
-                        // This is what prevents the first words from
-                        // being lost by VAD.
-                        // =================================================
-
-                        byte[] preBuffer =
-                            GetAutoVoicePreBufferSnapshot();
-
-
-                        if (preBuffer != null &&
-                            preBuffer.Length > 0)
-                        {
-                            lock (voiceVadLock)
-                            {
-                                if (voiceVadSession != null)
-                                {
-                                    voiceVadSession.AcceptAudio(
-                                        preBuffer,
-                                        preBuffer.Length);
-                                }
+                                voiceVadSession.AcceptAudio(
+                                    preBuffer,
+                                    preBuffer.Length);
                             }
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        voiceVadSession = null;
+                }
+                catch (Exception ex)
+                {
+                    voiceVadSession = null;
 
-                        Debug.WriteLine(
-                            "SILERO VAD START ERROR: " +
-                            ex);
-                    }
+                    Debug.WriteLine(
+                        "SILERO VAD START ERROR: " +
+                        ex);
                 }
 
 
@@ -520,10 +513,7 @@ namespace AiInterviewAssistant
                 // EXISTING QUEUE LOGIC UNCHANGED.
                 // =====================================================
 
-                if (!_chatGPTView)
-                {
-                    StartVoiceQuestionQueue();
-                }
+                StartVoiceQuestionQueue();
 
 
                 // =====================================================
@@ -916,8 +906,7 @@ namespace AiInterviewAssistant
                 // CONTINUOUS SILERO VAD
                 // =========================================================
 
-                if (!_chatGPTView &&
-                    isVoiceRecording &&
+                if (isVoiceRecording &&
                     e.Buffer != null &&
                     e.BytesRecorded > 0)
                 {
@@ -1147,69 +1136,66 @@ namespace AiInterviewAssistant
                 // the silence tail that occurred before detection.
                 // =====================================================
 
-                if (!_chatGPTView)
+                try
                 {
-                    try
+                    lock (voiceVadLock)
                     {
-                        lock (voiceVadLock)
+                        if (voiceVadSession != null)
                         {
-                            if (voiceVadSession != null)
-                            {
-                                voiceVadSession.Stop();
+                            voiceVadSession.Stop();
 
 
-                                voiceVadSession.SpeechSegmentReady -=
-                                    VoiceVadSession_SpeechSegmentReady;
+                            voiceVadSession.SpeechSegmentReady -=
+                                VoiceVadSession_SpeechSegmentReady;
 
 
-                                voiceVadSession.Dispose();
+                            voiceVadSession.Dispose();
 
-                                voiceVadSession = null;
-                            }
+                            voiceVadSession = null;
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine(
-                            "SILERO VAD CYCLE STOP ERROR: " +
-                            ex);
-                    }
-
-
-                    // =================================================
-                    // BUILD FINAL QUESTION AUDIO
-                    // =================================================
-
-                    byte[] sessionWav =
-                        BuildVoiceSessionWav();
-
-
-                    if (sessionWav != null &&
-                        sessionWav.Length > 44)
-                    {
-                        Debug.WriteLine(
-                            "VOICE SESSION WAV READY | SIZE = " +
-                            sessionWav.Length);
-
-
-                        // =================================================
-                        // EXISTING QUEUE
-                        //
-                        // DO NOT CHANGE QUEUE IMPLEMENTATION.
-                        // =================================================
-
-                        EnqueueVoiceSession(
-                            sessionWav);
-                    }
-                    else
-                    {
-                        Debug.WriteLine(
-                            "VOICE SESSION: NO SPEECH DETECTED");
-                    }
-
-
-                    RemoveLiveVoiceMessage();
                 }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(
+                        "SILERO VAD CYCLE STOP ERROR: " +
+                        ex);
+                }
+
+
+                // =================================================
+                // BUILD FINAL QUESTION AUDIO
+                // =================================================
+
+                byte[] sessionWav =
+                    BuildVoiceSessionWav();
+
+
+                if (sessionWav != null &&
+                    sessionWav.Length > 44)
+                {
+                    Debug.WriteLine(
+                        "VOICE SESSION WAV READY | SIZE = " +
+                        sessionWav.Length);
+
+
+                    // =================================================
+                    // EXISTING QUEUE
+                    //
+                    // DO NOT CHANGE QUEUE IMPLEMENTATION.
+                    // =================================================
+
+                    EnqueueVoiceSession(
+                        sessionWav);
+                }
+                else
+                {
+                    Debug.WriteLine(
+                        "VOICE SESSION: NO SPEECH DETECTED");
+                }
+
+
+                RemoveLiveVoiceMessage();
             }
             catch (Exception ex)
             {
@@ -1324,9 +1310,6 @@ namespace AiInterviewAssistant
         {
             try
             {
-                if (_chatGPTView)
-                    return;
-
                 if (speechWav == null ||
                     speechWav.Length <= 44)
                 {
@@ -1430,102 +1413,85 @@ namespace AiInterviewAssistant
                 // LOCAL VOICE
                 // =================================================
 
-                if (!_chatGPTView)
+                // =====================================================
+                // FINAL VAD FLUSH
+                //
+                // IMPORTANT:
+                //
+                // SileroVadSession.Stop() performs the final
+                // DrainSpeechSegments().
+                //
+                // SpeechSegmentReady is raised synchronously
+                // during Stop().
+                //
+                // Therefore:
+                //
+                // 1. Stop VAD first
+                // 2. Let final SpeechSegmentReady callback execute
+                // 3. Unsubscribe
+                // 4. Dispose VAD
+                // 5. Build session WAV
+                //
+                // DO NOT unsubscribe before Stop().
+                // =====================================================
+
+                try
                 {
-                    // =====================================================
-                    // FINAL VAD FLUSH
-                    //
-                    // IMPORTANT:
-                    //
-                    // SileroVadSession.Stop() performs the final
-                    // DrainSpeechSegments().
-                    //
-                    // SpeechSegmentReady is raised synchronously
-                    // during Stop().
-                    //
-                    // Therefore:
-                    //
-                    // 1. Stop VAD first
-                    // 2. Let final SpeechSegmentReady callback execute
-                    // 3. Unsubscribe
-                    // 4. Dispose VAD
-                    // 5. Build session WAV
-                    //
-                    // DO NOT unsubscribe before Stop().
-                    // =====================================================
-
-                    try
+                    lock (voiceVadLock)
                     {
-                        lock (voiceVadLock)
+                        if (voiceVadSession != null)
                         {
-                            if (voiceVadSession != null)
-                            {
-                                voiceVadSession.Stop();
+                            voiceVadSession.Stop();
 
-                                voiceVadSession.SpeechSegmentReady -=
-                                    VoiceVadSession_SpeechSegmentReady;
+                            voiceVadSession.SpeechSegmentReady -=
+                                VoiceVadSession_SpeechSegmentReady;
 
-                                voiceVadSession.Dispose();
+                            voiceVadSession.Dispose();
 
-                                voiceVadSession = null;
-                            }
+                            voiceVadSession = null;
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine(
-                            "SILERO VAD STOP ERROR: " +
-                            ex);
-                    }
-
+                }
+                catch (Exception ex)
+                {
                     Debug.WriteLine(
-                        "VOICE STOP: NEW QUESTIONS DISABLED");
-
-                    Debug.WriteLine(
-                        "VOICE STOP: FINALIZING CURRENT VOICE SESSION");
-
-                    // =====================================================
-                    // BUILD SESSION FROM VAD SPEECH SEGMENTS
-                    // =====================================================
-
-                    byte[] sessionWav =
-                        BuildVoiceSessionWav();
-
-                    if (sessionWav != null &&
-                        sessionWav.Length > 44)
-                    {
-                        Debug.WriteLine(
-                            "VOICE SESSION WAV READY | SIZE = " +
-                            sessionWav.Length);
-
-                        EnqueueVoiceSession(
-                            sessionWav);
-                    }
-                    else
-                    {
-                        Debug.WriteLine(
-                            "VOICE SESSION: NO SPEECH DETECTED");
-                    }
-
-                    Debug.WriteLine(
-                        "VOICE STOP: EXISTING QUEUE PROCESSING CONTINUES");
-
-                    RemoveLiveVoiceMessage();
-
-                    return;
+                        "SILERO VAD STOP ERROR: " +
+                        ex);
                 }
 
-                // =================================================
-                // CHATGPT WEBVIEW
-                //
-                // Keep existing ChatGPT behavior untouched.
-                // =================================================
+                Debug.WriteLine(
+                    "VOICE STOP: NEW QUESTIONS DISABLED");
 
-                await Dispatcher.InvokeAsync(() =>
+                Debug.WriteLine(
+                    "VOICE STOP: FINALIZING CURRENT VOICE SESSION");
+
+                // =====================================================
+                // BUILD SESSION FROM VAD SPEECH SEGMENTS
+                // =====================================================
+
+                byte[] sessionWav =
+                    BuildVoiceSessionWav();
+
+                if (sessionWav != null &&
+                    sessionWav.Length > 44)
                 {
-                    UpdateLiveVoiceMessage(
-                        "Processing...");
-                });
+                    Debug.WriteLine(
+                        "VOICE SESSION WAV READY | SIZE = " +
+                        sessionWav.Length);
+
+                    EnqueueVoiceSession(
+                        sessionWav);
+                }
+                else
+                {
+                    Debug.WriteLine(
+                        "VOICE SESSION: NO SPEECH DETECTED");
+                }
+
+                Debug.WriteLine(
+                    "VOICE STOP: EXISTING QUEUE PROCESSING CONTINUES");
+
+                RemoveLiveVoiceMessage();
             }
             catch (Exception ex)
             {
@@ -1619,7 +1585,7 @@ namespace AiInterviewAssistant
                 {
                     ResetVoiceUI();
                 });
-               
+
             }
         }
 

@@ -1340,35 +1340,6 @@ namespace AiInterviewAssistant
                 }
 
                 // =====================================================
-                // CHATGPT VIEW
-                // =====================================================
-
-                if (_chatGPTView)
-                {
-                    Debug.WriteLine(
-                        "SEND QUESTION: ChatGPT View enabled.");
-
-                    Debug.WriteLine(
-                        "SEND QUESTION: Sending question to ChatGPT WebView.");
-
-                    await Dispatcher.InvokeAsync(() =>
-                    {
-                        if (QuestionTextBox != null)
-                        {
-                            QuestionTextBox.Clear();
-                        }
-                    });
-
-                    await ChatGPTWebViewHost.SendQuestionAsync(
-                        question);
-
-                    Debug.WriteLine(
-                        "SEND QUESTION: ChatGPT WebView send completed.");
-
-                    return;
-                }
-
-                // =====================================================
                 // DEBUG
                 // =====================================================
 

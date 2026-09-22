@@ -1,7 +1,6 @@
 ﻿<Window x:Class="AiInterviewAssistant.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:chatgpt="clr-namespace:AiInterviewAssistant.ChatGPTHost"
         Title="AI Interview Assistant"
         Width="630"
         Height="400"
@@ -1141,8 +1140,7 @@
                 HorizontalScrollBarVisibility="Disabled"
                 HorizontalContentAlignment="Stretch"
                 VerticalContentAlignment="Top"
-                Background="Transparent"
-                Visibility="Collapsed">
+                Background="Transparent">
 
                 <ScrollViewer.Resources>
 
@@ -1159,14 +1157,6 @@
                     VerticalAlignment="Top"/>
 
             </ScrollViewer>
-
-            <chatgpt:ChatGPTWebView
-                x:Name="ChatGPTWebViewHost"
-                Grid.Row="1"
-                Margin="14,10,9,8"
-                HorizontalAlignment="Stretch"
-                VerticalAlignment="Stretch"/>
-
 
             <!-- =================================================
                  BOTTOM PANEL

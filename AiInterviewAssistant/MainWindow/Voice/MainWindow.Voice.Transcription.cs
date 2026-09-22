@@ -54,7 +54,7 @@ namespace AiInterviewAssistant
                 //    Debug.WriteLine(
                 //        "STT AUDIO AFTER VAD = " +
                 //        vadAudio.Length + " bytes");
-
+                
                 //    audioBytes = vadAudio;
                 //}
 

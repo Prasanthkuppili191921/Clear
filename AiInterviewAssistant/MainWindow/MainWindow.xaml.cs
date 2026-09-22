@@ -94,9 +94,6 @@ namespace AiInterviewAssistant
 
         private AppSettings currentSettings;
 
-        private bool _chatGPTView;
-
-
         // =========================================================
         // PRIVACY
         // =========================================================
@@ -238,26 +235,13 @@ namespace AiInterviewAssistant
                 ?? new AppSettings();
 
             // =====================================================
-            // CHATGPT VIEW MODE
-            // =====================================================
-
-            _chatGPTView =
-                string.Equals(
-                    System.Configuration.ConfigurationManager
-                        .AppSettings["ChatGPTView"],
-                    "true",
-                    StringComparison.OrdinalIgnoreCase);
-
-            // =====================================================
             // SMART ANSWER VISIBILITY
             // =====================================================
 
             if (SmartAnswerButton != null)
             {
-                SmartAnswerButton.Visibility =
-                    _chatGPTView
-                        ? Visibility.Visible
-                        : Visibility.Collapsed;
+                SmartAnswerButton.Visibility = Visibility.Collapsed;
+                  
             }
 
             // =====================================================
@@ -319,74 +303,9 @@ namespace AiInterviewAssistant
 
             Closed +=
                 MainWindow_Closed;
-
-            Loaded += MainWindow_Loaded;
-
-            Loaded += MainWindow_AutoVoiceLoaded;
         }
 
-        private void MainWindow_AutoVoiceLoaded(
-    object sender,
-    RoutedEventArgs e)
-        {
-            //try
-            //{
-            //    if (_chatGPTView &&
-            //        IsSmartAnswerEnabled)
-            //    {
-            //        StartAutoVoiceDetection();
-            //    }
-            //}
-            //catch
-            //{
-            //}
-        }
-
-        private void MainWindow_Loaded(
-     object sender,
-     RoutedEventArgs e)
-        {
-            try
-            {
-                if (_chatGPTView)
-                {
-                    ChatScrollViewer.Visibility =
-                        Visibility.Collapsed;
-
-                    ChatGPTWebViewHost.Visibility =
-                        Visibility.Visible;
-
-                    ChatGPTWebViewHost.ChatGPTReady +=
-                        ChatGPTWebViewHost_ChatGPTReady;
-
-                    ChatGPTWebViewHost.FocusChatGPT();
-                }
-                else
-                {
-                    ChatGPTWebViewHost.Visibility =
-                        Visibility.Collapsed;
-
-                    ChatScrollViewer.Visibility =
-                        Visibility.Visible;
-                }
-            }
-            catch
-            {
-            }
-        }
-
-        // =========================================================
-        // TEMPORARY CHATGPT INJECTION TEST
-        // =========================================================
-
-        private async void ChatGPTWebViewHost_ChatGPTReady(
-            object sender,
-            EventArgs e)
-        {
-            await ChatGPTWebViewHost.InjectQuestionAsync(
-                "Hello, this is a test question");
-        }
-
+       
 
         // =========================================================
         // CHAT MOUSE WHEEL SCROLL
@@ -499,8 +418,6 @@ namespace AiInterviewAssistant
                             Activate();
 
                             Focus();
-
-                            ChatGPTWebViewHost.FocusChatGPT();
                         }
                         catch
                         {
@@ -1692,14 +1609,6 @@ namespace AiInterviewAssistant
 
                 if (SmartAnswerButton != null)
                     SmartAnswerButton.IsChecked = false;
-
-                //// Auto Voice Detection only in ChatGPTView
-                //if (_chatGPTView)
-                //{
-                //    await ChatGPTWebViewHost.SetComposerVisibleAsync(true);
-
-                //    //StartAutoVoiceDetection();
-                //}
             }
             catch
             {
@@ -1718,13 +1627,6 @@ namespace AiInterviewAssistant
             try
             {
                 _smartAnswerEnabled = false;
-
-                //StopAutoVoiceDetection();
-
-                //if (_chatGPTView)
-                //{
-                //    await ChatGPTWebViewHost.SetComposerVisibleAsync(false);
-                //}
             }
             catch
             {

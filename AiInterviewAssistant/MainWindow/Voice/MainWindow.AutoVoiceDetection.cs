@@ -34,8 +34,7 @@ namespace AiInterviewAssistant
 
         private bool ShouldAutoVoiceDetect()
         {
-            return _chatGPTView &&
-                   IsSmartAnswerEnabled;
+            return IsSmartAnswerEnabled;
         }
 
 
@@ -314,17 +313,6 @@ namespace AiInterviewAssistant
 
 
             // =====================================================
-            // DEBUG
-            // =====================================================
-
-            //Debug.WriteLine(
-            //    "AUTO VOICE LEVEL | RMS=" +
-            //    rms.ToString("0.0000") +
-            //    " | PEAK=" +
-            //    peak.ToString("0.0000"));
-
-
-            // =====================================================
             // SPEECH THRESHOLD
             // =====================================================
 
@@ -353,11 +341,11 @@ namespace AiInterviewAssistant
                 // AUTO VOICE CONDITIONS
                 // ============================================
 
-                if (!_chatGPTView ||
-                    !IsSmartAnswerEnabled)
+                if (!IsSmartAnswerEnabled)
                 {
                     return;
                 }
+
 
                 // ============================================
                 // ALREADY TRIGGERED
@@ -374,6 +362,7 @@ namespace AiInterviewAssistant
                     "AUTO VOICE DETECTED FROM: " +
                     source);
 
+
                 // ============================================
                 // START EXISTING VOICE FUNCTIONALITY
                 // ============================================
@@ -388,6 +377,7 @@ namespace AiInterviewAssistant
                                 await Task.Delay(500);
 
                                 PrepareVoiceCycleForNewRecording();
+
                                 StartVoiceRecording();
 
                                 Debug.WriteLine(
@@ -415,10 +405,10 @@ namespace AiInterviewAssistant
 
 
         // =========================================================
-        // TURN CHATGPT VOICE ON
+        // TURN VOICE ON AUTOMATICALLY
         // =========================================================
 
-        private async Task TurnChatGPTVoiceOnAutomatically()
+        private async Task TurnVoiceOnAutomatically()
         {
             try
             {
@@ -427,9 +417,8 @@ namespace AiInterviewAssistant
                     return;
                 }
 
-
                 Debug.WriteLine(
-                    "AUTO VOICE: TURNING CHATGPT VOICE ON");
+                    "AUTO VOICE: TURNING VOICE ON");
 
 
                 // =================================================
@@ -441,17 +430,6 @@ namespace AiInterviewAssistant
                     TextInputPanel.Visibility =
                         System.Windows.Visibility.Collapsed;
                 }
-
-
-                // =================================================
-                // EXISTING CHATGPT VOICE PATH
-                // =================================================
-
-                await ChatGPTWebViewHost.StartVoiceIfNotActiveAsync();
-
-
-                Debug.WriteLine(
-                    "AUTO VOICE: CHATGPT VOICE TOGGLE SENT");
             }
             catch (Exception ex)
             {

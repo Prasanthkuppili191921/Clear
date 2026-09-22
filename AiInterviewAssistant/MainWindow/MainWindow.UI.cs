@@ -118,11 +118,6 @@ namespace AiInterviewAssistant
 
                 Topmost = true;
                 Activate();
-
-                if (_chatGPTView && IsSmartAnswerEnabled)
-                {
-                    StartAutoVoiceDetection();
-                }
             }
             catch
             {
@@ -139,12 +134,6 @@ namespace AiInterviewAssistant
             object sender,
             RoutedEventArgs e)
         {
-            if (_chatGPTView)
-            {
-                _ = ChatGPTWebViewHost.StartNewChatAsync();
-                return;
-            }
-
             if (isGenerating &&
                 cancellationTokenSource != null)
             {
@@ -248,20 +237,6 @@ namespace AiInterviewAssistant
         {
             try
             {
-                if (_chatGPTView)
-                {
-                    if (TextInputPanel != null)
-                    {
-                        TextInputPanel.Visibility =
-                            Visibility.Collapsed;
-                    }
-
-                    _ = ChatGPTWebViewHost.ToggleVoiceAsync();
-
-                    return;
-                }
-
-
                 // =====================================================
                 // LOCAL VOICE
                 // =====================================================

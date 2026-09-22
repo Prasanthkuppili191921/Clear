@@ -29,6 +29,7 @@ namespace AiInterviewAssistant
         private VoiceCycleState voiceCycleState =
             VoiceCycleState.Idle;
 
+
         // =========================================================
         // QUESTIONS ALREADY TRANSCRIBED
         // =========================================================
@@ -37,6 +38,7 @@ namespace AiInterviewAssistant
             voiceCycleQuestions =
             new List<string>();
 
+
         // =========================================================
         // AUDIO WAITING FOR STT
         // =========================================================
@@ -44,6 +46,7 @@ namespace AiInterviewAssistant
         private readonly List<byte[]>
             voiceCyclePendingAudio =
             new List<byte[]>();
+
 
         // =========================================================
         // STT
@@ -56,6 +59,7 @@ namespace AiInterviewAssistant
 
         private Task
             voiceSttTask;
+
 
         // =========================================================
         // AI
@@ -71,6 +75,7 @@ namespace AiInterviewAssistant
 
         private bool voiceAiRequestStarted = false;
 
+
         // =========================================================
         // TRUE WHEN THE CURRENT CYCLE MUST WAIT FOR ANOTHER
         // VOICE SESSION BEFORE AI CAN START.
@@ -78,11 +83,13 @@ namespace AiInterviewAssistant
 
         private bool voiceCycleWaitingForNextQuestion = false;
 
+
         // =========================================================
         // ONLY ONE PROCESSOR OWNS THE CURRENT CYCLE.
         // =========================================================
 
         private bool voiceCycleProcessorRunning = false;
+
 
         // =========================================================
         // START
@@ -93,6 +100,7 @@ namespace AiInterviewAssistant
             Debug.WriteLine(
                 "VOICE CYCLE: READY");
         }
+
 
         // =========================================================
         // VOICE ON
@@ -125,6 +133,7 @@ namespace AiInterviewAssistant
                         VoiceCycleState.Idle;
                 }
 
+
                 // =====================================================
                 // STT ACTIVE
                 //
@@ -152,6 +161,7 @@ namespace AiInterviewAssistant
                     voiceCycleWaitingForNextQuestion =
                         true;
                 }
+
 
                 // =====================================================
                 // AI ACTIVE
@@ -186,6 +196,7 @@ namespace AiInterviewAssistant
                         VoiceCycleState.Idle;
                 }
 
+
                 // =====================================================
                 // CURRENT CYCLE REMAINS OPEN.
                 // =====================================================
@@ -206,6 +217,7 @@ namespace AiInterviewAssistant
                 }
             }
 
+
             // =========================================================
             // CANCEL ONLY AI OUTSIDE LOCK
             // =========================================================
@@ -222,16 +234,14 @@ namespace AiInterviewAssistant
             }
         }
 
+
         // =========================================================
         // ENQUEUE VOICE SESSION
         // =========================================================
 
         private void EnqueueVoiceSession(
-    byte[] sessionWav)
+            byte[] sessionWav)
         {
-            if (_chatGPTView)
-                return;
-
             try
             {
                 if (sessionWav == null ||
@@ -253,6 +263,7 @@ namespace AiInterviewAssistant
                 //
                 // STT -> COMBINE QUESTIONS -> ONE AI REQUEST
                 // =========================================================
+
                 lock (voiceCycleLock)
                 {
                     voiceCycleWaitingForNextQuestion =
@@ -261,6 +272,7 @@ namespace AiInterviewAssistant
                     Debug.WriteLine(
                         "VOICE CYCLE: NEXT QUESTION SESSION RECEIVED");
                 }
+
 
                 Dispatcher.BeginInvoke(
                     new Action(() =>
@@ -277,6 +289,7 @@ namespace AiInterviewAssistant
                         }
                     }));
 
+
                 _ = ProcessVoiceCycleAudioAsync(
                     sessionWav);
             }
@@ -288,6 +301,7 @@ namespace AiInterviewAssistant
             }
         }
 
+
         // =========================================================
         // PROCESS CURRENT VOICE SESSION
         // =========================================================
@@ -295,9 +309,6 @@ namespace AiInterviewAssistant
         private async Task ProcessVoiceCycleAudioAsync(
             byte[] newSessionWav)
         {
-            if (_chatGPTView)
-                return;
-
             // =====================================================
             // ONLY ONE PROCESSOR.
             //
@@ -349,8 +360,10 @@ namespace AiInterviewAssistant
                 }
             }
 
+
             if (!becomeProcessor)
                 return;
+
 
             try
             {
@@ -362,6 +375,7 @@ namespace AiInterviewAssistant
                 {
                     List<byte[]> audioToProcess =
                         new List<byte[]>();
+
 
                     // =================================================
                     // TAKE CURRENT + PENDING AUDIO
@@ -381,6 +395,7 @@ namespace AiInterviewAssistant
                             voiceCyclePendingAudio.Clear();
                         }
 
+
                         // -------------------------------------------------
                         // Then process the current session.
                         // -------------------------------------------------
@@ -394,6 +409,7 @@ namespace AiInterviewAssistant
                             newSessionWav = null;
                         }
 
+
                         // -------------------------------------------------
                         // We are now doing STT.
                         // -------------------------------------------------
@@ -401,6 +417,7 @@ namespace AiInterviewAssistant
                         voiceCycleState =
                             VoiceCycleState.SttProcessing;
                     }
+
 
                     // =================================================
                     // WAIT FOR EXISTING STT
@@ -416,6 +433,7 @@ namespace AiInterviewAssistant
                             voiceSttTask;
                     }
 
+
                     if (oldSttTask != null)
                     {
                         try
@@ -427,6 +445,7 @@ namespace AiInterviewAssistant
                         {
                         }
                     }
+
 
                     // =================================================
                     // TRANSCRIBE AUDIO
@@ -440,10 +459,12 @@ namespace AiInterviewAssistant
                             continue;
                         }
 
+
                         string questionText =
                             await TranscribeVoiceCycleAudioAsync(
                                 audio)
                                 .ConfigureAwait(false);
+
 
                         // =================================================
                         // STT CANCELLED
@@ -471,6 +492,7 @@ namespace AiInterviewAssistant
                             return;
                         }
 
+
                         // =================================================
                         // NO TEXT
                         // =================================================
@@ -483,6 +505,7 @@ namespace AiInterviewAssistant
 
                         questionText =
                             questionText.Trim();
+
 
                         lock (voiceCycleLock)
                         {
@@ -497,6 +520,7 @@ namespace AiInterviewAssistant
                                 voiceCycleQuestions.Count);
                         }
                     }
+
 
                     // =================================================
                     // CHECK FOR MORE AUDIO
@@ -526,6 +550,7 @@ namespace AiInterviewAssistant
                              !voiceSttTask.IsCompleted);
                     }
 
+
                     // =================================================
                     // STT STILL RUNNING
                     // =================================================
@@ -539,6 +564,7 @@ namespace AiInterviewAssistant
 
                         continue;
                     }
+
 
                     // =================================================
                     // MORE AUDIO ALREADY ARRIVED
@@ -557,6 +583,7 @@ namespace AiInterviewAssistant
 
                         continue;
                     }
+
 
                     // =================================================
                     // WAITING FOR A NEW VOICE SESSION
@@ -586,6 +613,7 @@ namespace AiInterviewAssistant
                         return;
                     }
 
+
                     // =================================================
                     // GET COMPLETE CURRENT-CYCLE QUESTION
                     // =================================================
@@ -610,17 +638,20 @@ namespace AiInterviewAssistant
                                     .Select(q => q.Trim()));
                     }
 
+
                     Debug.WriteLine(
                         "VOICE CYCLE: COMBINED QUESTION READY");
 
                     Debug.WriteLine(
                         combinedQuestion);
 
+
                     // =================================================
                     // REMOVE PROCESSING MESSAGE
                     // =================================================
 
                     RemoveLiveVoiceMessage();
+
 
                     // =================================================
                     // START ONE AI REQUEST
@@ -638,6 +669,7 @@ namespace AiInterviewAssistant
                         voiceAiTask =
                             aiTask;
                     }
+
 
                     await aiTask
                         .ConfigureAwait(false);
@@ -676,6 +708,7 @@ namespace AiInterviewAssistant
             }
         }
 
+
         // =========================================================
         // STT
         // =========================================================
@@ -684,9 +717,6 @@ namespace AiInterviewAssistant
             TranscribeVoiceCycleAudioAsync(
                 byte[] audio)
         {
-            if (_chatGPTView)
-                return string.Empty;
-
             CancellationTokenSource cts =
                 new CancellationTokenSource();
 
@@ -773,6 +803,7 @@ namespace AiInterviewAssistant
             }
         }
 
+
         // =========================================================
         // START AI
         // =========================================================
@@ -780,9 +811,6 @@ namespace AiInterviewAssistant
         private async Task StartVoiceCycleAiAsync(
             string combinedQuestion)
         {
-            if (_chatGPTView)
-                return;
-
             if (string.IsNullOrWhiteSpace(
                 combinedQuestion))
             {
@@ -809,6 +837,7 @@ namespace AiInterviewAssistant
                     false;
             }
 
+
             Border thinkingBubble = null;
 
             try
@@ -824,6 +853,7 @@ namespace AiInterviewAssistant
                     previousAiTask =
                         voiceAiTask;
                 }
+
 
                 if (previousAiTask != null)
                 {
@@ -843,6 +873,7 @@ namespace AiInterviewAssistant
                         "VOICE CYCLE: PREVIOUS AI TASK EXITED");
                 }
 
+
                 // =================================================
                 // CANCELLED WHILE WAITING
                 // =================================================
@@ -854,6 +885,7 @@ namespace AiInterviewAssistant
 
                     return;
                 }
+
 
                 // =================================================
                 // UI
@@ -874,6 +906,7 @@ namespace AiInterviewAssistant
                         "");
                 });
 
+
                 // =================================================
                 // CANCELLED DURING UI
                 // =================================================
@@ -885,6 +918,7 @@ namespace AiInterviewAssistant
 
                     return;
                 }
+
 
                 // =================================================
                 // MARK REQUEST STARTED
@@ -900,8 +934,10 @@ namespace AiInterviewAssistant
                     }
                 }
 
+
                 Debug.WriteLine(
                     "VOICE CYCLE: AI GENERATION START");
+
 
                 // =================================================
                 // SETTINGS
@@ -925,6 +961,7 @@ namespace AiInterviewAssistant
                             "Short";
                     }
                 }
+
 
                 // =================================================
                 // EXISTING AI PIPELINE
@@ -966,6 +1003,7 @@ namespace AiInterviewAssistant
                             voiceAiCts = null;
                         }
 
+
                         // =================================================
                         // AI CANCELLED
                         //
@@ -1006,6 +1044,7 @@ namespace AiInterviewAssistant
             }
         }
 
+
         // =========================================================
         // STOP QUEUE
         // =========================================================
@@ -1033,6 +1072,7 @@ namespace AiInterviewAssistant
                     voiceAiTask;
             }
 
+
             try
             {
                 sttCts?.Cancel();
@@ -1049,6 +1089,7 @@ namespace AiInterviewAssistant
             {
             }
 
+
             if (sttTask != null)
             {
                 try
@@ -1061,6 +1102,7 @@ namespace AiInterviewAssistant
                 }
             }
 
+
             if (aiTask != null)
             {
                 try
@@ -1072,6 +1114,7 @@ namespace AiInterviewAssistant
                 {
                 }
             }
+
 
             lock (voiceCycleLock)
             {
@@ -1099,6 +1142,7 @@ namespace AiInterviewAssistant
                     VoiceCycleState.Idle;
             }
         }
+
 
         // =========================================================
         // BUILD VOICE SESSION WAV
@@ -1138,15 +1182,18 @@ namespace AiInterviewAssistant
                         wav.Length - 44;
                 }
 
+
                 if (totalPcmBytes <= 0)
                 {
                     return null;
                 }
 
+
                 byte[] combinedPcm =
                     new byte[totalPcmBytes];
 
                 int offset = 0;
+
 
                 foreach (byte[] wav in segments)
                 {
@@ -1169,6 +1216,7 @@ namespace AiInterviewAssistant
                     offset += pcmLength;
                 }
 
+
                 return CreatePcm16Wav(
                     combinedPcm,
                     16000,
@@ -1184,6 +1232,7 @@ namespace AiInterviewAssistant
                 return null;
             }
         }
+
 
         // =========================================================
         // CREATE PCM16 WAV
@@ -1210,6 +1259,7 @@ namespace AiInterviewAssistant
 
             int fileSize =
                 36 + pcm.Length;
+
 
             using (var stream =
                    new System.IO.MemoryStream(

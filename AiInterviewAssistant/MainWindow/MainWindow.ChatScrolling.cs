@@ -6,12 +6,6 @@ namespace AiInterviewAssistant
     {
         // =========================================================
         // CHAT SCROLL
-        //
-        // ChatGPTView = true
-        //     -> Scroll ChatGPT WebView
-        //
-        // ChatGPTView = false
-        //     -> Existing WPF ChatScrollViewer
         // =========================================================
 
         private void ScrollChatWindow(
@@ -19,44 +13,6 @@ namespace AiInterviewAssistant
         {
             try
             {
-                // =================================================
-                // CHATGPT VIEW
-                //
-                // Controlled by App.config:
-                //
-                // <add key="ChatGPTView" value="true" />
-                // =================================================
-
-                if (_chatGPTView)
-                {
-                    if (
-                        hotkeyId ==
-                        HotKeysRegister.SCROLL_UP_HOTKEY_ID)
-                    {
-                        _ =
-                            ChatGPTWebViewHost
-                                .ScrollChatGPTAsync(-1);
-
-                        return;
-                    }
-
-
-                    if (
-                        hotkeyId ==
-                        HotKeysRegister.SCROLL_DOWN_HOTKEY_ID)
-                    {
-                        _ =
-                            ChatGPTWebViewHost
-                                .ScrollChatGPTAsync(1);
-
-                        return;
-                    }
-
-
-                    return;
-                }
-
-
                 // =================================================
                 // EXISTING WPF CHAT
                 //

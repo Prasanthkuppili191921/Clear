@@ -307,9 +307,6 @@
     </Compile>
     <Compile Include="AppSettings.cs" />
     <Compile Include="AutoVoice\AutoVoiceManager.cs" />
-    <Compile Include="ChatGPTHost\ChatGPTWebView.xaml.cs">
-      <DependentUpon>ChatGPTWebView.xaml</DependentUpon>
-    </Compile>
     <Compile Include="HotKeysRegister.cs" />
     <Compile Include="InterviewSessionLogger.cs" />
     <Compile Include="MainWindow\AI\MainWindow.AI.ChatUI.cs" />
@@ -378,10 +375,6 @@
     </Compile>
     <Compile Include="SoxrResampler.cs" />
     <Page Include="AppMessageBox\AppMessageBox.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="ChatGPTHost\ChatGPTWebView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -480,24 +473,6 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="ChatGPTHost\Scripts\ChatGPTCleanup.js">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="ChatGPTHost\Scripts\ChatGPTInput.js">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="ChatGPTHost\Scripts\ChatGPTScroll.js">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="ChatGPTHost\Scripts\ChatGPTSend.js">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="ChatGPTHost\Scripts\ChatGPTStyles.js">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="ChatGPTHost\Scripts\ChatGPTUI.js">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="Native\soxr.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

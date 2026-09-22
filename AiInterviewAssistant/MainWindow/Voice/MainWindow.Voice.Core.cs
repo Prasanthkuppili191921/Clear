@@ -28,6 +28,7 @@ namespace AiInterviewAssistant
 
         private bool isVoiceRecording = false;
 
+
         // =========================================================
         // LOCAL MICROPHONE RECORDING STATE
         // =========================================================
@@ -40,6 +41,7 @@ namespace AiInterviewAssistant
 
         private readonly object localVoiceAudioLock =
             new object();
+
 
         // =========================================================
         // CONTINUOUS SILERO VAD
@@ -153,20 +155,6 @@ namespace AiInterviewAssistant
         {
             try
             {
-                // =====================================================
-                // CHATGPT VIEW
-                //
-                // Voice is handled by the embedded ChatGPT WebView.
-                // Returning false prevents the local recorder from
-                // starting after the WebView voice toggle is invoked.
-                // =====================================================
-
-                if (_chatGPTView)
-                {
-                    _ = ChatGPTWebViewHost.ToggleVoiceAsync();
-                    return false;
-                }
-
                 AppSettings settings =
                     SettingsService.Load();
 
