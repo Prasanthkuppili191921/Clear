@@ -185,6 +185,8 @@ namespace AiInterviewAssistant
 
         private static bool _registered;
 
+        private static MainWindow _mainWindow;
+
         private static DateTime _lastEscapePressTime =
             DateTime.MinValue;
 
@@ -311,12 +313,17 @@ namespace AiInterviewAssistant
                 if (!window.IsInitialized)
                     return false;
 
-
                 // =================================================
                 // REMOVE PREVIOUS REGISTRATION
                 // =================================================
 
                 Unregister();
+
+                _mainWindow = window;
+
+                // Automatically enable/disable plain Up/Down scroll
+                // hotkeys based on MainWindow visibility.
+                _mainWindow.IsVisibleChanged += MainWindow_IsVisibleChanged;
 
 
                 // =================================================
@@ -453,27 +460,17 @@ namespace AiInterviewAssistant
                     MOD_NOREPEAT,
                     VK_DOWN);
 
-
                 // =================================================
-                // ALT + UP
+                // CHAT SCROLL UP / DOWN
                 // =================================================
+                // Only register these while the window is visible.
+                // When hidden, Up/Down are released back to the
+                // application currently underneath the assistant.
 
-                RegisterSingleHotkey(
-                    SCROLL_UP_HOTKEY_ID,
-                    MOD_ALT |
-                    MOD_NOREPEAT,
-                    VK_UP);
-
-
-                // =================================================
-                // ALT + DOWN
-                // =================================================
-
-                RegisterSingleHotkey(
-                    SCROLL_DOWN_HOTKEY_ID,
-                    MOD_ALT |
-                    MOD_NOREPEAT,
-                    VK_DOWN);
+                if (window.IsVisible)
+                {
+                    EnableScrollHotkeys();
+                }
 
 
                 // =================================================
@@ -593,6 +590,102 @@ namespace AiInterviewAssistant
                 Unregister();
 
                 return false;
+            }
+        }
+
+
+        // =========================================================
+        // MAIN WINDOW VISIBILITY
+        // =========================================================
+
+        private static void MainWindow_IsVisibleChanged(
+            object sender,
+            System.Windows.DependencyPropertyChangedEventArgs e)
+        {
+            try
+            {
+                if (_mainWindow == null)
+                    return;
+
+                if (_mainWindow.IsVisible)
+                {
+                    EnableScrollHotkeys();
+                }
+                else
+                {
+                    DisableScrollHotkeys();
+                }
+            }
+            catch
+            {
+            }
+        }
+
+
+        // =========================================================
+        // DISABLE SCROLL HOTKEYS
+        // =========================================================
+
+        private static void DisableScrollHotkeys()
+        {
+            try
+            {
+                StopRepeatTimer();
+
+                if (_hotkeyHandle == IntPtr.Zero)
+                    return;
+
+                UnregisterHotKey(
+                    _hotkeyHandle,
+                    SCROLL_UP_HOTKEY_ID);
+
+                UnregisterHotKey(
+                    _hotkeyHandle,
+                    SCROLL_DOWN_HOTKEY_ID);
+
+                _registeredHotkeyIds.Remove(
+                    SCROLL_UP_HOTKEY_ID);
+
+                _registeredHotkeyIds.Remove(
+                    SCROLL_DOWN_HOTKEY_ID);
+            }
+            catch
+            {
+            }
+        }
+
+
+        // =========================================================
+        // ENABLE SCROLL HOTKEYS
+        // =========================================================
+
+        private static void EnableScrollHotkeys()
+        {
+            try
+            {
+                if (_hotkeyHandle == IntPtr.Zero)
+                    return;
+
+                if (!_registeredHotkeyIds.Contains(
+                    SCROLL_UP_HOTKEY_ID))
+                {
+                    RegisterSingleHotkey(
+                        SCROLL_UP_HOTKEY_ID,
+                        MOD_NOREPEAT,
+                        VK_UP);
+                }
+
+                if (!_registeredHotkeyIds.Contains(
+                    SCROLL_DOWN_HOTKEY_ID))
+                {
+                    RegisterSingleHotkey(
+                        SCROLL_DOWN_HOTKEY_ID,
+                        MOD_NOREPEAT,
+                        VK_DOWN);
+                }
+            }
+            catch
+            {
             }
         }
 
@@ -781,9 +874,19 @@ namespace AiInterviewAssistant
 
 
                     // ---------------------------------------------
-                    // CTRL + ARROW
-                    // ALT + ARROW
+                    // ARROW KEYS
                     // ---------------------------------------------
+
+                    if (!_mainWindow.IsVisible &&
+                        (virtualKey == (int)VK_UP ||
+                         virtualKey == (int)VK_DOWN))
+                    {
+                        return CallNextHookEx(
+                            _keyboardHook,
+                            nCode,
+                            wParam,
+                            lParam);
+                    }
 
                     HandleRepeatKeyDown(
                         virtualKey);
@@ -848,6 +951,17 @@ namespace AiInterviewAssistant
                 if (keyId == 0)
                     return;
 
+                if (!IsControlPressed() &&
+                    (virtualKey == (int)VK_UP ||
+                     virtualKey == (int)VK_DOWN))
+                {
+                    if (_mainWindow == null ||
+                        !_mainWindow.IsVisible)
+                    {
+                        return;
+                    }
+                }
+
 
                 int modifier;
 
@@ -860,19 +974,9 @@ namespace AiInterviewAssistant
                 {
                     modifier = 1;
                 }
-
-
-                // =================================================
-                // ALT + ARROW = SCROLL
-                // =================================================
-
-                else if (IsAltPressed())
-                {
-                    modifier = 2;
-                }
                 else
                 {
-                    return;
+                    modifier = 2;
                 }
 
 
@@ -1049,26 +1153,6 @@ namespace AiInterviewAssistant
                     }
                 }
 
-
-                // =================================================
-                // ALT SCROLL
-                // =================================================
-
-                else if (_activeModifier == 2)
-                {
-                    if (!IsAltPressed())
-                    {
-                        StopRepeatTimer();
-
-                        _repeatKeyDown =
-                            false;
-
-                        _activeModifier =
-                            0;
-
-                        return;
-                    }
-                }
 
 
                 // =================================================
@@ -1261,10 +1345,7 @@ namespace AiInterviewAssistant
                     if (IsControlPressed())
                         return MOVE_UP_HOTKEY_ID;
 
-                    if (IsAltPressed())
-                        return SCROLL_UP_HOTKEY_ID;
-
-                    return 0;
+                    return SCROLL_UP_HOTKEY_ID;
 
 
                 case (int)VK_DOWN:
@@ -1272,10 +1353,7 @@ namespace AiInterviewAssistant
                     if (IsControlPressed())
                         return MOVE_DOWN_HOTKEY_ID;
 
-                    if (IsAltPressed())
-                        return SCROLL_DOWN_HOTKEY_ID;
-
-                    return 0;
+                    return SCROLL_DOWN_HOTKEY_ID;
 
 
                 default:
@@ -1547,29 +1625,37 @@ namespace AiInterviewAssistant
 
 
                     // =============================================
-                    // ALT + UP
+                    // UP
                     // =============================================
 
                     case SCROLL_UP_HOTKEY_ID:
 
-                        Execute(
-                            _scrollUp);
+                        if (_mainWindow != null &&
+                            _mainWindow.IsVisible)
+                        {
+                            Execute(
+                                _scrollUp);
 
-                        handled = true;
+                            handled = true;
+                        }
 
                         break;
 
 
                     // =============================================
-                    // ALT + DOWN
+                    // DOWN
                     // =============================================
 
                     case SCROLL_DOWN_HOTKEY_ID:
 
-                        Execute(
-                            _scrollDown);
+                        if (_mainWindow != null &&
+                            _mainWindow.IsVisible)
+                        {
+                            Execute(
+                                _scrollDown);
 
-                        handled = true;
+                            handled = true;
+                        }
 
                         break;
 
@@ -1892,6 +1978,21 @@ namespace AiInterviewAssistant
                     null;
 
                 _clearChat =
+                    null;
+
+                if (_mainWindow != null)
+                {
+                    try
+                    {
+                        _mainWindow.IsVisibleChanged -=
+                            MainWindow_IsVisibleChanged;
+                    }
+                    catch
+                    {
+                    }
+                }
+
+                _mainWindow =
                     null;
 
 
