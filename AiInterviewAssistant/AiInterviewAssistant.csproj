@@ -324,7 +324,6 @@
     <Compile Include="MainWindow\OnlineTests\MainWindow.OnlineTests.Capture.cs" />
     <Compile Include="MainWindow\OnlineTests\MainWindow.OnlineTests.Request.cs" />
     <Compile Include="MainWindow\OnlineTests\MainWindow.OnlineTests.UI.cs" />
-    <Compile Include="MainWindow\Voice\MainWindow.AutoVoiceDetection.cs" />
     <Compile Include="MainWindow\Voice\MainWindow.LocalVoiceCapture.cs" />
     <Compile Include="MainWindow\Voice\Mainwindow.SileroVadService.cs" />
     <Compile Include="MainWindow\Voice\Mainwindow.SileroVadSession.cs" />
