@@ -920,49 +920,6 @@
 
 
                 <!-- =================================================
-                     SMART ANSWER
-                     ================================================= -->
-
-                <Border Style="{StaticResource HotkeyCardStyle}">
-
-                    <Grid>
-
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="145"/>
-                        </Grid.ColumnDefinitions>
-
-
-
-                        <StackPanel>
-
-                            <TextBlock
-                                Text="Smart Answer On / Off"
-                                Style="{StaticResource HotkeyTitleStyle}"/>
-
-                            <TextBlock
-                                Text="Turn Smart Answer mode on or off."
-                                Style="{StaticResource HotkeyDescriptionStyle}"/>
-
-                        </StackPanel>
-
-
-
-                        <Border
-                            Grid.Column="1"
-                            Style="{StaticResource HotkeyBadgeStyle}">
-
-                            <TextBlock
-                                Text="Ctrl + Shift + S"
-                                Style="{StaticResource HotkeyBadgeTextStyle}"/>
-
-                        </Border>
-
-                    </Grid>
-
-                </Border>
-
-                <!-- =================================================
                      CLEAR CHAT
                      ================================================= -->
 

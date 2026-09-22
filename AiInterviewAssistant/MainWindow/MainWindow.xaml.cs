@@ -121,12 +121,7 @@ namespace AiInterviewAssistant
 
         private bool _initializingPrivacy = true;
 
-        // =========================================================
-        // SMART ANSWER
-        // =========================================================
-
-        private bool _smartAnswerEnabled = false;
-
+        
         // =========================================================
         // INTERVIEW SESSION
         // =========================================================
@@ -134,15 +129,6 @@ namespace AiInterviewAssistant
         private InterviewSessionLogger _interviewSessionLogger;
 
         private readonly AutoVoiceManager _autoVoiceManager;
-
-        public bool IsSmartAnswerEnabled
-        {
-            get
-            {
-                return _smartAnswerEnabled;
-            }
-        }
-
 
         private bool IsLocalVoiceEnabled()
         {
@@ -233,33 +219,6 @@ namespace AiInterviewAssistant
             currentSettings =
                 SettingsService.Load()
                 ?? new AppSettings();
-
-            // =====================================================
-            // SMART ANSWER VISIBILITY
-            // =====================================================
-
-            if (SmartAnswerButton != null)
-            {
-                SmartAnswerButton.Visibility = Visibility.Collapsed;
-                  
-            }
-
-            // =====================================================
-            // SMART ANSWER STATE
-            // =====================================================
-
-            //if (SmartAnswerButton != null)
-            //{
-            //    SmartAnswerButton.IsChecked =
-            //        currentSettings.SmartAnswerEnabled;
-            //}
-
-            if (SmartAnswerButton != null)
-            {
-                SmartAnswerButton.IsChecked = false;
-                _smartAnswerEnabled = false;
-            }
-
 
             // =====================================================
             // APPLY APPEARANCE
@@ -734,27 +693,6 @@ namespace AiInterviewAssistant
 
                             MessageModeButton.IsChecked =
                                 !MessageModeButton.IsChecked;
-                        }
-                        catch
-                        {
-                        }
-                    },
-
-                    // =================================================
-                    // SMART ANSWER ON / OFF
-                    // CTRL + SHIFT + S
-                    // =================================================
-
-                    () =>
-                    {
-                        try
-                        {
-                            if (SmartAnswerButton == null)
-                                return;
-
-                            //SmartAnswerButton.IsChecked =
-                            //    !SmartAnswerButton.IsChecked;
-                            SmartAnswerButton.IsChecked = false;
                         }
                         catch
                         {
@@ -1595,110 +1533,6 @@ namespace AiInterviewAssistant
             }
         }
 
-        // =========================================================
-        // SMART ANSWER ON
-        // =========================================================
-
-        private void SmartAnswerButton_Checked(
-     object sender,
-     RoutedEventArgs e)
-        {
-            try
-            {
-                _smartAnswerEnabled = false;
-
-                if (SmartAnswerButton != null)
-                    SmartAnswerButton.IsChecked = false;
-            }
-            catch
-            {
-            }
-        }
-
-
-        // =========================================================
-        // SMART ANSWER OFF
-        // =========================================================
-
-        private void SmartAnswerButton_Unchecked(
-     object sender,
-     RoutedEventArgs e)
-        {
-            try
-            {
-                _smartAnswerEnabled = false;
-            }
-            catch
-            {
-            }
-        }
-
-        // =========================================================
-        // SMART ANSWER ON
-        // =========================================================
-
-        private void SmartAnswerToggleButton_Checked(
-    object sender,
-    RoutedEventArgs e)
-        {
-            try
-            {
-                AppSettings settings =
-                    SettingsService.Load()
-                    ?? new AppSettings();
-
-                settings.SmartAnswerEnabled = false;
-
-                SettingsService.Save(settings);
-
-                currentSettings = settings;
-
-                _smartAnswerEnabled = false;
-
-                if (SmartAnswerButton != null)
-                    SmartAnswerButton.IsChecked = false;
-
-                Debug.WriteLine("SMART ANSWER: DISABLED");
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(
-                    "SMART ANSWER DISABLE ERROR: " +
-                    ex.ToString());
-            }
-        }
-
-
-        // =========================================================
-        // SMART ANSWER OFF
-        // =========================================================
-
-        private void SmartAnswerToggleButton_Unchecked(
-            object sender,
-            RoutedEventArgs e)
-        {
-            try
-            {
-                AppSettings settings =
-                    SettingsService.Load()
-                    ?? new AppSettings();
-
-                settings.SmartAnswerEnabled = false;
-
-                SettingsService.Save(settings);
-
-                currentSettings = settings;
-
-                Debug.WriteLine(
-                    "SMART ANSWER: OFF");
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(
-                    "SMART ANSWER OFF ERROR: " +
-                    ex.ToString());
-            }
-        }
 
         // =========================================================
         // CLEAR CHAT HOTKEY

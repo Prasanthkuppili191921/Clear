@@ -39,26 +39,5 @@
         {
             SettingsService.Save(settings);
         }
-
-        // =====================================================
-        // SMART ANSWER - LOAD
-        // =====================================================
-
-        public bool GetSmartAnswerEnabled()
-        {
-            return settings.SmartAnswerEnabled;
-        }
-
-
-        // =====================================================
-        // SMART ANSWER - UPDATE
-        // =====================================================
-
-        public void SetSmartAnswerEnabled(
-            bool value)
-        {
-            settings.SmartAnswerEnabled =
-                value;
-        }
     }
 }

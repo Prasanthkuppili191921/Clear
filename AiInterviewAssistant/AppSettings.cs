@@ -18,10 +18,6 @@ namespace AiInterviewAssistant
 
         public string DeepgramApiKey { get; set; } = "";
 
-        public bool SmartAnswerEnabled { get; set; } = false;
-
-
-
         // =========================================================
         // AI
         // =========================================================

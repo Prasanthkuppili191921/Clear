@@ -225,8 +225,6 @@ namespace AiInterviewAssistant
 
         private static Action _message;
 
-        private static Action _smartAnswer;
-
         private static Action _clearChat;
 
         private static Action _autoVoice;
@@ -308,7 +306,6 @@ namespace AiInterviewAssistant
             Action send,
             Action settings,
             Action message,
-            Action smartAnswer,
             Action autoVoice,
             Action clearChat)
         {
@@ -375,9 +372,6 @@ namespace AiInterviewAssistant
 
                 _message =
                     message;
-
-                _smartAnswer =
-                    smartAnswer;
 
                 _autoVoice = 
                     autoVoice;
@@ -547,18 +541,6 @@ namespace AiInterviewAssistant
                     MOD_CONTROL |
                     MOD_NOREPEAT,
                     VK_M);
-
-                //// =================================================
-                //// CTRL + SHIFT + S
-                //// SMART ANSWER ON / OFF
-                //// =================================================
-
-                //RegisterSingleHotkey(
-                //    SMART_ANSWER_HOTKEY_ID,
-                //    MOD_CONTROL |
-                //    MOD_SHIFT |
-                //    MOD_NOREPEAT,
-                //    VK_S);
 
                 // =================================================
                 // CTRL + SHIFT + BACKSPACE
@@ -1764,20 +1746,7 @@ namespace AiInterviewAssistant
 
                         break;
 
-                    // =============================================
-                    // CTRL + SHIFT + S
-                    // SMART ANSWER ON / OFF
-                    // =============================================
-
-                    //case SMART_ANSWER_HOTKEY_ID:
-
-                    //    Execute(
-                    //        _smartAnswer);
-
-                    //    handled = true;
-
-                    //    break;
-
+                   
                     // =============================================
                     // CTRL + SHIFT + BACKSPACE
                     // CLEAR CHAT
@@ -2008,9 +1977,6 @@ namespace AiInterviewAssistant
                     null;
 
                 _message =
-                    null;
-
-                _smartAnswer =
                     null;
 
                 _autoVoice = 

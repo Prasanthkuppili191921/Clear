@@ -355,8 +355,6 @@
     <Compile Include="Settings\General\GeneralTab.xaml.cs">
       <DependentUpon>GeneralTab.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Settings\General\SmartAnswerService.cs" />
-    <Compile Include="Settings\General\SmartAnswerService_existed.cs" />
     <Compile Include="Settings\HotKeysReadonly\HotKeysReadonly.xaml.cs">
       <DependentUpon>HotKeysReadonly.xaml</DependentUpon>
     </Compile>

@@ -130,18 +130,13 @@ namespace AiInterviewAssistant
                 // RESPONSE LENGTH
                 // =====================================================
 
-                string responseLength = null;
-
-                if (!_smartAnswerEnabled)
-                {
-                    responseLength =
+                string responseLength =
                         settings.ResponseLength;
 
-                    if (string.IsNullOrWhiteSpace(
-                        responseLength))
-                    {
-                        responseLength = "Medium";
-                    }
+                if (string.IsNullOrWhiteSpace(
+                    responseLength))
+                {
+                    responseLength = "Medium";
                 }
 
                 // =====================================================
@@ -151,35 +146,18 @@ namespace AiInterviewAssistant
                 string languageInstruction =
                     "Answer in natural professional English.";
 
-                // =====================================================
-                // ANSWER MODE / SMART ANSWER
-                // =====================================================
+                string modeInstruction =
+                    BuildAnswerModeInstruction(
+                         answerMode,
+                         responseLength);
 
-                string finalQuestion;
-
-                if (_smartAnswerEnabled)
-                {
-                    finalQuestion =
-                        languageInstruction +
-                        "\n\n" +
-                        "Interview question:\n" +
-                        question;
-                }
-                else
-                {
-                    string modeInstruction =
-                        BuildAnswerModeInstruction(
-                            answerMode,
-                            responseLength);
-
-                    finalQuestion =
-                        modeInstruction +
-                        "\n\n" +
-                        languageInstruction +
-                        "\n\n" +
-                        "Interview question:\n" +
-                        question;
-                }
+                string finalQuestion =
+                    modeInstruction +
+                    "\n\n" +
+                    languageInstruction +
+                    "\n\n" +
+                    "Interview question:\n" +
+                    question;
 
                 // =====================================================
                 // ONLINE TEST MODE
@@ -1326,17 +1304,12 @@ namespace AiInterviewAssistant
                 // ANSWER MODE
                 // =====================================================
 
-                string answerMode = null;
-
-                if (!_smartAnswerEnabled)
-                {
-                    answerMode =
+                string answerMode =
                         settings.AnswerMode;
 
-                    if (string.IsNullOrWhiteSpace(answerMode))
-                    {
-                        answerMode = "Short";
-                    }
+                if (string.IsNullOrWhiteSpace(answerMode))
+                {
+                    answerMode = "Short";
                 }
 
                 // =====================================================

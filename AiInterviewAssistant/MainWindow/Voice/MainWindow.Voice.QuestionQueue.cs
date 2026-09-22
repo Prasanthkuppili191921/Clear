@@ -947,20 +947,11 @@ namespace AiInterviewAssistant
                     SettingsService.Load()
                     ?? new AppSettings();
 
-                string answerMode = null;
+                string answerMode =
+                    settings.AnswerMode;
 
-                if (!_smartAnswerEnabled)
-                {
-                    answerMode =
-                        settings.AnswerMode;
-
-                    if (string.IsNullOrWhiteSpace(
-                        answerMode))
-                    {
-                        answerMode =
-                            "Short";
-                    }
-                }
+                if (string.IsNullOrWhiteSpace(answerMode))
+                    answerMode = "Short";
 
 
                 // =================================================

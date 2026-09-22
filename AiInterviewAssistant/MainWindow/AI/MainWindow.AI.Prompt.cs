@@ -310,8 +310,8 @@ namespace AiInterviewAssistant
         // =========================================================
 
         private List<object> BuildMessages(
-            AppSettings settings,
-            string languageInstruction)
+    AppSettings settings,
+    string languageInstruction)
         {
             List<object> messages =
                 new List<object>();
@@ -376,21 +376,6 @@ namespace AiInterviewAssistant
                 BuildSystemPrompt(
                     settings,
                     languageInstruction);
-
-            // =========================================================
-            // SMART ANSWER
-            //
-            // Leave existing Smart Answer behavior untouched.
-            // =========================================================
-
-            if (_smartAnswerEnabled &&
-                !string.IsNullOrWhiteSpace(currentQuestion))
-            {
-                systemPrompt +=
-                    "\n\n" +
-                    SmartAnswerService_existed.BuildInstruction(
-                        currentQuestion);
-            }
 
             // =========================================================
             // SYSTEM MESSAGE

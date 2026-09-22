@@ -34,7 +34,7 @@ namespace AiInterviewAssistant
 
         private bool ShouldAutoVoiceDetect()
         {
-            return IsSmartAnswerEnabled;
+            return true;
         }
 
 
@@ -337,15 +337,6 @@ namespace AiInterviewAssistant
         {
             try
             {
-                // ============================================
-                // AUTO VOICE CONDITIONS
-                // ============================================
-
-                if (!IsSmartAnswerEnabled)
-                {
-                    return;
-                }
-
 
                 // ============================================
                 // ALREADY TRIGGERED
