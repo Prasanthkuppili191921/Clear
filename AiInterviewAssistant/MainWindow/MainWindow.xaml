@@ -16,587 +16,594 @@
 
     <Window.Resources>
 
-        <!-- =====================================================
+        <ResourceDictionary>
+
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Chat/ChatMessageStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+
+            <!-- =====================================================
              COLORS
              ===================================================== -->
 
-        <SolidColorBrush x:Key="WindowBackgroundBrush"
+            <SolidColorBrush x:Key="WindowBackgroundBrush"
                          Color="#660C0E12"/>
 
-        <SolidColorBrush x:Key="HeaderBackgroundBrush"
+            <SolidColorBrush x:Key="HeaderBackgroundBrush"
                          Color="#22000000"/>
 
-        <SolidColorBrush x:Key="PanelBackgroundBrush"
+            <SolidColorBrush x:Key="PanelBackgroundBrush"
                          Color="#22000000"/>
 
-        <SolidColorBrush x:Key="MainBorderBrush"
+            <SolidColorBrush x:Key="MainBorderBrush"
                          Color="#333C424D"/>
 
-        <SolidColorBrush x:Key="DividerBrush"
+            <SolidColorBrush x:Key="DividerBrush"
                          Color="#222F343D"/>
 
-        <SolidColorBrush x:Key="PrimaryTextBrush"
+            <SolidColorBrush x:Key="PrimaryTextBrush"
                          Color="#F4F6FA"/>
 
-        <SolidColorBrush x:Key="SecondaryTextBrush"
+            <SolidColorBrush x:Key="SecondaryTextBrush"
                          Color="#858C99"/>
 
-        <SolidColorBrush x:Key="MutedTextBrush"
+            <SolidColorBrush x:Key="MutedTextBrush"
                          Color="#687180"/>
 
-        <SolidColorBrush x:Key="AccentBrush"
+            <SolidColorBrush x:Key="AccentBrush"
                          Color="#4D8DFF"/>
 
-        <SolidColorBrush x:Key="WhiteBrush"
+            <SolidColorBrush x:Key="WhiteBrush"
                          Color="#F4F6FA"/>
 
-        <SolidColorBrush x:Key="SecondaryTextBrushLegacy"
+            <SolidColorBrush x:Key="SecondaryTextBrushLegacy"
                          Color="#8E95A3"/>
 
-        <SolidColorBrush x:Key="BlueBrush"
+            <SolidColorBrush x:Key="BlueBrush"
                          Color="#4D8DFF"/>
 
-        <SolidColorBrush x:Key="BlueHoverBrush"
+            <SolidColorBrush x:Key="BlueHoverBrush"
                          Color="#659DFF"/>
 
-        <SolidColorBrush x:Key="RedBrush"
+            <SolidColorBrush x:Key="RedBrush"
                          Color="#E85B5B"/>
 
 
-        <!-- =====================================================
+            <!-- =====================================================
              VOICE PULSE
              ===================================================== -->
 
-        <Storyboard x:Key="VoicePulseAnimation"
+            <Storyboard x:Key="VoicePulseAnimation"
                     RepeatBehavior="Forever"
                     AutoReverse="True">
 
-            <DoubleAnimation
+                <DoubleAnimation
                 Storyboard.TargetName="VoicePulseScale"
                 Storyboard.TargetProperty="ScaleX"
                 From="1"
                 To="1.10"
                 Duration="0:0:0.55"/>
 
-            <DoubleAnimation
+                <DoubleAnimation
                 Storyboard.TargetName="VoicePulseScale"
                 Storyboard.TargetProperty="ScaleY"
                 From="1"
                 To="1.10"
                 Duration="0:0:0.55"/>
 
-        </Storyboard>
+            </Storyboard>
 
 
-        <!-- =====================================================
+            <!-- =====================================================
              TRANSPARENT ICON BUTTON
              ===================================================== -->
 
-        <Style x:Key="TransparentIconButton"
+            <Style x:Key="TransparentIconButton"
                TargetType="Button">
 
-            <Setter Property="Background"
+                <Setter Property="Background"
                     Value="Transparent"/>
 
-            <Setter Property="BorderThickness"
+                <Setter Property="BorderThickness"
                     Value="0"/>
 
-            <Setter Property="Foreground"
+                <Setter Property="Foreground"
                     Value="{DynamicResource PrimaryTextBrush}"/>
 
-            <Setter Property="Template">
+                <Setter Property="Template">
 
-                <Setter.Value>
+                    <Setter.Value>
 
-                    <ControlTemplate TargetType="Button">
+                        <ControlTemplate TargetType="Button">
 
-                        <Border
+                            <Border
                             x:Name="IconBorder"
                             Background="{TemplateBinding Background}"
                             CornerRadius="14">
 
-                            <ContentPresenter
+                                <ContentPresenter
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"/>
 
-                        </Border>
+                            </Border>
 
-                        <ControlTemplate.Triggers>
+                            <ControlTemplate.Triggers>
 
-                            <Trigger
+                                <Trigger
                                 Property="IsMouseOver"
                                 Value="True">
 
-                                <Setter
+                                    <Setter
                                     TargetName="IconBorder"
                                     Property="Background"
                                     Value="#22FFFFFF"/>
 
-                            </Trigger>
+                                </Trigger>
 
-                            <Trigger
+                                <Trigger
                                 Property="IsPressed"
                                 Value="True">
 
-                                <Setter
+                                    <Setter
                                     TargetName="IconBorder"
                                     Property="Opacity"
                                     Value="0.75"/>
 
-                            </Trigger>
+                                </Trigger>
 
-                        </ControlTemplate.Triggers>
+                            </ControlTemplate.Triggers>
 
-                    </ControlTemplate>
+                        </ControlTemplate>
 
-                </Setter.Value>
+                    </Setter.Value>
 
-            </Setter>
+                </Setter>
 
-        </Style>
+            </Style>
 
 
-        <!-- =====================================================
+            <!-- =====================================================
              VOICE BUTTON
              ===================================================== -->
 
-        <Style x:Key="VoiceButtonStyle"
+            <Style x:Key="VoiceButtonStyle"
                TargetType="Button">
 
-            <Setter Property="Width"
+                <Setter Property="Width"
                     Value="40"/>
 
-            <Setter Property="Height"
+                <Setter Property="Height"
                     Value="40"/>
 
-            <Setter Property="Background"
+                <Setter Property="Background"
                     Value="Transparent"/>
 
-            <Setter Property="BorderThickness"
+                <Setter Property="BorderThickness"
                     Value="0"/>
 
-            <Setter Property="Foreground"
+                <Setter Property="Foreground"
                     Value="{DynamicResource PrimaryTextBrush}"/>
 
-            <Setter Property="Template">
+                <Setter Property="Template">
 
-                <Setter.Value>
+                    <Setter.Value>
 
-                    <ControlTemplate TargetType="Button">
+                        <ControlTemplate TargetType="Button">
 
-                        <Border
+                            <Border
                             x:Name="VoiceBorder"
                             Width="40"
                             Height="40"
                             CornerRadius="20"
                             Background="{TemplateBinding Background}">
 
-                            <ContentPresenter
+                                <ContentPresenter
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"/>
 
-                        </Border>
+                            </Border>
 
-                        <ControlTemplate.Triggers>
+                            <ControlTemplate.Triggers>
 
-                            <Trigger
+                                <Trigger
                                 Property="IsMouseOver"
                                 Value="True">
 
-                                <Setter
+                                    <Setter
                                     TargetName="VoiceBorder"
                                     Property="Opacity"
                                     Value="0.92"/>
 
-                            </Trigger>
+                                </Trigger>
 
-                            <Trigger
+                                <Trigger
                                 Property="IsPressed"
                                 Value="True">
 
-                                <Setter
+                                    <Setter
                                     TargetName="VoiceBorder"
                                     Property="Opacity"
                                     Value="0.75"/>
 
-                            </Trigger>
+                                </Trigger>
 
-                        </ControlTemplate.Triggers>
+                            </ControlTemplate.Triggers>
 
-                    </ControlTemplate>
+                        </ControlTemplate>
 
-                </Setter.Value>
+                    </Setter.Value>
 
-            </Setter>
+                </Setter>
 
-        </Style>
+            </Style>
 
 
-        <!-- =====================================================
+            <!-- =====================================================
              MESSAGE TOGGLE BUTTON
              ===================================================== -->
 
-        <Style x:Key="MessageToggleButtonStyle"
+            <Style x:Key="MessageToggleButtonStyle"
                TargetType="ToggleButton">
 
-            <Setter Property="Width"
+                <Setter Property="Width"
                     Value="40"/>
 
-            <Setter Property="Height"
+                <Setter Property="Height"
                     Value="40"/>
 
-            <Setter Property="Background"
+                <Setter Property="Background"
                     Value="Transparent"/>
 
-            <Setter Property="BorderThickness"
+                <Setter Property="BorderThickness"
                     Value="0"/>
 
-            <Setter Property="Foreground"
+                <Setter Property="Foreground"
                     Value="{DynamicResource PrimaryTextBrush}"/>
 
-            <Setter Property="Template">
+                <Setter Property="Template">
 
-                <Setter.Value>
+                    <Setter.Value>
 
-                    <ControlTemplate TargetType="ToggleButton">
+                        <ControlTemplate TargetType="ToggleButton">
 
-                        <Border
+                            <Border
                             x:Name="MessageBorder"
                             Width="40"
                             Height="40"
                             CornerRadius="20"
                             Background="{TemplateBinding Background}">
 
-                            <ContentPresenter
+                                <ContentPresenter
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"/>
 
-                        </Border>
+                            </Border>
 
-                        <ControlTemplate.Triggers>
+                            <ControlTemplate.Triggers>
 
-                            <Trigger
+                                <Trigger
                                 Property="IsChecked"
                                 Value="True">
 
-                                <Setter
+                                    <Setter
                                     TargetName="MessageBorder"
                                     Property="Background"
                                     Value="{DynamicResource AccentBrush}"/>
 
-                            </Trigger>
+                                </Trigger>
 
-                            <MultiTrigger>
+                                <MultiTrigger>
 
-                                <MultiTrigger.Conditions>
+                                    <MultiTrigger.Conditions>
 
-                                    <Condition
+                                        <Condition
                                         Property="IsChecked"
                                         Value="True"/>
 
-                                    <Condition
+                                        <Condition
                                         Property="IsMouseOver"
                                         Value="True"/>
 
-                                </MultiTrigger.Conditions>
+                                    </MultiTrigger.Conditions>
 
-                                <Setter
+                                    <Setter
                                     TargetName="MessageBorder"
                                     Property="Background"
                                     Value="{DynamicResource BlueHoverBrush}"/>
 
-                            </MultiTrigger>
+                                </MultiTrigger>
 
-                            <Trigger
+                                <Trigger
                                 Property="IsPressed"
                                 Value="True">
 
-                                <Setter
+                                    <Setter
                                     TargetName="MessageBorder"
                                     Property="Opacity"
                                     Value="0.75"/>
 
-                            </Trigger>
+                                </Trigger>
 
-                        </ControlTemplate.Triggers>
+                            </ControlTemplate.Triggers>
 
-                    </ControlTemplate>
+                        </ControlTemplate>
 
-                </Setter.Value>
+                    </Setter.Value>
 
-            </Setter>
+                </Setter>
 
-        </Style>
+            </Style>
 
 
-        <!-- =====================================================
+            <!-- =====================================================
              MODERN TEXTBOX
              ===================================================== -->
 
-        <Style x:Key="ModernTextBox"
+            <Style x:Key="ModernTextBox"
                TargetType="TextBox">
 
-            <Setter Property="Foreground"
+                <Setter Property="Foreground"
                     Value="{DynamicResource PrimaryTextBrush}"/>
 
-            <Setter Property="Background"
+                <Setter Property="Background"
                     Value="#33000000"/>
 
-            <Setter Property="BorderBrush"
+                <Setter Property="BorderBrush"
                     Value="#303640"/>
 
-            <Setter Property="BorderThickness"
+                <Setter Property="BorderThickness"
                     Value="1"/>
 
-            <Setter Property="FontSize"
+                <Setter Property="FontSize"
                     Value="15"/>
 
-            <Setter Property="Padding"
+                <Setter Property="Padding"
                     Value="15,10,55,10"/>
 
-            <Setter Property="VerticalContentAlignment"
+                <Setter Property="VerticalContentAlignment"
                     Value="Center"/>
 
-            <Setter Property="Template">
+                <Setter Property="Template">
 
-                <Setter.Value>
+                    <Setter.Value>
 
-                    <ControlTemplate TargetType="TextBox">
+                        <ControlTemplate TargetType="TextBox">
 
-                        <Border
+                            <Border
                             x:Name="TextBorder"
                             Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
                             CornerRadius="15">
 
-                            <ScrollViewer
+                                <ScrollViewer
                                 x:Name="PART_ContentHost"/>
 
-                        </Border>
+                            </Border>
 
-                        <ControlTemplate.Triggers>
+                            <ControlTemplate.Triggers>
 
-                            <Trigger
+                                <Trigger
                                 Property="IsKeyboardFocused"
                                 Value="True">
 
-                                <Setter
+                                    <Setter
                                     TargetName="TextBorder"
                                     Property="BorderBrush"
                                     Value="{DynamicResource AccentBrush}"/>
 
-                            </Trigger>
+                                </Trigger>
 
-                        </ControlTemplate.Triggers>
+                            </ControlTemplate.Triggers>
 
-                    </ControlTemplate>
+                        </ControlTemplate>
 
-                </Setter.Value>
+                    </Setter.Value>
 
-            </Setter>
+                </Setter>
 
-        </Style>
+            </Style>
 
 
-        <!-- =====================================================
+            <!-- =====================================================
              SEND BUTTON
              ===================================================== -->
 
-        <Style x:Key="SendButtonStyle"
+            <Style x:Key="SendButtonStyle"
                TargetType="Button">
 
-            <Setter Property="Background"
+                <Setter Property="Background"
                     Value="{DynamicResource AccentBrush}"/>
 
-            <Setter Property="Foreground"
+                <Setter Property="Foreground"
                     Value="White"/>
 
-            <Setter Property="BorderThickness"
+                <Setter Property="BorderThickness"
                     Value="0"/>
 
-            <Setter Property="Template">
+                <Setter Property="Template">
 
-                <Setter.Value>
+                    <Setter.Value>
 
-                    <ControlTemplate TargetType="Button">
+                        <ControlTemplate TargetType="Button">
 
-                        <Border
+                            <Border
                             x:Name="SendBorder"
                             Background="{TemplateBinding Background}"
                             CornerRadius="20">
 
-                            <ContentPresenter
+                                <ContentPresenter
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"/>
 
-                        </Border>
+                            </Border>
 
-                        <ControlTemplate.Triggers>
+                            <ControlTemplate.Triggers>
 
-                            <Trigger
+                                <Trigger
                                 Property="IsMouseOver"
                                 Value="True">
 
-                                <Setter
+                                    <Setter
                                     TargetName="SendBorder"
                                     Property="Background"
                                     Value="{StaticResource BlueHoverBrush}"/>
 
-                            </Trigger>
+                                </Trigger>
 
-                            <Trigger
+                                <Trigger
                                 Property="IsPressed"
                                 Value="True">
 
-                                <Setter
+                                    <Setter
                                     TargetName="SendBorder"
                                     Property="Opacity"
                                     Value="0.75"/>
 
-                            </Trigger>
+                                </Trigger>
 
-                        </ControlTemplate.Triggers>
+                            </ControlTemplate.Triggers>
 
-                    </ControlTemplate>
+                        </ControlTemplate>
 
-                </Setter.Value>
+                    </Setter.Value>
 
-            </Setter>
+                </Setter>
 
-        </Style>
+            </Style>
 
 
-        <!-- =====================================================
+            <!-- =====================================================
              STOP BUTTON
              ===================================================== -->
 
-        <Style x:Key="StopButtonStyle"
+            <Style x:Key="StopButtonStyle"
                TargetType="Button">
 
-            <Setter Property="Background"
+                <Setter Property="Background"
                     Value="{StaticResource RedBrush}"/>
 
-            <Setter Property="Foreground"
+                <Setter Property="Foreground"
                     Value="White"/>
 
-            <Setter Property="BorderThickness"
+                <Setter Property="BorderThickness"
                     Value="0"/>
 
-            <Setter Property="Template">
+                <Setter Property="Template">
 
-                <Setter.Value>
+                    <Setter.Value>
 
-                    <ControlTemplate TargetType="Button">
+                        <ControlTemplate TargetType="Button">
 
-                        <Border
+                            <Border
                             Background="{TemplateBinding Background}"
                             CornerRadius="20">
 
-                            <ContentPresenter
+                                <ContentPresenter
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"/>
 
-                        </Border>
+                            </Border>
 
-                    </ControlTemplate>
+                        </ControlTemplate>
 
-                </Setter.Value>
+                    </Setter.Value>
 
-            </Setter>
+                </Setter>
 
-        </Style>
+            </Style>
 
 
-        <!-- =====================================================
+            <!-- =====================================================
              SETTINGS COMBOBOX
              ===================================================== -->
 
-        <Style x:Key="SettingsComboBoxStyle"
+            <Style x:Key="SettingsComboBoxStyle"
                TargetType="ComboBox">
 
-            <Setter Property="Foreground"
+                <Setter Property="Foreground"
                     Value="{DynamicResource PrimaryTextBrush}"/>
 
-            <Setter Property="Background"
+                <Setter Property="Background"
                     Value="#252A32"/>
 
-            <Setter Property="BorderBrush"
+                <Setter Property="BorderBrush"
                     Value="#3A424E"/>
 
-            <Setter Property="BorderThickness"
+                <Setter Property="BorderThickness"
                     Value="1"/>
 
-            <Setter Property="FontSize"
+                <Setter Property="FontSize"
                     Value="13"/>
 
-            <Setter Property="Padding"
+                <Setter Property="Padding"
                     Value="10,0"/>
 
-        </Style>
+            </Style>
 
 
-        <!-- =====================================================
+            <!-- =====================================================
              SETTINGS TEXTBOX
              ===================================================== -->
 
-        <Style x:Key="SettingsTextBoxStyle"
+            <Style x:Key="SettingsTextBoxStyle"
                TargetType="TextBox">
 
-            <Setter Property="Foreground"
+                <Setter Property="Foreground"
                     Value="{DynamicResource PrimaryTextBrush}"/>
 
-            <Setter Property="Background"
+                <Setter Property="Background"
                     Value="#252A32"/>
 
-            <Setter Property="BorderBrush"
+                <Setter Property="BorderBrush"
                     Value="#3A424E"/>
 
-            <Setter Property="BorderThickness"
+                <Setter Property="BorderThickness"
                     Value="1"/>
 
-            <Setter Property="FontSize"
+                <Setter Property="FontSize"
                     Value="13"/>
 
-            <Setter Property="Padding"
+                <Setter Property="Padding"
                     Value="10,0"/>
 
-            <Setter Property="VerticalContentAlignment"
+                <Setter Property="VerticalContentAlignment"
                     Value="Center"/>
 
-        </Style>
+            </Style>
 
 
-        <!-- =====================================================
+            <!-- =====================================================
              HIDE TOGGLE / STEALTH
              ===================================================== -->
 
-        <Style x:Key="HideToggleStyle"
+            <Style x:Key="HideToggleStyle"
                TargetType="ToggleButton">
 
-            <Setter Property="Width"
+                <Setter Property="Width"
                     Value="66"/>
 
-            <Setter Property="Height"
+                <Setter Property="Height"
                     Value="30"/>
 
-            <Setter Property="Background"
+                <Setter Property="Background"
                     Value="Transparent"/>
 
-            <Setter Property="BorderThickness"
+                <Setter Property="BorderThickness"
                     Value="0"/>
 
-            <Setter Property="Template">
+                <Setter Property="Template">
 
-                <Setter.Value>
+                    <Setter.Value>
 
-                    <ControlTemplate TargetType="ToggleButton">
+                        <ControlTemplate TargetType="ToggleButton">
 
-                        <Grid
+                            <Grid
                             Width="66"
                             Height="30">
 
-                            <Border
+                                <Border
                                 x:Name="HideTrack"
                                 Width="62"
                                 Height="28"
@@ -605,9 +612,9 @@
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center">
 
-                                <Grid>
+                                    <Grid>
 
-                                    <TextBlock
+                                        <TextBlock
                                         x:Name="OffText"
                                         Text="OFF"
                                         FontSize="9"
@@ -617,7 +624,7 @@
                                         VerticalAlignment="Center"
                                         Margin="0,0,7,0"/>
 
-                                    <TextBlock
+                                        <TextBlock
                                         x:Name="OnText"
                                         Text="ON"
                                         FontSize="9"
@@ -628,7 +635,7 @@
                                         Margin="8,0,0,0"
                                         Visibility="Collapsed"/>
 
-                                    <Ellipse
+                                        <Ellipse
                                         x:Name="HideThumb"
                                         Width="20"
                                         Height="20"
@@ -637,96 +644,96 @@
                                         VerticalAlignment="Center"
                                         Margin="4,0,0,0"/>
 
-                                </Grid>
+                                    </Grid>
 
-                            </Border>
+                                </Border>
 
-                        </Grid>
+                            </Grid>
 
-                        <ControlTemplate.Triggers>
+                            <ControlTemplate.Triggers>
 
-                            <Trigger
+                                <Trigger
                                 Property="IsChecked"
                                 Value="True">
 
-                                <Setter
+                                    <Setter
                                     TargetName="HideTrack"
                                     Property="Background"
                                     Value="{DynamicResource AccentBrush}"/>
 
-                                <Setter
+                                    <Setter
                                     TargetName="HideThumb"
                                     Property="HorizontalAlignment"
                                     Value="Right"/>
 
-                                <Setter
+                                    <Setter
                                     TargetName="HideThumb"
                                     Property="Margin"
                                     Value="0,0,4,0"/>
 
-                                <Setter
+                                    <Setter
                                     TargetName="HideThumb"
                                     Property="Fill"
                                     Value="White"/>
 
-                                <Setter
+                                    <Setter
                                     TargetName="OffText"
                                     Property="Visibility"
                                     Value="Collapsed"/>
 
-                                <Setter
+                                    <Setter
                                     TargetName="OnText"
                                     Property="Visibility"
                                     Value="Visible"/>
 
-                            </Trigger>
+                                </Trigger>
 
-                        </ControlTemplate.Triggers>
+                            </ControlTemplate.Triggers>
 
-                    </ControlTemplate>
+                        </ControlTemplate>
 
-                </Setter.Value>
+                    </Setter.Value>
 
-            </Setter>
+                </Setter>
 
-        </Style>
+            </Style>
 
 
-        <!-- =====================================================
+            <!-- =====================================================
              EXIT BUTTON
              ===================================================== -->
 
-        <Style x:Key="ExitButtonStyle"
+            <Style x:Key="ExitButtonStyle"
                TargetType="Button">
 
-            <Setter Property="Width"
+                <Setter Property="Width"
                     Value="30"/>
 
-            <Setter Property="Height"
+                <Setter Property="Height"
                     Value="30"/>
 
-            <Setter Property="Background"
+                <Setter Property="Background"
                     Value="Transparent"/>
 
-            <Setter Property="Foreground"
+                <Setter Property="Foreground"
                     Value="{DynamicResource PrimaryTextBrush}"/>
 
-            <Setter Property="BorderThickness"
+                <Setter Property="BorderThickness"
                     Value="0"/>
 
-            <Setter Property="Padding"
+                <Setter Property="Padding"
                     Value="0"/>
 
-            <Setter Property="Focusable"
+                <Setter Property="Focusable"
                     Value="True"/>
 
-            <Setter Property="Template">
+                <Setter Property="Template">
 
-                <Setter.Value>
+                    <Setter.Value>
 
-                    <ControlTemplate TargetType="Button">
+                        <ControlTemplate TargetType="Button">
 
-                        <Border
+                            <Border
                             x:Name="ExitBorder"
                             Width="30"
                             Height="30"
@@ -735,7 +742,7 @@
                             BorderBrush="{DynamicResource MainBorderBrush}"
                             BorderThickness="1">
 
-                            <TextBlock
+                                <TextBlock
                                 Text="×"
                                 FontSize="17"
                                 FontWeight="SemiBold"
@@ -744,175 +751,179 @@
                                 VerticalAlignment="Center"
                                 Margin="0,-1,0,0"/>
 
-                        </Border>
+                            </Border>
 
-                        <ControlTemplate.Triggers>
+                            <ControlTemplate.Triggers>
 
-                            <Trigger
+                                <Trigger
                                 Property="IsMouseOver"
                                 Value="True">
 
-                                <Setter
+                                    <Setter
                                     TargetName="ExitBorder"
                                     Property="Background"
                                     Value="{DynamicResource DividerBrush}"/>
 
-                            </Trigger>
+                                </Trigger>
 
-                            <Trigger
+                                <Trigger
                                 Property="IsPressed"
                                 Value="True">
 
-                                <Setter
+                                    <Setter
                                     TargetName="ExitBorder"
                                     Property="Opacity"
                                     Value="0.70"/>
 
-                            </Trigger>
+                                </Trigger>
 
-                        </ControlTemplate.Triggers>
+                            </ControlTemplate.Triggers>
 
-                    </ControlTemplate>
+                        </ControlTemplate>
 
-                </Setter.Value>
+                    </Setter.Value>
 
-            </Setter>
+                </Setter>
 
-        </Style>
+            </Style>
 
 
-        <!-- =====================================================
+            <!-- =====================================================
              ULTRA THIN SCROLLBAR
              ===================================================== -->
 
-        <Style x:Key="ThinScrollBar"
+            <Style x:Key="ThinScrollBar"
                TargetType="ScrollBar">
 
-            <Setter Property="Width"
+                <Setter Property="Width"
                     Value="5"/>
 
-            <Setter Property="Background"
+                <Setter Property="Background"
                     Value="Transparent"/>
 
-            <Setter Property="BorderThickness"
+                <Setter Property="BorderThickness"
                     Value="0"/>
 
-            <Setter Property="Template">
+                <Setter Property="Template">
 
-                <Setter.Value>
+                    <Setter.Value>
 
-                    <ControlTemplate TargetType="ScrollBar">
+                        <ControlTemplate TargetType="ScrollBar">
 
-                        <Grid
+                            <Grid
                             Width="5"
                             Background="Transparent">
 
-                            <Track
+                                <Track
                                 x:Name="PART_Track"
                                 IsDirectionReversed="True">
 
-                                <Track.DecreaseRepeatButton>
+                                    <Track.DecreaseRepeatButton>
 
-                                    <RepeatButton
+                                        <RepeatButton
                                         Command="ScrollBar.PageUpCommand"
                                         Background="Transparent"
                                         BorderThickness="0"
                                         IsTabStop="False"
                                         Opacity="0"/>
 
-                                </Track.DecreaseRepeatButton>
+                                    </Track.DecreaseRepeatButton>
 
-                                <Track.Thumb>
+                                    <Track.Thumb>
 
-                                    <Thumb
+                                        <Thumb
                                         Width="5"
                                         Background="#66778494"
                                         BorderThickness="0">
 
-                                        <Thumb.Template>
+                                            <Thumb.Template>
 
-                                            <ControlTemplate
+                                                <ControlTemplate
                                                 TargetType="Thumb">
 
-                                                <Border
+                                                    <Border
                                                     x:Name="ThumbBorder"
                                                     Width="5"
                                                     Background="{TemplateBinding Background}"
                                                     CornerRadius="3"
                                                     Opacity="0.55"/>
 
-                                                <ControlTemplate.Triggers>
+                                                    <ControlTemplate.Triggers>
 
-                                                    <Trigger
+                                                        <Trigger
                                                         Property="IsMouseOver"
                                                         Value="True">
 
-                                                        <Setter
+                                                            <Setter
                                                             TargetName="ThumbBorder"
                                                             Property="Opacity"
                                                             Value="0.85"/>
 
-                                                    </Trigger>
+                                                        </Trigger>
 
-                                                    <Trigger
+                                                        <Trigger
                                                         Property="IsDragging"
                                                         Value="True">
 
-                                                        <Setter
+                                                            <Setter
                                                             TargetName="ThumbBorder"
                                                             Property="Opacity"
                                                             Value="1"/>
 
-                                                    </Trigger>
+                                                        </Trigger>
 
-                                                </ControlTemplate.Triggers>
+                                                    </ControlTemplate.Triggers>
 
-                                            </ControlTemplate>
+                                                </ControlTemplate>
 
-                                        </Thumb.Template>
+                                            </Thumb.Template>
 
-                                    </Thumb>
+                                        </Thumb>
 
-                                </Track.Thumb>
+                                    </Track.Thumb>
 
-                                <Track.IncreaseRepeatButton>
+                                    <Track.IncreaseRepeatButton>
 
-                                    <RepeatButton
+                                        <RepeatButton
                                         Command="ScrollBar.PageDownCommand"
                                         Background="Transparent"
                                         BorderThickness="0"
                                         IsTabStop="False"
                                         Opacity="0"/>
 
-                                </Track.IncreaseRepeatButton>
+                                    </Track.IncreaseRepeatButton>
 
-                            </Track>
+                                </Track>
 
-                        </Grid>
+                            </Grid>
 
-                    </ControlTemplate>
+                        </ControlTemplate>
 
-                </Setter.Value>
+                    </Setter.Value>
 
-            </Setter>
+                </Setter>
 
-        </Style>
+            </Style>
 
 
-        <!-- =====================================================
+            <!-- =====================================================
              CHAT SCROLLVIEWER STYLE
              ===================================================== -->
 
-        <Style x:Key="ChatScrollViewerStyle"
+            <Style x:Key="ChatScrollViewerStyle"
                TargetType="ScrollViewer">
 
-            <Setter Property="VerticalScrollBarVisibility"
+                <Setter Property="VerticalScrollBarVisibility"
                     Value="Auto"/>
 
-            <Setter Property="HorizontalScrollBarVisibility"
+                <Setter Property="HorizontalScrollBarVisibility"
                     Value="Disabled"/>
 
-        </Style>
+            </Style>
+
+
+
+        </ResourceDictionary>
 
     </Window.Resources>
 

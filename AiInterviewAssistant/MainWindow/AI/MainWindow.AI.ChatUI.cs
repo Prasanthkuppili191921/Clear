@@ -116,20 +116,6 @@ namespace AiInterviewAssistant
             Border bubble =
                 new Border
                 {
-                    Background =
-                        new SolidColorBrush(
-                            backgroundColor),
-
-                    CornerRadius =
-                        new CornerRadius(10),
-
-                    Padding =
-                        new Thickness(
-                            14,
-                            11,
-                            14,
-                            11),
-
                     Margin =
                         margin,
 
@@ -140,29 +126,23 @@ namespace AiInterviewAssistant
                         900
                 };
 
+            bubble.SetResourceReference(
+                FrameworkElement.StyleProperty,
+                alignment == HorizontalAlignment.Right
+                    ? "ChatUserBubbleStyle"
+                    : "ChatAiBubbleStyle");
+
 
             TextBlock text =
-                new TextBlock
-                {
-                    Text =
-                        message ?? "",
+                 new TextBlock
+                 {
+                     Text =
+                         message ?? ""
+                 };
 
-                    FontFamily =
-                        AnswerFont,
-
-                    FontSize =
-                        AnswerFontSize,
-
-                    FontWeight =
-                        FontWeights.Normal,
-
-                    TextWrapping =
-                        TextWrapping.Wrap,
-
-                    Foreground =
-                        new SolidColorBrush(
-                            NormalTextColor)
-                };
+            text.SetResourceReference(
+                FrameworkElement.StyleProperty,
+                "ChatUserTextStyle");
 
 
             bubble.Child =
@@ -240,24 +220,6 @@ namespace AiInterviewAssistant
             Border bubble =
                 new Border
                 {
-                    Background =
-                        new SolidColorBrush(
-                                Color.FromArgb(
-                                    100,
-                                    35,
-                                    38,
-                                    45)),
-
-                    CornerRadius =
-                        new CornerRadius(10),
-
-                    Padding =
-                        new Thickness(
-                            14,
-                            12,
-                            14,
-                            12),
-
                     Margin =
                         new Thickness(
                             0,
@@ -268,6 +230,10 @@ namespace AiInterviewAssistant
                     HorizontalAlignment =
                         HorizontalAlignment.Stretch
                 };
+
+            bubble.SetResourceReference(
+                FrameworkElement.StyleProperty,
+                "ChatAiBubbleStyle");
 
 
             Grid mainGrid =
@@ -547,34 +513,12 @@ namespace AiInterviewAssistant
                 new TextBlock
                 {
                     Text =
-                        text.Trim(),
-
-                    FontFamily =
-                        AnswerFont,
-
-                    FontSize =
-                        AnswerFontSize,
-
-                    FontWeight =
-                        FontWeights.Normal,
-
-                    Foreground =
-                        new SolidColorBrush(
-                            NormalTextColor),
-
-                    TextWrapping =
-                        TextWrapping.Wrap,
-
-                    LineHeight =
-                        22,
-
-                    Margin =
-                        new Thickness(
-                            0,
-                            2,
-                            0,
-                            4)
+                        text.Trim()
                 };
+
+            normalText.SetResourceReference(
+                FrameworkElement.StyleProperty,
+                "ChatBodyTextStyle");
 
 
             panel.Children.Add(

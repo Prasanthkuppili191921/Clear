@@ -1,0 +1,397 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- =========================================================
+         CHAT COLORS
+         ========================================================= -->
+
+    <SolidColorBrush
+        x:Key="ChatUserBubbleBrush"
+        Color="#80324A70"/>
+
+    <SolidColorBrush
+        x:Key="ChatUserBorderBrush"
+        Color="#705F82A8"/>
+
+    <SolidColorBrush
+        x:Key="ChatAiBubbleBrush"
+        Color="#8020252D"/>
+
+    <SolidColorBrush
+        x:Key="ChatAiBorderBrush"
+        Color="#603F4652"/>
+
+
+    <!-- =========================================================
+         TEXT COLORS
+         ========================================================= -->
+
+    <SolidColorBrush
+        x:Key="ChatUserTextBrush"
+        Color="#E8E0D3"/>
+
+    <SolidColorBrush
+        x:Key="ChatAiTextBrush"
+        Color="#DED6C8"/>
+
+    <SolidColorBrush
+        x:Key="ChatUserLabelBrush"
+        Color="#B8CFF0"/>
+
+    <SolidColorBrush
+        x:Key="ChatAiLabelBrush"
+        Color="#B8D8C8"/>
+
+    <SolidColorBrush
+        x:Key="ChatMutedTextBrush"
+        Color="#AAA398"/>
+
+
+    <!-- =========================================================
+         CODE COLORS
+         ========================================================= -->
+
+    <SolidColorBrush
+        x:Key="ChatCodeBackgroundBrush"
+        Color="#6015191F"/>
+
+    <SolidColorBrush
+        x:Key="ChatCodeTextBrush"
+        Color="#D8D0C4"/>
+
+    <SolidColorBrush
+        x:Key="ChatCodeBorderBrush"
+        Color="#50303743"/>
+
+
+    <!-- =========================================================
+         USER BUBBLE STYLE
+         ========================================================= -->
+
+    <Style
+        x:Key="ChatUserBubbleStyle"
+        TargetType="{x:Type Border}">
+
+        <Setter
+            Property="Background"
+            Value="{StaticResource ChatUserBubbleBrush}"/>
+
+        <Setter
+            Property="BorderBrush"
+            Value="{StaticResource ChatUserBorderBrush}"/>
+
+        <Setter
+            Property="BorderThickness"
+            Value="1"/>
+
+        <Setter
+            Property="CornerRadius"
+            Value="14"/>
+
+        <Setter
+            Property="Padding"
+            Value="16,12"/>
+
+    </Style>
+
+
+    <!-- =========================================================
+         AI BUBBLE STYLE
+         ========================================================= -->
+
+    <Style
+        x:Key="ChatAiBubbleStyle"
+        TargetType="{x:Type Border}">
+
+        <Setter
+            Property="Background"
+            Value="{StaticResource ChatAiBubbleBrush}"/>
+
+        <Setter
+            Property="BorderBrush"
+            Value="{StaticResource ChatAiBorderBrush}"/>
+
+        <Setter
+            Property="BorderThickness"
+            Value="1"/>
+
+        <Setter
+            Property="CornerRadius"
+            Value="14"/>
+
+        <Setter
+            Property="Padding"
+            Value="18,14"/>
+
+    </Style>
+
+
+    <!-- =========================================================
+         USER TEXT
+         ========================================================= -->
+
+    <Style
+        x:Key="ChatUserTextStyle"
+        TargetType="{x:Type TextBlock}">
+
+        <Setter
+            Property="Foreground"
+            Value="{StaticResource ChatUserTextBrush}"/>
+
+        <Setter
+            Property="FontFamily"
+            Value="Segoe UI"/>
+
+        <Setter
+            Property="FontSize"
+            Value="15"/>
+
+        <Setter
+            Property="FontWeight"
+            Value="Normal"/>
+
+        <Setter
+            Property="TextWrapping"
+            Value="Wrap"/>
+
+        <Setter
+            Property="LineHeight"
+            Value="23"/>
+
+    </Style>
+
+
+    <!-- =========================================================
+         AI TEXT
+         ========================================================= -->
+
+    <Style
+        x:Key="ChatAiTextStyle"
+        TargetType="{x:Type TextBlock}">
+
+        <Setter
+            Property="Foreground"
+            Value="{StaticResource ChatAiTextBrush}"/>
+
+        <Setter
+            Property="FontFamily"
+            Value="Verdana"/>
+
+        <Setter
+            Property="FontSize"
+            Value="18"/>
+
+        <Setter
+            Property="FontWeight"
+            Value="Normal"/>
+
+        <Setter
+            Property="TextWrapping"
+            Value="Wrap"/>
+
+        <Setter
+            Property="LineHeight"
+            Value="25"/>
+
+    </Style>
+
+
+    <!-- =========================================================
+         AI BODY TEXT
+         ========================================================= -->
+
+    <Style
+        x:Key="ChatBodyTextStyle"
+        TargetType="{x:Type TextBlock}">
+
+        <Setter
+            Property="Foreground"
+            Value="{StaticResource ChatAiTextBrush}"/>
+
+        <Setter
+            Property="FontFamily"
+            Value="Verdana"/>
+
+        <Setter
+            Property="FontSize"
+            Value="18"/>
+
+        <Setter
+            Property="FontWeight"
+            Value="Normal"/>
+
+        <Setter
+            Property="TextWrapping"
+            Value="Wrap"/>
+
+        <Setter
+            Property="LineHeight"
+            Value="25"/>
+
+        <Setter
+            Property="Margin"
+            Value="0,2,0,8"/>
+
+    </Style>
+
+
+    <!-- =========================================================
+         HEADING TEXT
+         ========================================================= -->
+
+    <Style
+        x:Key="ChatHeadingTextStyle"
+        TargetType="{x:Type TextBlock}">
+
+        <Setter
+            Property="Foreground"
+            Value="#EEE5D8"/>
+
+        <Setter
+            Property="FontFamily"
+            Value="Verdana"/>
+
+        <Setter
+            Property="FontSize"
+            Value="18"/>
+
+        <Setter
+            Property="FontWeight"
+            Value="SemiBold"/>
+
+        <Setter
+            Property="TextWrapping"
+            Value="Wrap"/>
+
+        <Setter
+            Property="LineHeight"
+            Value="26"/>
+
+    </Style>
+
+
+    <!-- =========================================================
+         BULLET TEXT
+         ========================================================= -->
+
+    <Style
+        x:Key="ChatBulletTextStyle"
+        TargetType="{x:Type TextBlock}">
+
+        <Setter
+            Property="Foreground"
+            Value="{StaticResource ChatAiTextBrush}"/>
+
+        <Setter
+            Property="FontFamily"
+            Value="Verdana"/>
+
+        <Setter
+            Property="FontSize"
+            Value="18"/>
+
+        <Setter
+            Property="FontWeight"
+            Value="Normal"/>
+
+        <Setter
+            Property="TextWrapping"
+            Value="Wrap"/>
+
+        <Setter
+            Property="LineHeight"
+            Value="25"/>
+
+    </Style>
+
+
+    <!-- =========================================================
+         CODE BLOCK
+         ========================================================= -->
+
+    <Style
+        x:Key="ChatCodeBlockStyle"
+        TargetType="{x:Type Border}">
+
+        <Setter
+            Property="Background"
+            Value="{StaticResource ChatCodeBackgroundBrush}"/>
+
+        <Setter
+            Property="BorderBrush"
+            Value="{StaticResource ChatCodeBorderBrush}"/>
+
+        <Setter
+            Property="BorderThickness"
+            Value="1"/>
+
+        <Setter
+            Property="CornerRadius"
+            Value="8"/>
+
+        <Setter
+            Property="Padding"
+            Value="12,10"/>
+
+    </Style>
+
+
+    <!-- =========================================================
+         CODE TEXT
+         ========================================================= -->
+
+    <Style
+        x:Key="ChatCodeTextStyle"
+        TargetType="{x:Type TextBlock}">
+
+        <Setter
+            Property="Foreground"
+            Value="{StaticResource ChatCodeTextBrush}"/>
+
+        <Setter
+            Property="FontFamily"
+            Value="Cascadia Code"/>
+
+        <Setter
+            Property="FontSize"
+            Value="13.5"/>
+
+        <Setter
+            Property="TextWrapping"
+            Value="Wrap"/>
+
+        <Setter
+            Property="LineHeight"
+            Value="20"/>
+
+    </Style>
+
+
+    <!-- =========================================================
+         PROCESSING TEXT
+         ========================================================= -->
+
+    <Style
+        x:Key="ChatProcessingTextStyle"
+        TargetType="{x:Type TextBlock}">
+
+        <Setter
+            Property="Foreground"
+            Value="{StaticResource ChatMutedTextBrush}"/>
+
+        <Setter
+            Property="FontFamily"
+            Value="Segoe UI"/>
+
+        <Setter
+            Property="FontSize"
+            Value="13"/>
+
+        <Setter
+            Property="FontStyle"
+            Value="Italic"/>
+
+    </Style>
+
+</ResourceDictionary>

@@ -250,6 +250,15 @@ namespace AiInterviewAssistant
             ClearConversation();
 
 
+            //// =====================================================
+            //// DEFAULT AI MESSAGE
+            //// =====================================================
+
+            //AddAIMessage(
+            //    "Hello! I'm ready to help with your interview. Ask me any .NET, C#, SQL, System Design, or coding question."
+            //);
+
+
             // =====================================================
             // WINDOW EVENTS
             // =====================================================
