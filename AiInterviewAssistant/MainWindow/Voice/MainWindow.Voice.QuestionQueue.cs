@@ -273,22 +273,11 @@ namespace AiInterviewAssistant
                         "VOICE CYCLE: NEXT QUESTION SESSION RECEIVED");
                 }
 
-
                 Dispatcher.BeginInvoke(
                     new Action(() =>
                     {
-                        try
-                        {
-                            RemoveLiveVoiceMessage();
-                        }
-                        catch (Exception uiEx)
-                        {
-                            Debug.WriteLine(
-                                "VOICE CYCLE PROCESSING UI ERROR: " +
-                                uiEx.Message);
-                        }
+                        UpdateLiveVoiceMessage("STT");
                     }));
-
 
                 _ = ProcessVoiceCycleAudioAsync(
                     sessionWav);
@@ -645,14 +634,6 @@ namespace AiInterviewAssistant
                     Debug.WriteLine(
                         combinedQuestion);
 
-
-                    // =================================================
-                    // REMOVE PROCESSING MESSAGE
-                    // =================================================
-
-                    RemoveLiveVoiceMessage();
-
-
                     // =================================================
                     // START ONE AI REQUEST
                     // =================================================
@@ -809,7 +790,7 @@ namespace AiInterviewAssistant
         // =========================================================
 
         private async Task StartVoiceCycleAiAsync(
-            string combinedQuestion)
+    string combinedQuestion)
         {
             if (string.IsNullOrWhiteSpace(
                 combinedQuestion))
@@ -893,13 +874,31 @@ namespace AiInterviewAssistant
 
                 await Dispatcher.InvokeAsync(() =>
                 {
-                    RemoveLiveVoiceMessage();
+                    // ---------------------------------------------
+                    // QUESTION BUBBLE
+                    // ---------------------------------------------
 
                     AddUserMessage(
                         combinedQuestion);
 
+
+                    // ---------------------------------------------
+                    // AI IMAGE
+                    //
+                    // AI generation UI starts here.
+                    // VoiceAI.png will be shown.
+                    // ---------------------------------------------
+
+                    ShowVoiceAIVisual();
+
+
+                    // ---------------------------------------------
+                    // AI RESPONSE BUBBLE
+                    // ---------------------------------------------
+
                     thinkingBubble =
                         AddAIMessage("");
+
 
                     StartAITypingAnimation(
                         thinkingBubble,
@@ -965,6 +964,16 @@ namespace AiInterviewAssistant
                     answerMode,
                     true)
                     .ConfigureAwait(false);
+
+
+                // =================================================
+                // AI RESPONSE COMPLETED
+                // =================================================
+
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    RemoveLiveVoiceMessage();
+                });
             }
             catch (OperationCanceledException)
             {
@@ -1024,9 +1033,6 @@ namespace AiInterviewAssistant
 
                             voiceCycleWaitingForNextQuestion =
                                 false;
-
-                            Debug.WriteLine(
-                                "VOICE CYCLE: COMPLETED AND CLOSED");
                         }
                     }
                 }
