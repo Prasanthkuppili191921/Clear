@@ -21,6 +21,8 @@ namespace AiInterviewAssistant
 
         private readonly string _interviewSessionsFolder;
 
+        private readonly Func<bool> _isRecordingEnabled;
+
         // Complete HTML is maintained in memory during the session.
         private string _sessionHtml;
 
@@ -33,8 +35,13 @@ namespace AiInterviewAssistant
         // CONSTRUCTOR
         // =========================================================
 
-        public InterviewSessionLogger()
+        public InterviewSessionLogger(
+            Func<bool> isRecordingEnabled)
         {
+            _isRecordingEnabled =
+               isRecordingEnabled
+               ?? (() => false);
+
             try
             {
                 // -------------------------------------------------
@@ -240,6 +247,8 @@ namespace AiInterviewAssistant
             if (string.IsNullOrWhiteSpace(answer))
                 return;
 
+            if (!IsInterviewRecordingEnabled())
+                return;
 
             lock (_sync)
             {
@@ -358,6 +367,18 @@ namespace AiInterviewAssistant
                     Debug.WriteLine(
                         $"Interview session logging failed: {ex}");
                 }
+            }
+        }
+
+        private bool IsInterviewRecordingEnabled()
+        {
+            try
+            {
+                return _isRecordingEnabled();
+            }
+            catch
+            {
+                return false;
             }
         }
 

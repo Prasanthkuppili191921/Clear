@@ -130,6 +130,8 @@ namespace AiInterviewAssistant
 
         private readonly AutoVoiceManager _autoVoiceManager;
 
+        private bool _recordInterview = false;
+
         private bool IsLocalVoiceEnabled()
         {
             try
@@ -183,7 +185,8 @@ namespace AiInterviewAssistant
             // INTERVIEW SESSION LOGGER
             // =====================================================
 
-            _interviewSessionLogger = new InterviewSessionLogger();
+            _interviewSessionLogger = new InterviewSessionLogger(
+                () => _recordInterview);
 
             ChatScrollViewer.PreviewMouseWheel +=
                 ChatScrollViewer_PreviewMouseWheel;
@@ -273,7 +276,26 @@ namespace AiInterviewAssistant
                 MainWindow_Closed;
         }
 
-       
+        private void RecordInterviewCheckBox_Checked(
+    object sender,
+    RoutedEventArgs e)
+        {
+            if (currentSettings == null)
+                return;
+
+            _recordInterview = true;
+        }
+
+        private void RecordInterviewCheckBox_Unchecked(
+            object sender,
+            RoutedEventArgs e)
+        {
+            if (currentSettings == null)
+                return;
+
+            _recordInterview = false;
+        }
+
 
         // =========================================================
         // CHAT MOUSE WHEEL SCROLL

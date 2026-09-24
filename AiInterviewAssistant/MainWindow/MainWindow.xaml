@@ -1001,6 +1001,24 @@
 
 
                     <!-- =================================================
+                         CENTER - RECORD INTERVIEW
+                         ================================================= -->
+                    <CheckBox
+                        x:Name="RecordInterviewCheckBox"
+                        Grid.Column="1"
+                        Content="Record Interview"
+                        IsChecked="False"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource PrimaryTextBrush}"
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Margin="0"
+                        Checked="RecordInterviewCheckBox_Checked"
+                        Unchecked="RecordInterviewCheckBox_Unchecked"/>
+
+
+                    <!-- =================================================
                          LEFT - TITLE
                          ================================================= -->
 
