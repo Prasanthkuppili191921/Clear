@@ -30,7 +30,7 @@ namespace AiInterviewAssistant.AutoVoice
             DateTime.MinValue;
 
         private const int SpeechConfirmationMs = 250;
-        private const int SilenceTimeoutMs = 900;
+        private const int SilenceTimeoutMs = 1000;
 
         private SileroVadSession autoVoiceVadSession;
 
@@ -219,10 +219,10 @@ namespace AiInterviewAssistant.AutoVoice
                 {
                     ProcessSpeechDetected();
                 }
-                //else
-                //{
-                //    TryStopVoice();
-                //}
+                else
+                {
+                    TryStopVoice();
+                }
             }
             catch (Exception ex)
             {
