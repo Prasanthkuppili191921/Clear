@@ -219,10 +219,10 @@ namespace AiInterviewAssistant.AutoVoice
                 {
                     ProcessSpeechDetected();
                 }
-                else
-                {
-                    TryStopVoice();
-                }
+                //else
+                //{
+                //    TryStopVoice();
+                //}
             }
             catch (Exception ex)
             {
