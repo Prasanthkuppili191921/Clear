@@ -134,8 +134,8 @@ namespace AiInterviewAssistant
                 "<complete question and options>\n\n" +
 
                 "ANSWER:\n" +
-                "Correct answer: <option>\n" +
-                "Explanation: <short explanation>\n\n" +
+                "Answer: <option> " +
+                "<exact correct answer option text>\n\n" +
 
                 "Do not use JSON.\n" +
                 "Do not use markdown code blocks.\n" +
