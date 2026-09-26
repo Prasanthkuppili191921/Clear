@@ -215,7 +215,7 @@ namespace AiInterviewAssistant
         // =========================================================
 
         private Border AddAIMessage(
-            string message)
+    string message)
         {
             Border bubble =
                 new Border
@@ -237,7 +237,11 @@ namespace AiInterviewAssistant
 
 
             Grid mainGrid =
-                new Grid();
+                new Grid
+                {
+                    HorizontalAlignment =
+                        HorizontalAlignment.Stretch
+                };
 
 
             // =====================================================
@@ -254,7 +258,13 @@ namespace AiInterviewAssistant
                         ScrollBarVisibility.Disabled,
 
                     CanContentScroll =
-                        false
+                        false,
+
+                    HorizontalAlignment =
+                        HorizontalAlignment.Stretch,
+
+                    VerticalAlignment =
+                        VerticalAlignment.Top
                 };
 
 
@@ -262,7 +272,10 @@ namespace AiInterviewAssistant
                 new StackPanel
                 {
                     Orientation =
-                        Orientation.Vertical
+                        Orientation.Vertical,
+
+                    HorizontalAlignment =
+                        HorizontalAlignment.Stretch
                 };
 
 
@@ -294,11 +307,11 @@ namespace AiInterviewAssistant
 
                     Background =
                         new SolidColorBrush(
-                                Color.FromArgb(
-                                    55,
-                                    255,
-                                    255,
-                                    255)),
+                            Color.FromArgb(
+                                55,
+                                255,
+                                255,
+                                255)),
 
                     BorderThickness =
                         new Thickness(0),
@@ -327,8 +340,15 @@ namespace AiInterviewAssistant
                             0),
 
                     Content =
-                        "⧉"
+                        "⧉",
+
+                    ToolTip =
+                        "Copy answer"
                 };
+
+
+            copyButton.Tag =
+                message ?? "";
 
 
             copyButton.Click +=
@@ -336,9 +356,6 @@ namespace AiInterviewAssistant
                 {
                     try
                     {
-                        //Clipboard.SetText(
-                        //    message ?? "");
-
                         Clipboard.SetText(
                             copyButton.Tag?.ToString() ?? "");
 
@@ -395,15 +412,16 @@ namespace AiInterviewAssistant
                 mainGrid;
 
 
-            // =========================================================
-            // INSERT AI RESPONSE DIRECTLY AFTER ITS QUESTION
-            // =========================================================
+            // =====================================================
+            // INSERT AI RESPONSE
+            // =====================================================
 
             if (_currentUserQuestionBubble != null)
             {
                 int questionIndex =
                     ChatPanel.Children.IndexOf(
                         _currentUserQuestionBubble);
+
 
                 if (questionIndex >= 0)
                 {
@@ -531,8 +549,8 @@ namespace AiInterviewAssistant
         // =========================================================
 
         private void AddAvalonCodeBlock(
-            StackPanel panel,
-            string rawCode)
+    StackPanel panel,
+    string rawCode)
         {
             if (panel == null)
                 return;
@@ -547,6 +565,7 @@ namespace AiInterviewAssistant
             // =====================================================
 
             string language = "";
+
 
             string code =
                 rawCode.TrimStart(
@@ -580,6 +599,7 @@ namespace AiInterviewAssistant
                         NormalizeLanguage(
                             firstLine);
 
+
                     code =
                         code.Substring(
                             newlineIndex + 1);
@@ -589,18 +609,6 @@ namespace AiInterviewAssistant
 
             // =====================================================
             // FALLBACK LANGUAGE DETECTION
-            //
-            // This is important when AI returns:
-            //
-            // ```
-            // SELECT ...
-            // ```
-            //
-            // instead of:
-            //
-            // ```sql
-            // SELECT ...
-            // ```
             // =====================================================
 
             if (string.IsNullOrWhiteSpace(language))
@@ -649,12 +657,22 @@ namespace AiInterviewAssistant
                             0,
                             7,
                             0,
-                            7)
+                            7),
+
+                    HorizontalAlignment =
+                        HorizontalAlignment.Stretch,
+
+                    MinHeight =
+                        48
                 };
 
 
             Grid codeGrid =
-                new Grid();
+                new Grid
+                {
+                    HorizontalAlignment =
+                        HorizontalAlignment.Stretch
+                };
 
 
             codeBorder.Child =
@@ -736,11 +754,11 @@ namespace AiInterviewAssistant
 
                     Background =
                         new SolidColorBrush(
-                                Color.FromArgb(
-                                    55,
-                                    255,
-                                    255,
-                                    255)),
+                            Color.FromArgb(
+                                55,
+                                255,
+                                255,
+                                255)),
 
                     BorderThickness =
                         new Thickness(0),
@@ -758,8 +776,19 @@ namespace AiInterviewAssistant
                     ShowLineNumbers =
                         false,
 
+                    // =================================================
+                    // WORD WRAP
+                    // =================================================
+
+                    WordWrap =
+                        true,
+
+                    // =================================================
+                    // NO HORIZONTAL SCROLL
+                    // =================================================
+
                     HorizontalScrollBarVisibility =
-                        ScrollBarVisibility.Auto,
+                        ScrollBarVisibility.Disabled,
 
                     VerticalScrollBarVisibility =
                         ScrollBarVisibility.Disabled,
@@ -769,6 +798,9 @@ namespace AiInterviewAssistant
 
                     VerticalAlignment =
                         VerticalAlignment.Top,
+
+                    MinHeight =
+                        48,
 
                     Focusable =
                         false,
@@ -788,7 +820,7 @@ namespace AiInterviewAssistant
 
 
             // =====================================================
-            // FORCE CUSTOM RENDERING COLORS
+            // CUSTOM SYNTAX COLORS
             // =====================================================
 
             ApplyReadableSyntaxColors(
@@ -797,31 +829,14 @@ namespace AiInterviewAssistant
 
 
             // =====================================================
-            // CODE HEIGHT
+            // NO FIXED HEIGHT
+            //
+            // DO NOT SET:
+            // editor.Height
+            // editor.MaxHeight
+            // codeHeight
+            // 500px limit
             // =====================================================
-
-            int lineCount =
-                Math.Max(
-                    1,
-                    code.Split(
-                        new[] { '\n' })
-                        .Length);
-
-
-            double codeHeight =
-                (lineCount * 20.0) + 24.0;
-
-
-            if (codeHeight < 48)
-                codeHeight = 48;
-
-
-            if (codeHeight > 500)
-                codeHeight = 500;
-
-
-            editor.Height =
-                codeHeight;
 
 
             // =====================================================
@@ -854,6 +869,10 @@ namespace AiInterviewAssistant
             codeGrid.Children.Add(
                 editor);
 
+
+            // =====================================================
+            // ADD CODE BLOCK
+            // =====================================================
 
             panel.Children.Add(
                 codeBorder);
