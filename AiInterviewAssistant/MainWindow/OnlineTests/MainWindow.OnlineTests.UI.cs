@@ -220,17 +220,31 @@ namespace AiInterviewAssistant
                         UpdateUserMessage(
                             questionBubble,
                             question);
+
+                        // =====================================================
+                        // IMPORTANT:
+                        // This Vision question belongs to the AI bubble
+                        // created below.
+                        //
+                        // Do NOT depend on _currentUserQuestionBubble here.
+                        // =====================================================
+
+                        questionBubble.Tag =
+                            question;
                     }
                     else
                     {
                         UpdateUserMessage(
                             questionBubble,
                             "Could not identify a question.");
+
+                        questionBubble.Tag =
+                            "Could not identify a question.";
                     }
                 });
 
                 if (!string.IsNullOrWhiteSpace(
-                        result.Answer))
+        result.Answer))
                 {
                     await Dispatcher.InvokeAsync(() =>
                     {
@@ -240,9 +254,43 @@ namespace AiInterviewAssistant
                         Border aiBubble =
                             AddAIMessage("");
 
+                        // =====================================================
+                        // IMPORTANT:
+                        // Vision flow uses its own questionBubble.
+                        //
+                        // Therefore explicitly associate this AI bubble
+                        // with the completed Vision question.
+                        // =====================================================
+
+                        string visionQuestion =
+                            questionBubble?.Tag as string;
+
+                        if (string.IsNullOrWhiteSpace(
+                                visionQuestion))
+                        {
+                            visionQuestion =
+                                result.Question?.Trim();
+                        }
+
+                        aiBubble.Tag =
+                            visionQuestion ?? string.Empty;
+
+                        // =====================================================
+                        // START AI TYPING
+                        //
+                        // RecordCompletedAIMessage() will be called only
+                        // after the complete answer reaches the bubble.
+                        // =====================================================
+
                         StartAITypingAnimation(
                             aiBubble,
-                            result.Answer);
+                            result.Answer,
+                            () =>
+                            {
+                                RecordCompletedAIMessage(
+                                    aiBubble,
+                                    result.Answer);
+                            });
                     });
                 }
             }

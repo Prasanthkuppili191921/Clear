@@ -231,6 +231,32 @@ namespace AiInterviewAssistant
                         HorizontalAlignment.Stretch
                 };
 
+            // =====================================================
+            // STORE QUESTION FOR THIS AI BUBBLE
+            //
+            // IMPORTANT:
+            // Do NOT use _currentUserQuestionBubble later when
+            // recording the answer.
+            //
+            // Question Queue / multiple questions can change that
+            // field before the AI response finishes.
+            //
+            // Therefore the question is captured at the moment
+            // this AI bubble is created.
+            // =====================================================
+
+            string recordedQuestion = string.Empty;
+
+            if (_currentUserQuestionBubble != null &&
+                _currentUserQuestionBubble.Child is TextBlock questionTextBlock)
+            {
+                recordedQuestion =
+                    questionTextBlock.Text ?? string.Empty;
+            }
+
+            bubble.Tag =
+                recordedQuestion;
+
             bubble.SetResourceReference(
                 FrameworkElement.StyleProperty,
                 "ChatAiBubbleStyle");

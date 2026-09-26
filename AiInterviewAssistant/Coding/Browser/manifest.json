@@ -1,0 +1,21 @@
+﻿{
+  "manifest_version": 3,
+  "name": "AI Interview Assistant DOM Reader",
+  "version": "1.0.0",
+  "description": "Reads the current webpage DOM for AI Interview Assistant.",
+  "permissions": [],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "BrowserDomContent.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}

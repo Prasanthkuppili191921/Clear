@@ -74,7 +74,7 @@ namespace AiInterviewAssistant
 
                 if (string.IsNullOrWhiteSpace(apiKey))
                 {
-                    await UpdateAIMessageOnUI(
+                    await FinalizeAIMessageOnUI(
                         thinkingBubble,
                         "OpenRouter API key not found.");
 
@@ -99,7 +99,7 @@ namespace AiInterviewAssistant
 
                 if (string.IsNullOrWhiteSpace(routerModel))
                 {
-                    await UpdateAIMessageOnUI(
+                    await FinalizeAIMessageOnUI(
                         thinkingBubble,
                         "OpenRouter model is not configured.");
 
@@ -376,7 +376,7 @@ namespace AiInterviewAssistant
                                 "AI 401 ERROR: " +
                                 error);
 
-                            await UpdateAIMessageOnUI(
+                            await FinalizeAIMessageOnUI(
                                 thinkingBubble,
                                 "OpenRouter authentication failed:\n\n" +
                                 error);
@@ -398,7 +398,7 @@ namespace AiInterviewAssistant
                             if (cancellationToken.IsCancellationRequested)
                                 return;
 
-                            await UpdateAIMessageOnUI(
+                            await FinalizeAIMessageOnUI(
                                 thinkingBubble,
                                 "AI rate limit reached.\n\n" +
                                 error);
@@ -420,7 +420,7 @@ namespace AiInterviewAssistant
                             if (cancellationToken.IsCancellationRequested)
                                 return;
 
-                            await UpdateAIMessageOnUI(
+                            await FinalizeAIMessageOnUI(
                                 thinkingBubble,
                                 "AI request error:\n\n" +
                                 error);
@@ -442,7 +442,7 @@ namespace AiInterviewAssistant
                             if (cancellationToken.IsCancellationRequested)
                                 return;
 
-                            await UpdateAIMessageOnUI(
+                            await FinalizeAIMessageOnUI(
                                 thinkingBubble,
                                 "AI Error (" +
                                 (int)response.StatusCode +
@@ -564,7 +564,7 @@ namespace AiInterviewAssistant
                                         break;
                                     }
 
-                                    await UpdateAIMessageOnUI(
+                                    await FinalizeAIMessageOnUI(
                                         thinkingBubble,
                                         "AI connection was interrupted.");
 
@@ -593,7 +593,7 @@ namespace AiInterviewAssistant
                                         break;
                                     }
 
-                                    await UpdateAIMessageOnUI(
+                                    await FinalizeAIMessageOnUI(
                                         thinkingBubble,
                                         "AI connection was interrupted.");
 
@@ -870,22 +870,6 @@ namespace AiInterviewAssistant
                                     finalAnswer;
 
                                 // =================================================
-                                // INTERVIEW SESSION LOG
-                                // =================================================
-
-                                if (cancellationToken.IsCancellationRequested)
-                                {
-                                    Debug.WriteLine(
-                                        "AI STREAM: Cancelled before session logging.");
-
-                                    return;
-                                }
-
-                                _interviewSessionLogger?.LogQuestionAnswer(
-                                    question,
-                                    finalAnswer);
-
-                                // =================================================
                                 // FINAL UI UPDATE
                                 // =================================================
 
@@ -1013,7 +997,7 @@ namespace AiInterviewAssistant
                                 return;
                             }
 
-                            await UpdateAIMessageOnUI(
+                            await FinalizeAIMessageOnUI(
                                 thinkingBubble,
                                 "AI connection was interrupted.");
 
@@ -1040,7 +1024,7 @@ namespace AiInterviewAssistant
                 }
                 else
                 {
-                    await UpdateAIMessageOnUI(
+                    await FinalizeAIMessageOnUI(
                         thinkingBubble,
                         "AI connection was interrupted.");
                 }
@@ -1449,6 +1433,37 @@ namespace AiInterviewAssistant
                     thinkingBubble,
                     token,
                     answerMode);
+
+                // =====================================================
+                // FINAL AI RESPONSE / FINAL ERROR
+                //
+                // AskOpenRouterStreaming() returns only after the
+                // final AI message or final error has been written
+                // into the bubble.
+                // =====================================================
+
+                if (!token.IsCancellationRequested &&
+                    thinkingBubble != null)
+                {
+                    await Dispatcher.InvokeAsync(() =>
+                    {
+                        string finalAiText =
+                            GetCompletedAIMessageText(
+                                thinkingBubble);
+
+                        if (!string.IsNullOrWhiteSpace(finalAiText))
+                        {
+                            RecordCompletedAIMessage(
+                                thinkingBubble,
+                                finalAiText);
+                        }
+                        else
+                        {
+                            Debug.WriteLine(
+                                "INTERVIEW RECORD: Final Message Send AI text not available.");
+                        }
+                    });
+                }
 
                 Debug.WriteLine(
                     "SEND QUESTION: AI RESPONSE COMPLETED");

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace AiInterviewAssistant
@@ -958,22 +959,69 @@ namespace AiInterviewAssistant
                 // =================================================
 
                 await AskOpenRouterStreaming(
-                    combinedQuestion,
-                    thinkingBubble,
-                    cts.Token,
-                    answerMode,
-                    true)
-                    .ConfigureAwait(false);
+     combinedQuestion,
+     thinkingBubble,
+     cts.Token,
+     answerMode,
+     true)
+     .ConfigureAwait(false);
 
 
                 // =================================================
-                // AI RESPONSE COMPLETED
+                // FINAL AI RESPONSE / ERROR COMPLETED
+                //
+                // AskOpenRouterStreaming() returns only after:
+                //
+                // SUCCESS:
+                //     StopAITypingAnimation()
+                //     -> complete AI bubble
+                //
+                // ERROR:
+                //     FinalizeAIMessageOnUI()
+                //     -> complete error bubble
+                //
+                // Therefore this is the ONLY Voice recording point.
+                //
+                // Cancellation is NOT recorded.
                 // =================================================
 
-                await Dispatcher.InvokeAsync(() =>
+                if (!cts.IsCancellationRequested)
                 {
-                    RemoveLiveVoiceMessage();
-                });
+                    await Dispatcher.InvokeAsync(() =>
+                    {
+                        try
+                        {
+                            string finalAiText =
+                                GetCompletedAIMessageText(
+                                    thinkingBubble);
+
+                            if (!string.IsNullOrWhiteSpace(finalAiText))
+                            {
+                                RecordCompletedAIMessage(
+                                    thinkingBubble,
+                                    finalAiText);
+                            }
+                            else
+                            {
+                                Debug.WriteLine(
+                                    "VOICE RECORD: Final AI bubble text not available.");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine(
+                                "VOICE RECORD ERROR: " +
+                                ex);
+                        }
+
+                        RemoveLiveVoiceMessage();
+                    });
+                }
+                else
+                {
+                    Debug.WriteLine(
+                        "VOICE RECORD: AI generation was cancelled. Not recording.");
+                }
             }
             catch (OperationCanceledException)
             {
@@ -1039,6 +1087,47 @@ namespace AiInterviewAssistant
 
                 cts.Dispose();
             }
+        }
+
+        private string GetCompletedAIMessageText(
+    Border bubble)
+        {
+            if (bubble == null)
+                return string.Empty;
+
+            try
+            {
+                // =====================================================
+                // AddAIMessage() creates a Copy button and
+                // UpdateAIMessage() always stores the COMPLETE
+                // rendered message in the Copy button Tag.
+                //
+                // Therefore this gives us the exact final text
+                // shown in the AI bubble, including error messages.
+                // =====================================================
+
+                if (bubble.Child is Grid mainGrid)
+                {
+                    foreach (UIElement child in mainGrid.Children)
+                    {
+                        if (child is Button copyButton &&
+                            copyButton.ToolTip?.ToString()
+                                == "Copy answer")
+                        {
+                            return copyButton.Tag?.ToString()
+                                   ?? string.Empty;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(
+                    "VOICE RECORD: Unable to read final AI bubble: " +
+                    ex);
+            }
+
+            return string.Empty;
         }
 
 
