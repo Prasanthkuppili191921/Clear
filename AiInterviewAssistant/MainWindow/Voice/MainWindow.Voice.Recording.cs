@@ -1775,7 +1775,6 @@ namespace AiInterviewAssistant
                 // IMPORTANT:
                 // Do not return raw audio here.
                 // Caller expects a final WAV when
-                // IncludeLocalVoice = true.
 
                 return null;
             }

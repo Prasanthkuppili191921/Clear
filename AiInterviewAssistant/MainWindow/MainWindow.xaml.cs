@@ -132,26 +132,7 @@ namespace AiInterviewAssistant
 
         private bool _recordInterview = false;
 
-        private bool IsLocalVoiceEnabled()
-        {
-            try
-            {
-                string value =
-                    System.Configuration.ConfigurationManager
-                        .AppSettings["IncludeLocalVoice"];
-
-                return string.Equals(
-                    value,
-                    "true",
-                    StringComparison.OrdinalIgnoreCase);
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-
+      
         // =========================================================
         // CONSTRUCTOR
         // =========================================================
