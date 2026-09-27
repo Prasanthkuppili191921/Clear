@@ -13,6 +13,7 @@ using System.Windows.Threading;
 using Tesseract;
 using MessageBox = System.Windows.MessageBox;
 using AiInterviewAssistant.AutoVoice;
+using System.Threading.Tasks;
 
 namespace AiInterviewAssistant
 {
@@ -644,14 +645,14 @@ namespace AiInterviewAssistant
 
                     // =================================================
                     // ALT + ENTER
-                    // VISION AI
+                    // VISION AI + CODING
                     // =================================================
 
                     () =>
                     {
                         try
                         {
-                            RunVisionAiFromHotkey();
+                            _ = HandleAltEnterAsync();
                         }
                         catch
                         {
@@ -845,6 +846,56 @@ namespace AiInterviewAssistant
             finally
             {
                 _initializingPrivacy = false;
+            }
+        }
+
+        private async Task HandleAltEnterAsync()
+        {
+            try
+            {
+                Border codingQuestionBubble = null;
+
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    codingQuestionBubble =
+                        AddUserMessage(
+                            "🔍 Reading question...");
+                });
+
+                // =================================================
+                // CODING PAGE FIRST
+                // =================================================
+
+                if (await TryProcessCodingQuestionAsync())
+                {
+                    await Dispatcher.InvokeAsync(() =>
+                    {
+                        if (codingQuestionBubble != null)
+                        {
+                            if (codingQuestionBubble.Parent is Panel parent)
+                            {
+                                parent.Children.Remove(
+                                    codingQuestionBubble);
+                            }
+
+                            codingQuestionBubble = null;
+                        }
+                    });
+
+                    return; 
+                }
+
+                // =================================================
+                // EXISTING ALT + ENTER FLOW
+                // =================================================
+
+                RunVisionAiFromHotkey();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(
+                    "ALT + ENTER ERROR: " +
+                    ex);
             }
         }
 

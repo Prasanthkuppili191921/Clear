@@ -295,6 +295,8 @@
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="UIAutomationClient" />
+    <Reference Include="UIAutomationTypes" />
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
@@ -307,6 +309,26 @@
     </Compile>
     <Compile Include="AppSettings.cs" />
     <Compile Include="AutoVoice\AutoVoiceManager.cs" />
+    <Compile Include="Coding\AI\CodingAiRequest.cs" />
+    <Compile Include="Coding\AI\CodingAiResponse.cs" />
+    <Compile Include="Coding\AI\CodingPageCoordinator.cs" />
+    <Compile Include="Coding\AI\ICodingAiService.cs" />
+    <Compile Include="Coding\AI\OpenRouterCodingAiService.cs" />
+
+    <Compile Include="Coding\CodingModeService.cs" />
+
+    <Compile Include="Coding\Detection\CodingPageDetector.cs" />
+    <Compile Include="Coding\Detection\ICodingPageDetector.cs" />
+
+    <Compile Include="Coding\Extraction\CodingExampleParser.cs" />
+    <Compile Include="Coding\Extraction\CodingPageExtractionResult.cs" />
+    <Compile Include="Coding\Extraction\CodingSectionParser.cs" />
+    <Compile Include="Coding\Extraction\ICodingPageExtractor.cs" />
+    <Compile Include="Coding\Extraction\WindowsUiAutomationCodingExtractor.cs" />
+    <Compile Include="Coding\Extraction\StarterCodeExtractor.cs" />
+
+    <Compile Include="Coding\Models\CodingExample.cs" />
+    <Compile Include="Coding\Models\CodingProblem.cs" />
     <Compile Include="HotKeysRegister.cs" />
     <Compile Include="InterviewSessionLogger.cs" />
     <Compile Include="MainWindow\AI\MainWindow.AI.ChatUI.cs" />

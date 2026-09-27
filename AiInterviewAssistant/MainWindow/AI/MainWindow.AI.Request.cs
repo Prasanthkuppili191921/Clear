@@ -1526,5 +1526,211 @@ namespace AiInterviewAssistant
                 });
             }
         }
+
+        private async Task<bool> TryProcessCodingQuestionAsync()
+        {
+            try
+            {
+                var detector =
+                    new AiInterviewAssistant.Coding.Detection.CodingPageDetector();
+
+                bool isCodingPage =
+                    await detector.IsCodingPageAsync(
+                        CancellationToken.None);
+
+                if (!isCodingPage)
+                    return false;
+
+                var extractor =
+                    new AiInterviewAssistant.Coding.Extraction
+                        .WindowsUiAutomationCodingExtractor();
+
+                var extraction =
+                    await extractor.ExtractAsync(
+                        CancellationToken.None);
+
+                if (extraction == null ||
+                    extraction.Problem == null)
+                {
+                    return false;
+                }
+
+                var request =
+                    new AiInterviewAssistant.Coding.AI.CodingAiRequest
+                    {
+                        Question =
+                            extraction.Problem.ProblemStatement,
+
+                        Input =
+                            extraction.Problem.InputDescription,
+
+                        Output =
+                            extraction.Problem.OutputDescription,
+
+                        Constraints =
+                            extraction.Problem.Constraints,
+
+                        StarterCode =
+                            extraction.Problem.StarterCode,
+
+                        Language =
+                            extraction.Problem.Language,
+
+                        Examples =
+                            BuildCodingExamplesText(
+                                extraction.Problem)
+                    };
+
+                AppSettings settings =
+                    SettingsService.Load()
+                    ?? new AppSettings();
+
+                string apiKey =
+                    settings.OpenRouterApiKey;
+
+                string model =
+                    settings.AnswerModel;
+
+                if (string.IsNullOrWhiteSpace(apiKey))
+                {
+                    Debug.WriteLine(
+                        "CODING AI: OpenRouter API key is missing.");
+
+                    return false;
+                }
+
+                if (string.IsNullOrWhiteSpace(model))
+                {
+                    Debug.WriteLine(
+                        "CODING AI: Answer model is missing.");
+
+                    return false;
+                }
+
+                using (var httpClient =
+                    new System.Net.Http.HttpClient())
+                {
+                    var service =
+                        new AiInterviewAssistant.Coding.AI
+                            .OpenRouterCodingAiService(
+                                httpClient,
+                                apiKey,
+                                model);
+
+                    var response =
+                        await service.GenerateAnswerAsync(
+                            request,
+                            CancellationToken.None);
+
+                    if (response == null)
+                    {
+                        Debug.WriteLine(
+                            "CODING AI: Response is null.");
+
+                        return false;
+                    }
+
+                    if (!response.Success)
+                    {
+                        Debug.WriteLine(
+                            "CODING AI ERROR: " +
+                            response.ErrorMessage);
+
+                        return false;
+                    }
+
+                    if (string.IsNullOrWhiteSpace(
+                            response.Answer))
+                    {
+                        Debug.WriteLine(
+                            "CODING AI: Empty answer.");
+
+                        return false;
+                    }
+
+                    string codingAnswer =
+                        response.Answer.Trim();
+
+                    Debug.WriteLine(
+                        "=================================================");
+
+                    Debug.WriteLine(
+                        "CODING AI RESPONSE");
+
+                    Debug.WriteLine(
+                        codingAnswer);
+
+                    Debug.WriteLine(
+                        "=================================================");
+
+                    await Dispatcher.InvokeAsync(() =>
+                    {
+                        latestAiText =
+                            codingAnswer;
+
+                        Border aiBubble =
+                            AddAIMessage("");
+
+                        StartAITypingAnimation(
+                            aiBubble,
+                            codingAnswer);
+                    });
+
+                    return true;
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(
+                    "CODING AI PIPELINE ERROR:");
+
+                Debug.WriteLine(
+                    ex.ToString());
+
+                return false;
+            }
+        }
+
+        private string BuildCodingExamplesText(
+            AiInterviewAssistant.Coding.Models.CodingProblem problem)
+        {
+            if (problem == null ||
+                problem.Examples == null ||
+                problem.Examples.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            var builder =
+                new System.Text.StringBuilder();
+
+            foreach (
+                var example in problem.Examples)
+            {
+                builder.AppendLine(
+                    "Input: " +
+                    example.Input);
+
+                builder.AppendLine(
+                    "Output: " +
+                    example.Output);
+
+                if (!string.IsNullOrWhiteSpace(
+                        example.Explanation))
+                {
+                    builder.AppendLine(
+                        "Explanation: " +
+                        example.Explanation);
+                }
+
+                builder.AppendLine();
+            }
+
+            return builder.ToString().Trim();
+        }
     }
 }
