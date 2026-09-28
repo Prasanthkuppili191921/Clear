@@ -652,10 +652,18 @@ namespace AiInterviewAssistant
                     {
                         try
                         {
-                            _ = HandleAltEnterAsync();
+                            // =========================================================
+                            // ALT + ENTER
+                            // MCQ / NORMAL QUESTION ONLY
+                            // =========================================================
+
+                            HandleAltEnterAsync();
                         }
-                        catch
+                        catch (Exception ex)
                         {
+                            Debug.WriteLine(
+                                "ALT + ENTER ERROR: " +
+                                ex);
                         }
                     },
 
@@ -865,27 +873,6 @@ namespace AiInterviewAssistant
             }
         }
 
-        private async Task HandleAltEnterAsync()
-        {
-            try
-            {
-                // =========================================================
-                // ALT + ENTER
-                // MCQ / NORMAL QUESTION ONLY
-                // =========================================================
-
-                RunVisionAiFromHotkey();
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(
-                    "ALT + ENTER ERROR: " +
-                    ex);
-            }
-
-
-        }
-
         private async Task HandleShiftEnterAsync()
         {
             try
@@ -944,7 +931,7 @@ namespace AiInterviewAssistant
         // ALT + ENTER ENTRY POINT
         // =========================================================
 
-        private async void RunVisionAiFromHotkey()
+        private async void HandleAltEnterAsync()
         {
             try
             {
