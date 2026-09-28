@@ -166,6 +166,7 @@ namespace AiInterviewAssistant
 
         public const int VISION_HOTKEY_ID = 9109;
         public const int SEND_HOTKEY_ID = 9110;
+        public const int CODING_HOTKEY_ID = 9111;
 
         public const int SETTINGS_HOTKEY_ID = 9112;
 
@@ -218,6 +219,7 @@ namespace AiInterviewAssistant
 
         private static Action _escape;
         private static Action _voice;
+        private static Action _coding;
         private static Action _vision;
         private static Action _send;
 
@@ -303,6 +305,7 @@ namespace AiInterviewAssistant
             Action escape,
             Action voice,
             Action vision,
+            Action coding,
             Action send,
             Action settings,
             Action message,
@@ -363,6 +366,9 @@ namespace AiInterviewAssistant
 
                 _vision =
                     vision;
+
+                _coding =
+                    coding;
 
                 _send =
                     send;
@@ -505,6 +511,17 @@ namespace AiInterviewAssistant
                 RegisterSingleHotkey(
                     VISION_HOTKEY_ID,
                     MOD_ALT |
+                    MOD_NOREPEAT,
+                    VK_RETURN);
+
+                // =================================================
+                // SHIFT + ENTER
+                // CODING QUESTION
+                // =================================================
+
+                RegisterSingleHotkey(
+                    CODING_HOTKEY_ID,
+                    MOD_SHIFT |
                     MOD_NOREPEAT,
                     VK_RETURN);
 
@@ -1704,6 +1721,19 @@ namespace AiInterviewAssistant
 
                         break;
 
+                    // =============================================
+                    // SHIFT + ENTER
+                    // =============================================
+
+                    case CODING_HOTKEY_ID:
+
+                        Execute(
+                            _coding);
+
+                        handled = true;
+
+                        break;
+
 
                     // =============================================
                     // CTRL + ENTER
@@ -1968,6 +1998,9 @@ namespace AiInterviewAssistant
                     null;
 
                 _vision =
+                    null;
+
+                _coding =
                     null;
 
                 _send =

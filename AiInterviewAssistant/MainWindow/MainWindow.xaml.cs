@@ -627,25 +627,25 @@ namespace AiInterviewAssistant
                 //    }
                 //},
 
-                // =================================================
-                // SPACE
-                // =================================================
+                    // =================================================
+                    // SPACE
+                    // =================================================
 
-                () =>
-                {
-                    try
+                    () =>
                     {
-                        ToggleVoiceRecording();
-                    }
-                    catch
-                    {
-                    }
-                },
+                        try
+                        {
+                            ToggleVoiceRecording();
+                        }
+                        catch
+                        {
+                        }
+                    },
 
 
                     // =================================================
                     // ALT + ENTER
-                    // VISION AI + CODING
+                    // VISION AI / MCQ
                     // =================================================
 
                     () =>
@@ -653,6 +653,22 @@ namespace AiInterviewAssistant
                         try
                         {
                             _ = HandleAltEnterAsync();
+                        }
+                        catch
+                        {
+                        }
+                    },
+
+                    // =================================================
+                    // SHIFT + ENTER
+                    // CODING QUESTION
+                    // =================================================
+
+                    () =>
+                    {
+                        try
+                        {
+                            _ = HandleShiftEnterAsync();
                         }
                         catch
                         {
@@ -853,6 +869,27 @@ namespace AiInterviewAssistant
         {
             try
             {
+                // =========================================================
+                // ALT + ENTER
+                // MCQ / NORMAL QUESTION ONLY
+                // =========================================================
+
+                RunVisionAiFromHotkey();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(
+                    "ALT + ENTER ERROR: " +
+                    ex);
+            }
+
+
+        }
+
+        private async Task HandleShiftEnterAsync()
+        {
+            try
+            {
                 Border codingQuestionBubble = null;
 
                 await Dispatcher.InvokeAsync(() =>
@@ -862,39 +899,42 @@ namespace AiInterviewAssistant
                             "🔍 Reading question...");
                 });
 
-                // =================================================
-                // CODING PAGE FIRST
-                // =================================================
+                // =========================================================
+                // SHIFT + ENTER
+                // CODING QUESTION ONLY
+                // =========================================================
 
-                if (await TryProcessCodingQuestionAsync())
+                bool success =
+                    await TryProcessCodingQuestionAsync();
+
+                // =========================================================
+                // REMOVE TEMPORARY "READING QUESTION..." MESSAGE
+                // =========================================================
+
+                await Dispatcher.InvokeAsync(() =>
                 {
-                    await Dispatcher.InvokeAsync(() =>
+                    if (codingQuestionBubble != null)
                     {
-                        if (codingQuestionBubble != null)
+                        if (codingQuestionBubble.Parent is Panel parent)
                         {
-                            if (codingQuestionBubble.Parent is Panel parent)
-                            {
-                                parent.Children.Remove(
-                                    codingQuestionBubble);
-                            }
-
-                            codingQuestionBubble = null;
+                            parent.Children.Remove(
+                                codingQuestionBubble);
                         }
-                    });
 
-                    return; 
+                        codingQuestionBubble = null;
+                    }
+                });
+
+                if (!success)
+                {
+                    Debug.WriteLine(
+                        "SHIFT + ENTER: Coding question processing failed.");
                 }
-
-                // =================================================
-                // EXISTING ALT + ENTER FLOW
-                // =================================================
-
-                RunVisionAiFromHotkey();
             }
             catch (Exception ex)
             {
                 Debug.WriteLine(
-                    "ALT + ENTER ERROR: " +
+                    "SHIFT + ENTER ERROR: " +
                     ex);
             }
         }

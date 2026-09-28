@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Automation;
@@ -50,13 +51,110 @@ namespace AiInterviewAssistant.Coding.Detection
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                AutomationElement window =
+                // First check the currently focused window.
+                AutomationElement activeWindow =
                     GetActiveWindow();
 
+                if (activeWindow != null)
+                {
+                    if (IsCodingWindow(
+                        activeWindow,
+                        cancellationToken))
+                    {
+                        return true;
+                    }
+                }
+
+                // When Record Interview is enabled,
+                // focus may remain on our application.
+                // Therefore search visible top-level windows.
+                bool codingFound = false;
+
+                EnumWindows(
+                    (hWnd, lParam) =>
+                    {
+                        try
+                        {
+                            cancellationToken
+                                .ThrowIfCancellationRequested();
+
+                            if (hWnd == IntPtr.Zero)
+                            {
+                                return true;
+                            }
+
+                            if (!IsWindowVisible(hWnd))
+                            {
+                                return true;
+                            }
+
+                            // Do not inspect our own application window.
+                            if (IsOwnProcessWindow(hWnd))
+                            {
+                                return true;
+                            }
+
+                            AutomationElement window =
+                                AutomationElement.FromHandle(
+                                    hWnd);
+
+                            if (window == null)
+                            {
+                                return true;
+                            }
+
+                            if (SafeGetControlType(window) !=
+                                ControlType.Window)
+                            {
+                                return true;
+                            }
+
+                            if (IsCodingWindow(
+                                window,
+                                cancellationToken))
+                            {
+                                codingFound = true;
+
+                                return false;
+                            }
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            throw;
+                        }
+                        catch
+                        {
+                            // Ignore an individual inaccessible window.
+                        }
+
+                        return true;
+                    },
+                    IntPtr.Zero);
+
+                return codingFound;
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private bool IsCodingWindow(
+            AutomationElement window,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
                 if (window == null)
                 {
                     return false;
                 }
+
+                cancellationToken.ThrowIfCancellationRequested();
 
                 string windowName =
                     SafeGetName(window);
@@ -134,7 +232,8 @@ namespace AiInterviewAssistant.Coding.Detection
                         ReadTextPattern(
                             document);
 
-                    if (!string.IsNullOrWhiteSpace(text))
+                    if (!string.IsNullOrWhiteSpace(
+                        text))
                     {
                         return text;
                     }
@@ -521,5 +620,50 @@ namespace AiInterviewAssistant.Coding.Detection
                 return null;
             }
         }
+
+        private bool IsOwnProcessWindow(
+            IntPtr hWnd)
+        {
+            try
+            {
+                uint processId;
+
+                GetWindowThreadProcessId(
+                    hWnd,
+                    out processId);
+
+                using (Process process =
+                    Process.GetCurrentProcess())
+                {
+                    return process.Id ==
+                           (int)processId;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        [System.Runtime.InteropServices.DllImport(
+            "user32.dll")]
+        private static extern bool EnumWindows(
+            EnumWindowsProc lpEnumFunc,
+            IntPtr lParam);
+
+        private delegate bool EnumWindowsProc(
+            IntPtr hWnd,
+            IntPtr lParam);
+
+        [System.Runtime.InteropServices.DllImport(
+            "user32.dll")]
+        private static extern bool IsWindowVisible(
+            IntPtr hWnd);
+
+        [System.Runtime.InteropServices.DllImport(
+            "user32.dll")]
+        private static extern uint GetWindowThreadProcessId(
+            IntPtr hWnd,
+            out uint lpdwProcessId);
     }
 }

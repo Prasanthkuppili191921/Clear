@@ -1538,6 +1538,12 @@ namespace AiInterviewAssistant
                     await detector.IsCodingPageAsync(
                         CancellationToken.None);
 
+                Debug.WriteLine(
+                    "CODING DEBUG | RecordInterview=" +
+                    _recordInterview +
+                    " | IsCodingPage=" +
+                    isCodingPage);
+
                 if (!isCodingPage)
                     return false;
 
