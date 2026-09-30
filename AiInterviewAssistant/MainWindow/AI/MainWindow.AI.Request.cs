@@ -1235,8 +1235,8 @@ namespace AiInterviewAssistant
         // =========================================================
 
         private async Task SendQuestion(
-            string question = null,
-            Border thinkingBubble = null)
+    string question = null,
+    Border thinkingBubble = null)
         {
             try
             {
@@ -1389,6 +1389,24 @@ namespace AiInterviewAssistant
                     if (SendButton != null)
                     {
                         SendButton.IsEnabled = false;
+                    }
+
+                    // =================================================
+                    // HIDE MESSAGE INPUT IMMEDIATELY AFTER SEND
+                    // =================================================
+
+                    if (questionFromTextBox)
+                    {
+                        if (TextInputPanel != null)
+                        {
+                            TextInputPanel.Visibility =
+                                Visibility.Collapsed;
+                        }
+
+                        if (MessageModeButton != null)
+                        {
+                            MessageModeButton.IsChecked = false;
+                        }
                     }
 
                     if (StopButton != null)

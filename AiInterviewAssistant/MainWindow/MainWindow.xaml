@@ -1223,11 +1223,14 @@
 
                         <TextBox
                             x:Name="QuestionTextBox"
-                            Height="48"
+                            Height="80"
                             Style="{StaticResource ModernTextBox}"
-                            AcceptsReturn="False"
-                            KeyDown="QuestionTextBox_KeyDown"
-                            />
+                            AcceptsReturn="True"
+                            TextWrapping="Wrap"
+                            VerticalScrollBarVisibility="Auto"
+                            HorizontalScrollBarVisibility="Disabled"
+                            VerticalContentAlignment="Top"
+                            KeyDown="QuestionTextBox_KeyDown" />
 
 
                         <!-- SEND -->
