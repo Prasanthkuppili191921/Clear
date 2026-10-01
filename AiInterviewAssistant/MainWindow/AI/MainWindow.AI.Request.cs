@@ -1545,6 +1545,175 @@ namespace AiInterviewAssistant
             }
         }
 
+        private async Task SendQuestion(
+    string question)
+        {
+            // =========================================================
+            // PREVENT DUPLICATE GENERATION
+            // =========================================================
+
+            if (isGenerating)
+                return;
+
+            if (string.IsNullOrWhiteSpace(question))
+                return;
+
+            question =
+                question.Trim();
+
+
+            // =========================================================
+            // ANSWER MODE
+            // =========================================================
+
+            string answerMode =
+                "Medium";
+
+            if (AnswerModeComboBox.SelectedItem
+                is ComboBoxItem selectedItem)
+            {
+                answerMode =
+                    selectedItem.Content.ToString();
+            }
+
+
+            // =========================================================
+            // GENERATION STATE
+            // =========================================================
+
+            isGenerating = true;
+
+
+            SendButton.IsEnabled =
+                false;
+
+
+            QuestionTextBox.IsEnabled =
+                false;
+
+
+            cancellationTokenSource =
+                new CancellationTokenSource();
+
+
+            SendButton.Visibility =
+                Visibility.Collapsed;
+
+
+            StopButton.Visibility =
+                Visibility.Visible;
+
+
+            try
+            {
+                // =====================================================
+                // QUESTION BUBBLE
+                // =====================================================
+
+                AddUserMessage(
+                    question);
+
+
+                // =====================================================
+                // AI RESPONSE BUBBLE
+                // =====================================================
+
+                Border thinkingBubble =
+                    AddAIMessage(
+                        "");
+
+
+                StartAITypingAnimation(
+                    thinkingBubble,
+                    "");
+
+
+                // =====================================================
+                // EXISTING STREAMING PIPELINE
+                // =====================================================
+
+                await AskOpenRouterStreaming(
+                    question,
+                    thinkingBubble,
+                    cancellationTokenSource.Token,
+                    answerMode);
+            }
+            catch (OperationCanceledException)
+            {
+                // =====================================================
+                // GENERATION STOPPED
+                // =====================================================
+
+                // Use the same existing UI behavior.
+                //
+                // =====================================================
+
+                Border currentBubble =
+                    aiTypingBubble;
+
+                if (currentBubble != null)
+                {
+                    StopAITypingAnimation(
+                        currentBubble,
+                        "Generation stopped.");
+                }
+            }
+            catch (Exception ex)
+            {
+                // =====================================================
+                // GENERATION ERROR
+                // =====================================================
+
+                Border currentBubble =
+                    aiTypingBubble;
+
+                if (currentBubble != null)
+                {
+                    StopAITypingAnimation(
+                        currentBubble,
+                        "Error: " +
+                        ex.Message);
+                }
+
+                Debug.WriteLine(
+                    "UNIVERSAL SEND QUESTION ERROR: " +
+                    ex);
+            }
+            finally
+            {
+                // =====================================================
+                // RESTORE UI STATE
+                // =====================================================
+
+                isGenerating = false;
+
+
+                SendButton.IsEnabled =
+                    true;
+
+
+                QuestionTextBox.IsEnabled =
+                    true;
+
+
+                SendButton.Visibility =
+                    Visibility.Visible;
+
+
+                StopButton.Visibility =
+                    Visibility.Collapsed;
+
+
+                cancellationTokenSource?.Dispose();
+
+                cancellationTokenSource =
+                    null;
+
+
+                QuestionTextBox.Focus();
+            }
+        }
+
         private async Task<bool> TryProcessCodingQuestionAsync()
         {
             try

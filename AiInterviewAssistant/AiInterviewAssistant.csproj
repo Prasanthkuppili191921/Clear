@@ -297,6 +297,9 @@
     <Reference Include="PresentationFramework" />
     <Reference Include="UIAutomationClient" />
     <Reference Include="UIAutomationTypes" />
+    <Reference Include="WpfScreenHelper, Version=2.1.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\WpfScreenHelper.2.1.1\lib\net40\WpfScreenHelper.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
@@ -314,19 +317,15 @@
     <Compile Include="Coding\AI\CodingPageCoordinator.cs" />
     <Compile Include="Coding\AI\ICodingAiService.cs" />
     <Compile Include="Coding\AI\OpenRouterCodingAiService.cs" />
-
     <Compile Include="Coding\CodingModeService.cs" />
-
     <Compile Include="Coding\Detection\CodingPageDetector.cs" />
     <Compile Include="Coding\Detection\ICodingPageDetector.cs" />
-
     <Compile Include="Coding\Extraction\CodingExampleParser.cs" />
     <Compile Include="Coding\Extraction\CodingPageExtractionResult.cs" />
     <Compile Include="Coding\Extraction\CodingSectionParser.cs" />
     <Compile Include="Coding\Extraction\ICodingPageExtractor.cs" />
     <Compile Include="Coding\Extraction\WindowsUiAutomationCodingExtractor.cs" />
     <Compile Include="Coding\Extraction\StarterCodeExtractor.cs" />
-
     <Compile Include="Coding\Models\CodingExample.cs" />
     <Compile Include="Coding\Models\CodingProblem.cs" />
     <Compile Include="HotKeysRegister.cs" />
@@ -361,6 +360,9 @@
       <DependentUpon>InterviewReportsWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="ScreenCaptureProtection.cs" />
+    <Compile Include="ScreenQuestion\UniversalScreenCapture.cs" />
+    <Compile Include="ScreenQuestion\UniversalScreenQuestionResult.cs" />
+    <Compile Include="ScreenQuestion\UniversalScreenQuestionService.cs" />
     <Compile Include="Security\OpenRouterKeyProtection.cs" />
     <Compile Include="Security\WindowBehaviorManager.cs" />
     <Compile Include="SettingsManager.cs" />

@@ -1,10 +1,14 @@
-﻿using AiInterviewAssistant.Privacy;
+﻿using AiInterviewAssistant.AutoVoice;
+using AiInterviewAssistant.Privacy;
+using AiInterviewAssistant.ScreenQuestion;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Net.Http;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -12,8 +16,6 @@ using System.Windows.Interop;
 using System.Windows.Threading;
 using Tesseract;
 using MessageBox = System.Windows.MessageBox;
-using AiInterviewAssistant.AutoVoice;
-using System.Threading.Tasks;
 
 namespace AiInterviewAssistant
 {
@@ -133,7 +135,12 @@ namespace AiInterviewAssistant
 
         private bool _recordInterview = false;
 
-      
+        private UniversalScreenQuestionService _universalScreenQuestionService;
+
+        private readonly UniversalScreenCapture _universalScreenCapture =
+            new UniversalScreenCapture();
+
+
         // =========================================================
         // CONSTRUCTOR
         // =========================================================
@@ -141,6 +148,12 @@ namespace AiInterviewAssistant
         public MainWindow()
         {
             InitializeComponent();
+
+            _universalScreenQuestionService =
+                new UniversalScreenQuestionService(
+                    new HttpClient());
+
+            
 
             _autoVoiceManager =
                 new AutoVoiceManager(
@@ -654,10 +667,10 @@ namespace AiInterviewAssistant
                         {
                             // =========================================================
                             // ALT + ENTER
-                            // MCQ / NORMAL QUESTION ONLY
+                            // UNIVERSAL SCREEN QUESTION
                             // =========================================================
 
-                            HandleAltEnterAsync();
+                            _ = HandleUniversalAltEnterAsync();
                         }
                         catch (Exception ex)
                         {

@@ -1,8 +1,10 @@
-﻿using NAudio.Wave;
+﻿using AiInterviewAssistant.ScreenQuestion;
+using NAudio.Wave;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -30,7 +32,10 @@ namespace AiInterviewAssistant
     public partial class MainWindow : Window
     {
         // SCREEN CAPTURE, OCR and online-test question extraction.
-
+        [DllImport(
+    "dwmapi.dll",
+    PreserveSig = true)]
+        private static extern int DwmFlush();
         private Bitmap CaptureFullScreen()
         {
             Rectangle bounds =
@@ -568,6 +573,532 @@ namespace AiInterviewAssistant
             return result
                 .ToString()
                 .Trim();
+        }
+
+      
+        private string ConvertBitmapToBase64Jpeg(Bitmap bitmap)
+        {
+            if (bitmap == null)
+                return null;
+
+            using (MemoryStream stream = new MemoryStream())
+            {
+                bitmap.Save(
+                    stream,
+                    System.Drawing.Imaging.ImageFormat.Jpeg);
+
+                return Convert.ToBase64String(
+                    stream.ToArray());
+            }
+        }
+
+        private async Task<UniversalScreenQuestionResult>
+    ReadUniversalScreenQuestionAsync()
+        {
+            Bitmap screenshot = null;
+
+            try
+            {
+                screenshot =
+                 // await _universalScreenCapture.CaptureAsync();
+                 await CaptureUniversalScreen();
+
+
+                if (screenshot == null)
+                {
+                    return new UniversalScreenQuestionResult
+                    {
+                        IsQuestion = false,
+                        IsSkillRelated = false,
+                        Reason = "Unable to capture screen."
+                    };
+                }
+
+                string debugPath =
+                        Path.Combine(
+                            Path.GetTempPath(),
+                            "UniversalCapture_Debug.png");
+
+                                    screenshot.Save(
+                                        debugPath,
+                                        System.Drawing.Imaging.ImageFormat.Png);
+
+                                    Debug.WriteLine(
+                                        "UNIVERSAL CAPTURE SAVED: " +
+                                        debugPath);
+
+                string imageBase64 =
+                    ConvertBitmapToBase64Jpeg(screenshot);
+
+                if (string.IsNullOrWhiteSpace(imageBase64))
+                {
+                    return new UniversalScreenQuestionResult
+                    {
+                        IsQuestion = false,
+                        IsSkillRelated = false,
+                        Reason = "Unable to convert screenshot."
+                    };
+                }
+
+                // =====================================================
+                // USE EXISTING MAIN WINDOW SETTINGS
+                // =====================================================
+
+                string apiKey =
+                    currentSettings.OpenRouterApiKey;
+
+                string model =
+                    currentSettings.OnlineTestModel;
+
+                if (string.IsNullOrWhiteSpace(apiKey))
+                {
+                    return new UniversalScreenQuestionResult
+                    {
+                        IsQuestion = false,
+                        IsSkillRelated = false,
+                        Reason = "OpenRouter API key is not configured."
+                    };
+                }
+
+                if (string.IsNullOrWhiteSpace(model))
+                {
+                    return new UniversalScreenQuestionResult
+                    {
+                        IsQuestion = false,
+                        IsSkillRelated = false,
+                        Reason = "Online Test model is not configured."
+                    };
+                }
+
+                return await _universalScreenQuestionService
+                    .AnalyzeScreenAsync(
+                        imageBase64,
+                        apiKey,
+                        model,
+                        CancellationToken.None);
+            }
+            finally
+            {
+                screenshot?.Dispose();
+            }
+        }
+
+        private async Task<Bitmap> CaptureUniversalScreen()
+        {
+            try
+            {
+                // =============================================================
+                // IMPORTANT:
+                //
+                // Do NOT Hide() the assistant.
+                // Do NOT Show() the assistant.
+                //
+                // This keeps the Universal Alt+Enter flow completely
+                // blink-free.
+                //
+                // =============================================================
+
+                // Give the target application time to finish processing
+                // the tab switch / screen update.
+                await Task.Delay(300);
+
+                // Ask Windows Desktop Window Manager to finish pending
+                // composition work.
+                try
+                {
+                    DwmFlush();
+                }
+                catch
+                {
+                }
+
+                // Give the newly composed frame a little time to become
+                // available to CopyFromScreen().
+                await Task.Delay(100);
+
+                // =============================================================
+                // FIRST FRAME
+                // =============================================================
+
+                Bitmap firstFrame =
+                    CaptureFullScreen();
+
+                if (firstFrame == null)
+                    return null;
+
+                // =============================================================
+                // SECOND FRAME
+                // =============================================================
+
+                await Task.Delay(100);
+
+                try
+                {
+                    DwmFlush();
+                }
+                catch
+                {
+                }
+
+                Bitmap secondFrame =
+                    CaptureFullScreen();
+
+                if (secondFrame == null)
+                {
+                    return firstFrame;
+                }
+
+                // First frame is no longer needed.
+                firstFrame.Dispose();
+
+                // =============================================================
+                // THIRD / FINAL FRAME
+                // =============================================================
+
+                await Task.Delay(100);
+
+                try
+                {
+                    DwmFlush();
+                }
+                catch
+                {
+                }
+
+                Bitmap finalFrame =
+                    CaptureFullScreen();
+
+                if (finalFrame == null)
+                {
+                    return secondFrame;
+                }
+
+                // Second frame is no longer needed.
+                secondFrame.Dispose();
+
+                // =============================================================
+                // IMPORTANT:
+                //
+                // Always return the latest frame.
+                //
+                // =============================================================
+
+                return finalFrame;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(
+                    "UNIVERSAL SCREEN CAPTURE ERROR:");
+
+                Debug.WriteLine(
+                    ex.ToString());
+
+                return null;
+            }
+        }
+
+        private async Task HandleUniversalAltEnterAsync()
+        {
+            try
+            {
+                // =========================================================
+                // 1. PREVENT DUPLICATE UNIVERSAL REQUEST
+                // =========================================================
+
+                if (isGenerating)
+                {
+                    Debug.WriteLine(
+                        "UNIVERSAL ALT + ENTER: AI generation already running.");
+
+                    return;
+                }
+
+
+                // =========================================================
+                // 2. START EXISTING VISION REQUEST GUARD
+                // =========================================================
+
+                if (!TryStartVisionRequest())
+                {
+                    Debug.WriteLine(
+                        "UNIVERSAL ALT + ENTER: Vision request already running.");
+
+                    return;
+                }
+
+
+                try
+                {
+                    // =====================================================
+                    // 3. SHOW READING QUESTION
+                    // =====================================================
+                    //
+                    // Same UI pattern as existing Vision flow.
+                    //
+                    // =====================================================
+
+                    Border questionBubble =
+                        null;
+
+
+                    await Dispatcher.InvokeAsync(() =>
+                    {
+                        questionBubble =
+                            AddUserMessage(
+                                "🔍 Reading question...");
+                    });
+
+
+                    // =====================================================
+                    // 4. READ QUESTION FROM SCREEN
+                    // =====================================================
+
+                    UniversalScreenQuestionResult result =
+                        await ReadUniversalScreenQuestionAsync();
+
+
+                    // =====================================================
+                    // 5. VALIDATE RESULT
+                    // =====================================================
+
+                    if (result == null)
+                    {
+                        await Dispatcher.InvokeAsync(() =>
+                        {
+                            if (questionBubble != null)
+                            {
+                                UpdateUserMessage(
+                                    questionBubble,
+                                    "Could not read the question.");
+                            }
+                        });
+
+                        return;
+                    }
+
+
+                    if (!result.IsQuestion)
+                    {
+                        await Dispatcher.InvokeAsync(() =>
+                        {
+                            if (questionBubble != null)
+                            {
+                                UpdateUserMessage(
+                                    questionBubble,
+                                    "Could not identify a question.");
+                            }
+                        });
+
+                        return;
+                    }
+
+
+                    // =====================================================
+                    // 6. SKILL CHECK
+                    // =====================================================
+
+                    if (!result.IsSkillRelated)
+                    {
+                        await Dispatcher.InvokeAsync(() =>
+                        {
+                            if (questionBubble != null)
+                            {
+                                UpdateUserMessage(
+                                    questionBubble,
+                                    "Question is not related to the configured skills.");
+                            }
+                        });
+
+                        return;
+                    }
+
+
+                    // =====================================================
+                    // 7. BUILD QUESTION
+                    // =====================================================
+
+                    string question =
+                        result.Question?.Trim();
+
+
+                    if (string.IsNullOrWhiteSpace(question))
+                    {
+                        await Dispatcher.InvokeAsync(() =>
+                        {
+                            if (questionBubble != null)
+                            {
+                                UpdateUserMessage(
+                                    questionBubble,
+                                    "Could not identify a question.");
+                            }
+                        });
+
+                        return;
+                    }
+
+
+                    // =====================================================
+                    // 8. ADD MCQ OPTIONS
+                    // =====================================================
+
+                    if (!string.IsNullOrWhiteSpace(
+                            result.Options))
+                    {
+                        question +=
+                            "\n\nOptions:\n" +
+                            result.Options.Trim();
+                    }
+
+
+                    Debug.WriteLine(
+                        "=================================================");
+
+                    Debug.WriteLine(
+                        "UNIVERSAL QUESTION:");
+
+                    Debug.WriteLine(
+                        question);
+
+                    Debug.WriteLine(
+                        "UNIVERSAL QUESTION TYPE: " +
+                        result.QuestionType);
+
+                    Debug.WriteLine(
+                        "=================================================");
+
+
+                    // =====================================================
+                    // 9. UPDATE EXISTING QUESTION BUBBLE
+                    // =====================================================
+                    //
+                    // Do NOT remove and recreate it.
+                    //
+                    // Existing Vision flow updates the same bubble.
+                    //
+                    // =====================================================
+
+                    await Dispatcher.InvokeAsync(() =>
+                    {
+                        if (questionBubble != null)
+                        {
+                            UpdateUserMessage(
+                                questionBubble,
+                                question);
+                        }
+                    });
+
+
+                    // =====================================================
+                    // 10. SEND DIRECTLY TO EXISTING AI PIPELINE
+                    // =====================================================
+                    //
+                    // IMPORTANT:
+                    //
+                    // NO:
+                    //     QuestionTextBox.Text = question;
+                    //
+                    // NO:
+                    //     SendQuestion();
+                    //
+                    // Instead:
+                    //
+                    //     SendQuestion(question)
+                    //
+                    // This follows the exact Ctrl+Enter pipeline internally
+                    // without requiring the question textbox.
+                    //
+                    // =====================================================
+
+                    await SendUniversalQuestionAsync(question);
+                }
+                finally
+                {
+                    // =====================================================
+                    // RELEASE VISION REQUEST GUARD
+                    // =====================================================
+
+                    FinishVisionRequest();
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(
+                    "UNIVERSAL ALT + ENTER ERROR:");
+
+                Debug.WriteLine(ex.ToString());
+            }
+        }
+
+        private string BuildUniversalInterviewPrompt(string question)
+        {
+            return $@"
+                        You are an interview assistant.
+
+                        Answer the following interview question directly and concisely.
+
+                        QUESTION:
+                        {question}
+
+                        RULES:
+                        - Give only the answer the interviewer needs.
+                        - Keep the answer short and interview-ready.
+                        - For normal technical questions, answer in 3-6 sentences.
+                        - For comparison questions, give only the key differences.
+                        - For MCQs, give the correct option first, then one short explanation.
+                        - For coding questions, provide the code first, followed by a brief explanation.
+                        - For SQL questions, provide the query first, followed by a brief explanation.
+                        - If an example is required, give one concise example.
+                        - Do not repeat the question.
+                        - Do not add unnecessary introduction or conclusion.
+                        - Do not provide lengthy background information.
+                        - Do not over-explain.
+                        - Use professional interview language.";
+        }
+
+        private async Task SendUniversalQuestionAsync(string question)
+        {
+            if (string.IsNullOrWhiteSpace(question))
+                return;
+
+            try
+            {
+                string prompt =
+                    BuildUniversalInterviewPrompt(question);
+
+                // =====================================================
+                // AI RESPONSE BUBBLE
+                // =====================================================
+
+                Border thinkingBubble =
+                    AddAIMessage("");
+
+                StartAITypingAnimation(
+                    thinkingBubble,
+                    "");
+
+                // =====================================================
+                // EXISTING OPENROUTER STREAMING
+                // =====================================================
+
+                await AskOpenRouterStreaming(
+                    prompt,
+                    thinkingBubble,
+                    CancellationToken.None,
+                    "Medium");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(
+                    "UNIVERSAL AI ERROR: " +
+                    ex);
+
+                if (aiTypingBubble != null)
+                {
+                    StopAITypingAnimation(
+                        aiTypingBubble,
+                        "Error: " + ex.Message);
+                }
+            }
         }
     }
 }
