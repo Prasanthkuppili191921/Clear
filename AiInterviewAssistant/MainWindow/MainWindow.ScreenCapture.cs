@@ -1062,12 +1062,18 @@ namespace AiInterviewAssistant
 
             try
             {
+                // =========================================================
+                // RESET PREVIOUS AI RESPONSE
+                // =========================================================
+
+                latestAiText = "";
+
                 string prompt =
                     BuildUniversalInterviewPrompt(question);
 
-                // =====================================================
+                // =========================================================
                 // AI RESPONSE BUBBLE
-                // =====================================================
+                // =========================================================
 
                 Border thinkingBubble =
                     AddAIMessage("");
@@ -1076,15 +1082,46 @@ namespace AiInterviewAssistant
                     thinkingBubble,
                     "");
 
-                // =====================================================
+                // =========================================================
                 // EXISTING OPENROUTER STREAMING
-                // =====================================================
+                // =========================================================
 
                 await AskOpenRouterStreaming(
                     prompt,
                     thinkingBubble,
                     CancellationToken.None,
                     "Medium");
+
+                // =========================================================
+                // RECORD INTERVIEW
+                //
+                // Universal Screen Question flow was previously missing
+                // this recording step.
+                // =========================================================
+
+                if (!string.IsNullOrWhiteSpace(latestAiText))
+                {
+                    try
+                    {
+                        _interviewSessionLogger?.LogQuestionAnswer(
+                            question,
+                            latestAiText);
+
+                        Debug.WriteLine(
+                            "UNIVERSAL RECORD: Interview Q&A logged.");
+                    }
+                    catch (Exception recordEx)
+                    {
+                        Debug.WriteLine(
+                            "UNIVERSAL RECORD ERROR: " +
+                            recordEx);
+                    }
+                }
+                else
+                {
+                    Debug.WriteLine(
+                        "UNIVERSAL RECORD: AI response text is empty.");
+                }
             }
             catch (Exception ex)
             {
