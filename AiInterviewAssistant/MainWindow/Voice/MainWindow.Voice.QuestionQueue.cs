@@ -820,6 +820,7 @@ namespace AiInterviewAssistant
             }
 
 
+            Border questionBubble = null;
             Border thinkingBubble = null;
 
             try
@@ -879,8 +880,10 @@ namespace AiInterviewAssistant
                     // QUESTION BUBBLE
                     // ---------------------------------------------
 
-                    AddUserMessage(
-                        combinedQuestion);
+                    questionBubble =
+                        AddUserMessage(
+                            combinedQuestion,
+                            false);
 
 
                     // ---------------------------------------------
@@ -1015,6 +1018,21 @@ namespace AiInterviewAssistant
                         }
 
                         RemoveLiveVoiceMessage();
+
+                        // =========================================================
+                        // AI RESPONSE COMPLETED
+                        //
+                        // Voice ON       -> NO SCROLL
+                        // STT            -> NO SCROLL
+                        // AI STREAMING   -> NO SCROLL
+                        // AI CANCELLED   -> NO SCROLL
+                        //
+                        // Only after the complete AI response is rendered:
+                        // scroll the new Question + Answer into view.
+                        // =========================================================
+
+                        ScrollCompletedVoiceQuestionIntoView(
+                            questionBubble);
                     });
                 }
                 else
@@ -1086,6 +1104,74 @@ namespace AiInterviewAssistant
                 }
 
                 cts.Dispose();
+            }
+        }
+
+        private void ScrollCompletedVoiceQuestionIntoView(
+    Border questionBubble)
+        {
+            if (questionBubble == null)
+                return;
+
+            if (!Dispatcher.CheckAccess())
+            {
+                Dispatcher.BeginInvoke(
+                    new Action(() =>
+                    {
+                        ScrollCompletedVoiceQuestionIntoView(
+                            questionBubble);
+                    }),
+                    System.Windows.Threading.DispatcherPriority.Render);
+
+                return;
+            }
+
+            try
+            {
+                if (ChatScrollViewer == null ||
+                    ChatPanel == null ||
+                    !ChatScrollViewer.IsLoaded)
+                {
+                    return;
+                }
+
+                ChatPanel.UpdateLayout();
+                ChatScrollViewer.UpdateLayout();
+
+                Point point =
+                    questionBubble
+                        .TransformToAncestor(
+                            ChatScrollViewer)
+                        .Transform(
+                            new Point(0, 0));
+
+                double targetOffset =
+                    ChatScrollViewer.VerticalOffset +
+                    point.Y;
+
+                if (targetOffset < 0)
+                {
+                    targetOffset = 0;
+                }
+
+                if (targetOffset >
+                    ChatScrollViewer.ScrollableHeight)
+                {
+                    targetOffset =
+                        ChatScrollViewer.ScrollableHeight;
+                }
+
+                StartSmoothChatScroll(
+                    targetOffset);
+
+                Debug.WriteLine(
+                    "VOICE SCROLL: Completed Question + AI Answer moved into view.");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(
+                    "VOICE SCROLL ERROR: " +
+                    ex);
             }
         }
 

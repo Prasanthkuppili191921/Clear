@@ -97,7 +97,7 @@ namespace AiInterviewAssistant
                             spacerIndex,
                             liveVoiceMessageBorder);
 
-                        ScrollLiveVoiceMessageIntoView();
+                        //ScrollLiveVoiceMessageIntoView();
                     }
                     else
                     {

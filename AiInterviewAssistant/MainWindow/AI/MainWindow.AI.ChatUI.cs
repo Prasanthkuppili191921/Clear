@@ -164,7 +164,17 @@ namespace AiInterviewAssistant
         // =========================================================
 
         private Border AddUserMessage(
-            string message)
+    string message)
+        {
+            return AddUserMessage(
+                message,
+                true);
+        }
+
+
+        private Border AddUserMessage(
+            string message,
+            bool scrollToTop)
         {
             Border bubble =
                 AddMessage(
@@ -179,9 +189,14 @@ namespace AiInterviewAssistant
 
             // IMPORTANT:
             // This question belongs to the next AI response.
-            _currentUserQuestionBubble = bubble;
+            _currentUserQuestionBubble =
+                bubble;
 
-            ScrollMessageToTop(bubble);
+            if (scrollToTop)
+            {
+                ScrollMessageToTop(
+                    bubble);
+            }
 
             return bubble;
         }
