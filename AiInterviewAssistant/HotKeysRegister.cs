@@ -144,6 +144,7 @@ namespace AiInterviewAssistant
         private const uint VK_BACK = 0x08;
 
         private const uint VK_A = 0x41;
+        private const uint VK_C = 0x43;
 
 
         // =========================================================
@@ -231,6 +232,8 @@ namespace AiInterviewAssistant
 
         private static Action _autoVoice;
 
+        private static Action _clipboardCopy;
+
 
         // =========================================================
         // LOW LEVEL KEYBOARD HOOK
@@ -310,7 +313,8 @@ namespace AiInterviewAssistant
             Action settings,
             Action message,
             Action autoVoice,
-            Action clearChat)
+            Action clearChat,
+            Action clipboardCopy)
         {
             try
             {
@@ -384,6 +388,9 @@ namespace AiInterviewAssistant
 
                 _clearChat =
                     clearChat;
+
+                _clipboardCopy =
+                    clipboardCopy;
 
 
                 // =================================================
@@ -865,6 +872,21 @@ namespace AiInterviewAssistant
                 if (message == WM_KEYDOWN ||
                     message == WM_SYSKEYDOWN)
                 {
+                    // ---------------------------------------------
+                    // CTRL + C
+                    // Clipboard question capture
+                    // ---------------------------------------------
+
+                    if (virtualKey == (int)VK_C &&
+                        IsControlPressed() &&
+                        _mainWindow != null &&
+                        _mainWindow.IsVisible)
+                    {
+                        Execute(
+                            _clipboardCopy);
+                    }
+
+
                     // ---------------------------------------------
                     // CTRL + \
                     // CTRL + SHIFT + \
