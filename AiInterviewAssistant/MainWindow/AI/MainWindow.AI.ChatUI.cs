@@ -57,7 +57,7 @@ namespace AiInterviewAssistant
         private static readonly Color CodeBorderColor =
             Color.FromRgb(110, 112, 122);
 
-        private static readonly Color NormalTextColor = 
+        private static readonly Color NormalTextColor =
             Color.FromRgb(225, 218, 205);
 
         private static readonly Color CodeTextColor =
@@ -383,8 +383,6 @@ namespace AiInterviewAssistant
                     Content =
                         "⧉",
 
-                    ToolTip =
-                        "Copy answer"
                 };
 
 
@@ -392,29 +390,30 @@ namespace AiInterviewAssistant
                 message ?? "";
 
 
-            copyButton.Click +=
+            copyButton.PreviewMouseLeftButtonDown +=
                 (sender, e) =>
                 {
                     try
                     {
-                        Clipboard.SetText(
-                            copyButton.Tag?.ToString() ?? "");
+                        // Prevent MainWindow drag handling from interfering
+                        e.Handled = true;
 
+                        string textToCopy =
+                            copyButton.Tag?.ToString() ?? "";
 
-                        copyButton.Opacity =
-                            0.45;
+                        if (string.IsNullOrWhiteSpace(textToCopy))
+                            return;
 
+                        Clipboard.SetText(textToCopy);
 
-                        Task.Delay(600)
-                            .ContinueWith(_ =>
+                        copyButton.Opacity = 0.45;
+
+                        Dispatcher.BeginInvoke(
+                            new Action(async () =>
                             {
-                                Dispatcher.BeginInvoke(
-                                    new Action(() =>
-                                    {
-                                        copyButton.Opacity =
-                                            1.0;
-                                    }));
-                            });
+                                await Task.Delay(600);
+                                copyButton.Opacity = 1.0;
+                            }));
                     }
                     catch (Exception ex)
                     {
@@ -1930,9 +1929,7 @@ namespace AiInterviewAssistant
                 foreach (UIElement child
                          in mainGrid.Children)
                 {
-                    if (child is Button copyButton &&
-                        copyButton.ToolTip?.ToString()
-                            == "Copy answer")
+                    if (child is Button copyButton)
                     {
                         copyButton.Tag =
                             finalMessage;
@@ -1941,9 +1938,6 @@ namespace AiInterviewAssistant
                     }
                 }
             }
-
-
-            //ChatScrollViewer.ScrollToEnd();
         }
 
         // =========================================================
