@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -88,6 +89,11 @@ namespace AiInterviewAssistant
 
         private int visionRequestRunning = 0;
 
+        // =========================================================
+        // CLIPBOARD QUESTION
+        // =========================================================
+
+        private bool _clipboardQuestionAvailable = false;
 
         // =========================================================
         // SETTINGS
@@ -139,7 +145,6 @@ namespace AiInterviewAssistant
 
         private readonly UniversalScreenCapture _universalScreenCapture =
             new UniversalScreenCapture();
-
 
         // =========================================================
         // CONSTRUCTOR
@@ -269,6 +274,10 @@ namespace AiInterviewAssistant
 
             Closed +=
                 MainWindow_Closed;
+
+            IsVisibleChanged +=
+                MainWindow_ClipboardVisibilityChanged;
+
         }
 
         private void RecordInterviewCheckBox_Checked(
@@ -789,7 +798,18 @@ namespace AiInterviewAssistant
                          catch
                          {
                          }
-                     }
+                     },
+
+                    // =================================================
+                    // CTRL + C
+                    // CLIPBOARD QUESTION
+                    // =================================================
+
+                    () =>
+                    {
+                        CaptureClipboardQuestionAfterCopy();
+                    }
+
                 );
 
 
@@ -961,6 +981,53 @@ namespace AiInterviewAssistant
             finally
             {
                 FinishVisionRequest();
+            }
+        }
+
+        // =========================================================
+        // CLIPBOARD QUESTION CAPTURE
+        // =========================================================
+
+        private void CaptureClipboardQuestionAfterCopy()
+        {
+            try
+            {
+                if (!IsVisible)
+                    return;
+
+                // Only remember that a fresh Ctrl+C happened
+                // while the assistant was visible.
+                _clipboardQuestionAvailable = true;
+
+                Debug.WriteLine(
+                    "CTRL+C DETECTED WHILE MAIN WINDOW IS VISIBLE.");
+            }
+            catch
+            {
+                _clipboardQuestionAvailable = false;
+            }
+        }
+
+        private void ClearClipboardQuestionState()
+        {
+            _clipboardQuestionAvailable = false;
+        }
+
+        private void MainWindow_ClipboardVisibilityChanged(
+    object sender,
+    DependencyPropertyChangedEventArgs e)
+        {
+            try
+            {
+                if (!IsVisible)
+                {
+                    // A Ctrl+C captured before Hide must never
+                    // become valid after the assistant is shown again.
+                    ClearClipboardQuestionState();
+                }
+            }
+            catch
+            {
             }
         }
 

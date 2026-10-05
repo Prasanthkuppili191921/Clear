@@ -797,6 +797,59 @@ namespace AiInterviewAssistant
             }
         }
 
+        private string ConsumeClipboardQuestion()
+        {
+            try
+            {
+                if (!IsVisible ||
+                    !_clipboardQuestionAvailable)
+                {
+                    return null;
+                }
+
+                string question = null;
+
+                if (Clipboard.ContainsText())
+                {
+                    question =
+                        Clipboard.GetText()?.Trim();
+                }
+
+                // One Ctrl+C -> one Alt+Enter
+                ClearClipboardQuestionState();
+
+                return question;
+            }
+            catch
+            {
+                ClearClipboardQuestionState();
+                return null;
+            }
+        }
+
+        private async Task SendClipboardQuestionAsync(
+    string question)
+        {
+            if (string.IsNullOrWhiteSpace(question))
+                return;
+
+            try
+            {
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    AddUserMessage(question);
+                });
+
+                await SendUniversalQuestionAsync(question);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(
+                    "CLIPBOARD QUESTION ERROR: " +
+                    ex);
+            }
+        }
+
         private async Task HandleUniversalAltEnterAsync()
         {
             try
@@ -813,9 +866,29 @@ namespace AiInterviewAssistant
                     return;
                 }
 
+                // =========================================================
+                // 2. CHECK FRESH CLIPBOARD QUESTION
+                // =========================================================
+
+                string clipboardQuestion =
+                    ConsumeClipboardQuestion();
+
+                if (!string.IsNullOrWhiteSpace(
+                        clipboardQuestion))
+                {
+                    Debug.WriteLine(
+                        "UNIVERSAL ALT + ENTER: " +
+                        "Using clipboard question.");
+
+                    await SendClipboardQuestionAsync(
+                        clipboardQuestion);
+
+                    return;
+                }
+
 
                 // =========================================================
-                // 2. START EXISTING VISION REQUEST GUARD
+                // 3. START EXISTING VISION REQUEST GUARD
                 // =========================================================
 
                 if (!TryStartVisionRequest())
