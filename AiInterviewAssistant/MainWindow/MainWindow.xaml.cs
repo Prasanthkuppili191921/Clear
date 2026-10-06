@@ -1,6 +1,5 @@
 ﻿using AiInterviewAssistant.AutoVoice;
 using AiInterviewAssistant.Privacy;
-using AiInterviewAssistant.ScreenQuestion;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -141,11 +140,6 @@ namespace AiInterviewAssistant
 
         private bool _recordInterview = false;
 
-        private UniversalScreenQuestionService _universalScreenQuestionService;
-
-        private readonly UniversalScreenCapture _universalScreenCapture =
-            new UniversalScreenCapture();
-
         // =========================================================
         // CONSTRUCTOR
         // =========================================================
@@ -153,12 +147,6 @@ namespace AiInterviewAssistant
         public MainWindow()
         {
             InitializeComponent();
-
-            _universalScreenQuestionService =
-                new UniversalScreenQuestionService(
-                    new HttpClient());
-
-            
 
             _autoVoiceManager =
                 new AutoVoiceManager(
@@ -665,21 +653,13 @@ namespace AiInterviewAssistant
                     },
 
 
-                    // =================================================
                     // ALT + ENTER
                     // VISION AI / MCQ
-                    // =================================================
-
                     () =>
                     {
                         try
                         {
-                            // =========================================================
-                            // ALT + ENTER
-                            // UNIVERSAL SCREEN QUESTION
-                            // =========================================================
-
-                            _ = HandleUniversalAltEnterAsync();
+                           HandleAltEnterAsync();
                         }
                         catch (Exception ex)
                         {
@@ -968,21 +948,62 @@ namespace AiInterviewAssistant
         {
             try
             {
+                // =========================================================
+                // 1. CHECK FOR FRESH COPIED QUESTION
+                // =========================================================
+                //
+                // If interviewer question was copied using CTRL+C,
+                // process the clipboard text directly.
+                //
+                // IMPORTANT:
+                // Do NOT show "🔍 Reading question..." for copied questions.
+                //
+                // =========================================================
+
+                string clipboardQuestion =
+                    ConsumeClipboardQuestion();
+
+                if (!string.IsNullOrWhiteSpace(clipboardQuestion))
+                {
+                    Debug.WriteLine(
+                        "ALT + ENTER: Using copied clipboard question.");
+
+                    await SendQuestion(
+                        clipboardQuestion);
+
+                    return;
+                }
+
+
+                // =========================================================
+                // 2. NO COPIED QUESTION
+                //
+                // Continue with the existing Vision / MCQ flow.
+                // =========================================================
+
                 if (!TryStartVisionRequest())
                 {
                     return;
                 }
 
-                await RunVisionAiFromScreenAsync();
+                try
+                {
+                    await RunVisionAiFromScreenAsync();
+                }
+                finally
+                {
+                    FinishVisionRequest();
+                }
             }
-            catch
+            catch (Exception ex)
             {
-            }
-            finally
-            {
-                FinishVisionRequest();
+                Debug.WriteLine(
+                    "ALT + ENTER ERROR: " +
+                    ex);
             }
         }
+
+
 
         // =========================================================
         // CLIPBOARD QUESTION CAPTURE
@@ -1014,8 +1035,8 @@ namespace AiInterviewAssistant
         }
 
         private void MainWindow_ClipboardVisibilityChanged(
-    object sender,
-    DependencyPropertyChangedEventArgs e)
+            object sender,
+            DependencyPropertyChangedEventArgs e)
         {
             try
             {

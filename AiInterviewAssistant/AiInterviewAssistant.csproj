@@ -360,9 +360,6 @@
       <DependentUpon>InterviewReportsWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="ScreenCaptureProtection.cs" />
-    <Compile Include="ScreenQuestion\UniversalScreenCapture.cs" />
-    <Compile Include="ScreenQuestion\UniversalScreenQuestionResult.cs" />
-    <Compile Include="ScreenQuestion\UniversalScreenQuestionService.cs" />
     <Compile Include="Security\OpenRouterKeyProtection.cs" />
     <Compile Include="Security\WindowBehaviorManager.cs" />
     <Compile Include="SettingsManager.cs" />
