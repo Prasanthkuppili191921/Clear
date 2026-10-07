@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
@@ -377,10 +378,6 @@ namespace AiInterviewAssistant
                     settings,
                     languageInstruction);
 
-            // =========================================================
-            // SYSTEM MESSAGE
-            // =========================================================
-
             messages.Add(
                 new
                 {
@@ -389,40 +386,29 @@ namespace AiInterviewAssistant
                 });
 
             // =========================================================
-            // NO CONVERSATION HISTORY
+            // NO HISTORY / NO CURRENT QUESTION
             // =========================================================
 
             if (conversationHistory == null ||
-                conversationHistory.Count == 0)
+                conversationHistory.Count == 0 ||
+                currentQuestionIndex < 0)
             {
                 return messages;
             }
 
             // =========================================================
-            // NO CURRENT QUESTION
-            // =========================================================
-
-            if (currentQuestionIndex < 0)
-            {
-                return messages;
-            }
-
-            // =========================================================
-            // FIND LAST 3 COMPLETE CONVERSATION TURNS
-            //
-            // A turn is:
+            // FIND IMMEDIATELY PREVIOUS COMPLETE TURN
             //
             // USER
             // ASSISTANT
             //
-            // We collect complete turns backwards so the current
-            // conversation context is always preserved.
+            // We only look at the immediately previous turn.
             // =========================================================
 
-            List<int> turnStartIndexes =
-                new List<int>();
+            int previousUserIndex =
+                -1;
 
-            int assistantIndex =
+            int previousAssistantIndex =
                 -1;
 
             for (int i = currentQuestionIndex - 1;
@@ -452,100 +438,96 @@ namespace AiInterviewAssistant
                     continue;
                 }
 
-                // -----------------------------------------------------
-                // We found the assistant answer belonging to a
-                // previous user question.
-                // -----------------------------------------------------
+                // ---------------------------------------------------------
+                // First assistant found = previous answer
+                // ---------------------------------------------------------
 
-                if (assistantIndex < 0 &&
+                if (previousAssistantIndex < 0 &&
                     string.Equals(
                         role,
                         "assistant",
                         StringComparison.OrdinalIgnoreCase))
                 {
-                    assistantIndex =
+                    previousAssistantIndex =
                         i;
 
                     continue;
                 }
 
-                // -----------------------------------------------------
-                // Once an assistant answer was found, the next user
-                // message before it is the start of that conversation
-                // turn.
-                // -----------------------------------------------------
+                // ---------------------------------------------------------
+                // User before that assistant = previous question
+                // ---------------------------------------------------------
 
-                if (assistantIndex >= 0 &&
+                if (previousAssistantIndex >= 0 &&
                     string.Equals(
                         role,
                         "user",
                         StringComparison.OrdinalIgnoreCase))
                 {
-                    turnStartIndexes.Add(i);
+                    previousUserIndex =
+                        i;
 
-                    assistantIndex = -1;
-
-                    if (turnStartIndexes.Count >= 3)
-                    {
-                        break;
-                    }
+                    break;
                 }
             }
 
             // =========================================================
-            // DETERMINE HISTORY START
+            // CONTEXT-AWARE HISTORY
+            // =========================================================
+            //
+            // Only send the previous Q&A when the current question
+            // appears to depend on the previous discussion.
+            //
+            // New standalone questions:
+            //     Resume + Current Question
+            //
+            // Follow-up questions:
+            //     Resume + Previous Q&A + Current Question
             // =========================================================
 
-            int startIndex =
-                currentQuestionIndex;
+            bool usePreviousTurn =
+                false;
 
-            if (turnStartIndexes.Count > 0)
+            if (previousUserIndex >= 0 &&
+                previousAssistantIndex >= 0)
             {
-                startIndex =
-                    turnStartIndexes[
-                        turnStartIndexes.Count - 1];
+                string previousQuestion =
+                    GetConversationMessageContent(
+                        conversationHistory[previousUserIndex]);
+
+                string previousAnswer =
+                    GetConversationMessageContent(
+                        conversationHistory[previousAssistantIndex]);
+
+                usePreviousTurn =
+                    IsLikelyFollowUpQuestion(
+                        currentQuestion,
+                        previousQuestion,
+                        previousAnswer);
             }
 
             // =========================================================
-            // ADD PREVIOUS COMPLETE TURNS
+            // ADD PREVIOUS TURN ONLY WHEN REQUIRED
             // =========================================================
 
-            for (int i = startIndex;
-                 i < currentQuestionIndex;
-                 i++)
+            if (usePreviousTurn)
             {
-                object historyMessage =
-                    conversationHistory[i];
+                object previousUserMessage =
+                    conversationHistory[previousUserIndex];
 
-                if (historyMessage == null)
-                    continue;
+                object previousAssistantMessage =
+                    conversationHistory[previousAssistantIndex];
 
-                try
+                if (previousUserMessage != null)
                 {
-                    dynamic message =
-                        historyMessage;
-
-                    string role =
-                        message.role?.ToString();
-
-                    // Only actual user/assistant conversation
-                    // messages are sent to the model.
-                    if (string.Equals(
-                            role,
-                            "user",
-                            StringComparison.OrdinalIgnoreCase) ||
-                        string.Equals(
-                            role,
-                            "assistant",
-                            StringComparison.OrdinalIgnoreCase))
-                    {
-                        messages.Add(
-                            historyMessage);
-                    }
+                    messages.Add(
+                        previousUserMessage);
                 }
-                catch
+
+                if (previousAssistantMessage != null)
                 {
-                    // Ignore malformed history item
+                    messages.Add(
+                        previousAssistantMessage);
                 }
             }
 
@@ -562,11 +544,280 @@ namespace AiInterviewAssistant
                     currentMessage);
             }
 
+            return messages;
+        }
+
+        private string GetConversationMessageContent(
+    object message)
+        {
+            if (message == null)
+                return string.Empty;
+
+            try
+            {
+                dynamic item =
+                    message;
+
+                return item.content?.ToString()
+                       ?? string.Empty;
+            }
+            catch
+            {
+                return string.Empty;
+            }
+        }
+
+        private bool IsLikelyFollowUpQuestion(
+    string currentQuestion,
+    string previousQuestion,
+    string previousAnswer)
+        {
+            if (string.IsNullOrWhiteSpace(currentQuestion))
+                return false;
+
+            string current =
+                currentQuestion.Trim();
+
             // =========================================================
-            // RETURN FINAL MESSAGE LIST
+            // VERY SHORT QUESTIONS
+            //
+            // Examples:
+            // "Why?"
+            // "How?"
+            // "What about Singleton?"
+            // "And middleware?"
+            // "Why is that?"
             // =========================================================
 
-            return messages;
+            string[] words =
+                current.Split(
+                    new[] { ' ', '\t', '\r', '\n' },
+                    StringSplitOptions.RemoveEmptyEntries);
+
+            if (words.Length <= 6)
+                return true;
+
+            // =========================================================
+            // CONTEXT-DEPENDENT WORDING
+            // =========================================================
+
+            string lower =
+                current.ToLowerInvariant();
+
+            string[] contextIndicators =
+            {
+        "why is that",
+        "why that",
+        "how about",
+        "what about",
+        "what does that",
+        "what is that",
+        "how does that",
+        "how can that",
+        "can you explain that",
+        "explain that",
+        "and what",
+        "and how",
+        "and why",
+        "then what",
+        "what about it",
+        "what about this",
+        "how about this",
+        "what does it",
+        "how does it",
+        "why does it",
+        "why do we",
+        "how do we",
+        "what if"
+    };
+
+            foreach (string indicator in contextIndicators)
+            {
+                if (lower.Contains(indicator))
+                    return true;
+            }
+
+            // =========================================================
+            // PRONOUN / REFERENCE BASED FOLLOW-UP
+            // =========================================================
+
+            string[] referenceWords =
+            {
+        "this",
+        "that",
+        "these",
+        "those",
+        "it",
+        "they",
+        "them",
+        "same",
+        "above",
+        "previous",
+        "earlier"
+    };
+
+            foreach (string word in referenceWords)
+            {
+                if (ContainsWholeWord(lower, word))
+                    return true;
+            }
+
+            // =========================================================
+            // SEMANTIC WORD OVERLAP
+            //
+            // If the current question shares meaningful words with the
+            // previous question/answer, keep the previous turn.
+            // =========================================================
+
+            HashSet<string> previousWords =
+                GetMeaningfulWords(
+                    previousQuestion + " " + previousAnswer);
+
+            HashSet<string> currentWords =
+                GetMeaningfulWords(
+                    current);
+
+            int overlap =
+                0;
+
+            foreach (string word in currentWords)
+            {
+                if (previousWords.Contains(word))
+                {
+                    overlap++;
+                }
+            }
+
+            return overlap >= 2;
+        }
+
+        private bool ContainsWholeWord(
+    string text,
+    string word)
+        {
+            if (string.IsNullOrWhiteSpace(text) ||
+                string.IsNullOrWhiteSpace(word))
+            {
+                return false;
+            }
+
+            string[] words =
+                text.Split(
+                    new[] { ' ', '\t', '\r', '\n', '.', ',', '?', '!', ':', ';', '(', ')' },
+                    StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (string item in words)
+            {
+                if (string.Equals(
+                    item,
+                    word,
+                    StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private HashSet<string> GetMeaningfulWords(
+    string text)
+        {
+            HashSet<string> words =
+                new HashSet<string>(
+                    StringComparer.OrdinalIgnoreCase);
+
+            if (string.IsNullOrWhiteSpace(text))
+                return words;
+
+            string[] stopWords =
+            {
+        "the",
+        "a",
+        "an",
+        "is",
+        "are",
+        "was",
+        "were",
+        "what",
+        "why",
+        "how",
+        "when",
+        "where",
+        "which",
+        "who",
+        "can",
+        "could",
+        "would",
+        "should",
+        "do",
+        "does",
+        "did",
+        "and",
+        "or",
+        "to",
+        "of",
+        "in",
+        "on",
+        "for",
+        "with",
+        "about",
+        "from",
+        "this",
+        "that",
+        "it",
+        "they",
+        "them",
+        "i",
+        "you",
+        "we",
+        "me",
+        "my",
+        "your"
+    };
+
+            string[] tokens =
+                text.ToLowerInvariant()
+                    .Split(
+                        new[]
+                        {
+                    ' ',
+                    '\t',
+                    '\r',
+                    '\n',
+                    '.',
+                    ',',
+                    '?',
+                    '!',
+                    ':',
+                    ';',
+                    '(',
+                    ')',
+                    '[',
+                    ']',
+                    '{',
+                    '}',
+                    '/',
+                    '\\',
+                    '-'
+                        },
+                        StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (string token in tokens)
+            {
+                string word =
+                    token.Trim();
+
+                if (word.Length < 3)
+                    continue;
+
+                if (stopWords.Contains(word))
+                    continue;
+
+                words.Add(word);
+            }
+
+            return words;
         }
     }
 }
