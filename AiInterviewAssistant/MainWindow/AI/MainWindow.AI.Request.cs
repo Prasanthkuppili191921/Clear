@@ -144,19 +144,25 @@ namespace AiInterviewAssistant
                 // =====================================================
 
                 string languageInstruction =
-                    "Answer in natural professional English.";
+                        "Answer in natural professional English.";
 
                 string modeInstruction =
                     BuildAnswerModeInstruction(
-                         answerMode,
-                         responseLength);
+                        answerMode,
+                        responseLength);
+
+                // =====================================================
+                // USER QUESTION
+                // =====================================================
+
+                // IMPORTANT:
+                // InterviewAnswerContext.BuildSystemPrompt() is used
+                // by BuildMessages() as the SYSTEM message.
+                //
+                // The actual interviewer question must remain the
+                // USER message. Do NOT put the system prompt here.
 
                 string finalQuestion =
-                    modeInstruction +
-                    "\n\n" +
-                    languageInstruction +
-                    "\n\n" +
-                    "Interview question:\n" +
                     question;
 
                 // =====================================================
@@ -185,7 +191,7 @@ namespace AiInterviewAssistant
                 }
 
                 // =====================================================
-                // ADD USER MESSAGE TO HISTORY
+                // ADD ACTUAL USER QUESTION TO HISTORY
                 // =====================================================
 
                 voiceUserHistoryEntry = new
@@ -1194,7 +1200,8 @@ namespace AiInterviewAssistant
                     content =
                         BuildSystemPrompt(
                             settings,
-                            languageInstruction)
+                            languageInstruction,
+                            string.Empty)
                 });
 
             if (ChatPanel != null)

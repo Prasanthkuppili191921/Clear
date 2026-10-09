@@ -330,6 +330,7 @@
     <Compile Include="Coding\Models\CodingProblem.cs" />
     <Compile Include="HotKeysRegister.cs" />
     <Compile Include="InterviewSessionLogger.cs" />
+    <Compile Include="MainWindow\AI\InterviewAnswerContext.cs" />
     <Compile Include="MainWindow\AI\MainWindow.AI.ChatUI.cs" />
     <Compile Include="MainWindow\AI\MainWindow.AI.Core.cs" />
     <Compile Include="MainWindow\AI\MainWindow.AI.Prompt.cs" />
