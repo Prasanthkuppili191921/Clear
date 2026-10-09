@@ -1175,33 +1175,25 @@ namespace AiInterviewAssistant
             }
         }
 
-        private string GetCompletedAIMessageText(
-    Border bubble)
+
+        private string GetCompletedAIMessageText(Border bubble)
         {
             if (bubble == null)
                 return string.Empty;
 
             try
             {
-                // =====================================================
-                // AddAIMessage() creates a Copy button and
-                // UpdateAIMessage() always stores the COMPLETE
-                // rendered message in the Copy button Tag.
-                //
-                // Therefore this gives us the exact final text
-                // shown in the AI bubble, including error messages.
-                // =====================================================
-
                 if (bubble.Child is Grid mainGrid)
                 {
                     foreach (UIElement child in mainGrid.Children)
                     {
-                        if (child is Button copyButton &&
-                            copyButton.ToolTip?.ToString()
-                                == "Copy answer")
+                        if (child is Button copyButton)
                         {
-                            return copyButton.Tag?.ToString()
-                                   ?? string.Empty;
+                            string answer =
+                                copyButton.Tag?.ToString() ?? string.Empty;
+
+                            if (!string.IsNullOrWhiteSpace(answer))
+                                return answer.Trim();
                         }
                     }
                 }
@@ -1209,12 +1201,15 @@ namespace AiInterviewAssistant
             catch (Exception ex)
             {
                 Debug.WriteLine(
-                    "VOICE RECORD: Unable to read final AI bubble: " +
-                    ex);
+                    "VOICE RECORD: Unable to read final AI bubble: " + ex);
             }
+
+            Debug.WriteLine(
+                "VOICE RECORD: Final AI text could not be extracted.");
 
             return string.Empty;
         }
+
 
 
         // =========================================================
