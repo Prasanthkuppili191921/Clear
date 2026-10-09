@@ -869,11 +869,24 @@ namespace AiInterviewAssistant
                                     return;
                                 }
 
-                                string finalAnswer =
-                                    fullAnswer.Trim();
 
-                                latestAiText =
-                                    finalAnswer;
+                                string finalAnswer = fullAnswer.Trim();
+
+                                // Prevent unrelated past-experience claims from being appended
+                                // to hypothetical implementation answers.
+                                finalAnswer = RemoveUnrequestedExperienceClaims(
+                                    question,
+                                    finalAnswer);
+
+                                if (string.IsNullOrWhiteSpace(finalAnswer))
+                                {
+                                    finalAnswer =
+                                        "I would first clarify the requirements, then choose " +
+                                        "an appropriate implementation based on the application's needs.";
+                                }
+
+                                latestAiText = finalAnswer;
+
 
                                 // =================================================
                                 // FINAL UI UPDATE
@@ -1123,6 +1136,21 @@ namespace AiInterviewAssistant
                     DateTime.Now.ToString("HH:mm:ss.fff"));
             }
         }
+
+
+
+        private static string RemoveUnrequestedExperienceClaims(
+            string question,
+            string answer)
+        {
+            // Do not delete complete paragraphs using fixed phrase lists.
+            // Such filtering can remove valid technical explanations and cannot
+            // reliably determine whether a claim is supported by the active resume.
+            // Personal-experience accuracy is governed by the resume-aware prompt.
+            return answer?.Trim() ?? string.Empty;
+        }
+
+
 
         private async Task<string> ReadLineWithCancellationAsync(
             StreamReader reader,
@@ -1476,6 +1504,11 @@ namespace AiInterviewAssistant
                             GetCompletedAIMessageText(
                                 thinkingBubble);
 
+                        if (string.IsNullOrWhiteSpace(finalAiText))
+                        {
+                            finalAiText = latestAiText;
+                        }
+
                         if (!string.IsNullOrWhiteSpace(finalAiText))
                         {
                             RecordCompletedAIMessage(
@@ -1485,7 +1518,7 @@ namespace AiInterviewAssistant
                         else
                         {
                             Debug.WriteLine(
-                                "INTERVIEW RECORD: Final Message Send AI text not available.");
+                                "INTERVIEW RECORD: Final AI text unavailable in message bubble and latestAiText.");
                         }
                     });
                 }

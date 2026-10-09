@@ -272,33 +272,15 @@ namespace AiInterviewAssistant
             }
 
             // =========================================================
-            // CONTEXT-AWARE HISTORY
+            // INCLUDE THE IMMEDIATELY PREVIOUS COMPLETE TURN
             // =========================================================
+            // The model receives one previous turn so it can resolve natural
+            // follow-ups that do not match a hardcoded phrase list. The system
+            // prompt instructs it not to reuse that context for independent questions.
 
             bool usePreviousTurn =
-                false;
-
-            if (previousUserIndex >= 0 &&
-                previousAssistantIndex >= 0)
-            {
-                string previousQuestion =
-                    GetConversationMessageContent(
-                        conversationHistory[previousUserIndex]);
-
-                string previousAnswer =
-                    GetConversationMessageContent(
-                        conversationHistory[previousAssistantIndex]);
-
-                usePreviousTurn =
-                    IsLikelyFollowUpQuestion(
-                        currentQuestion,
-                        previousQuestion,
-                        previousAnswer);
-            }
-
-            // =========================================================
-            // ADD PREVIOUS TURN WHEN IT IS A FOLLOW-UP
-            // =========================================================
+                previousUserIndex >= 0 &&
+                previousAssistantIndex >= 0;
 
             if (usePreviousTurn)
             {
@@ -357,146 +339,93 @@ namespace AiInterviewAssistant
             }
         }
 
+
+
         private bool IsLikelyFollowUpQuestion(
-    string currentQuestion,
-    string previousQuestion,
-    string previousAnswer)
+            string currentQuestion,
+            string previousQuestion,
+            string previousAnswer)
         {
             if (string.IsNullOrWhiteSpace(currentQuestion))
                 return false;
 
-            string current =
-                currentQuestion.Trim();
+            string current = currentQuestion
+                .Trim()
+                .ToLowerInvariant()
+                .TrimEnd('.', '?', '!', ' ');
 
-            // =========================================================
-            // VERY SHORT QUESTIONS
-            //
-            // Examples:
-            // "Why?"
-            // "How?"
-            // "What about Singleton?"
-            // "And middleware?"
-            // "Why is that?"
-            // =========================================================
-
-            string[] words =
-                current.Split(
-                    new[] { ' ', '\t', '\r', '\n' },
-                    StringSplitOptions.RemoveEmptyEntries);
-
-            string normalized =
-               current
-                   .ToLowerInvariant()
-                   .Trim();
-
-            if (normalized == "why" ||
-                normalized == "how" ||
-                normalized == "what" ||
-                normalized == "why?" ||
-                normalized == "how?" ||
-                normalized == "what?" ||
-                normalized == "then what?" ||
-                normalized == "and then?" ||
-                normalized == "how so?" ||
-                normalized == "why is that?" ||
-                normalized == "how is that?")
+            // No previous turn means this cannot be a follow-up.
+            if (string.IsNullOrWhiteSpace(previousQuestion) ||
+                string.IsNullOrWhiteSpace(previousAnswer))
             {
-                return true;
+                return false;
             }
 
-            // =========================================================
-            // CONTEXT-DEPENDENT WORDING
-            // =========================================================
-
-            string lower =
-                current.ToLowerInvariant();
-
-            string[] contextIndicators =
+            // Only clearly context-dependent questions use previous context.
+            string[] explicitFollowUps =
             {
-        "why is that",
-        "why that",
-        "how about",
-        "what about",
-        "what does that",
-        "what is that",
-        "how does that",
-        "how can that",
-        "can you explain that",
-        "explain that",
-        "and what",
-        "and how",
-        "and why",
-        "then what",
-        "what about it",
-        "what about this",
-        "how about this",
-        "what does it",
-        "how does it",
-        "why does it",
-        "why do we",
-        "how do we",
-        "what if"
-    };
+                "why",
+                "how",
+                "why is that",
+                "how is that",
+                "why so",
+                "how so",
+                "explain that",
+                "explain this",
+                "can you explain that",
+                "can you explain this",
+                "elaborate",
+                "tell me more",
+                "give an example",
+                "show an example",
+                "what do you mean",
+                "what about that",
+                "what about this",
+                "and why",
+                "and how",
+                "then what",
+                "what happens next"
+            };
 
-            foreach (string indicator in contextIndicators)
+            foreach (string phrase in explicitFollowUps)
             {
-                if (lower.Contains(indicator))
+                if (current == phrase)
                     return true;
             }
 
-            // =========================================================
-            // PRONOUN / REFERENCE BASED FOLLOW-UP
-            // =========================================================
-
-            string[] referenceWords =
+            // Require an explicit reference AND a context-dependent phrase.
+            // Words like "this", "that", or "it" alone are insufficient.
+            string[] dependentPhrases =
             {
-        "this",
-        "that",
-        "these",
-        "those",
-        "it",
-        "they",
-        "them",
-        "same",
-        "above",
-        "previous",
-        "earlier"
-    };
+                "why does that",
+                "why is that",
+                "how does that",
+                "how is that",
+                "what does that mean",
+                "what happens to it",
+                "how does it work",
+                "why does it happen",
+                "can you explain it",
+                "can you explain that",
+                "how about that",
+                "what about that",
+                "what about this",
+                "in that case",
+                "based on that"
+            };
 
-            foreach (string word in referenceWords)
+            foreach (string phrase in dependentPhrases)
             {
-                if (ContainsWholeWord(lower, word))
+                if (current.Contains(phrase))
                     return true;
             }
 
-            // =========================================================
-            // SEMANTIC WORD OVERLAP
-            //
-            // If the current question shares meaningful words with the
-            // previous question/answer, keep the previous turn.
-            // =========================================================
-
-            HashSet<string> previousWords =
-                GetMeaningfulWords(
-                    previousQuestion + " " + previousAnswer);
-
-            HashSet<string> currentWords =
-                GetMeaningfulWords(
-                    current);
-
-            int overlap =
-                0;
-
-            foreach (string word in currentWords)
-            {
-                if (previousWords.Contains(word))
-                {
-                    overlap++;
-                }
-            }
-
-            return overlap >= 2;
+            // All other questions are independent by default.
+            // Do not use keyword overlap as proof of a follow-up.
+            return false;
         }
+
+
 
         private bool ContainsWholeWord(
     string text,
