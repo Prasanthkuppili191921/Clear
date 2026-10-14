@@ -344,13 +344,13 @@
                TargetType="TextBox">
 
                 <Setter Property="Foreground"
-                    Value="{DynamicResource PrimaryTextBrush}"/>
+                    Value="#FF172F46"/>
 
                 <Setter Property="Background"
-                    Value="#33000000"/>
+                    Value="#B3EAF6FF"/>
 
                 <Setter Property="BorderBrush"
-                    Value="#303640"/>
+                    Value="#FF579FD8"/>
 
                 <Setter Property="BorderThickness"
                     Value="1"/>

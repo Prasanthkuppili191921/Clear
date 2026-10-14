@@ -200,25 +200,27 @@ namespace AiInterviewAssistant
                 }
                 else
                 {
-                    // =============================================
-                    // FIRST CLICK
-                    // SHOW TEXTBOX + SEND ICON
-                    // =============================================
+                    // Show text input panel
+                    TextInputPanel.Visibility = Visibility.Visible;
 
-                    TextInputPanel.Visibility =
-                        Visibility.Visible;
+                    // Focus after WPF completes layout and visibility update
+                    Dispatcher.BeginInvoke(
+                        new Action(() =>
+                        {
+                            if (QuestionTextBox == null ||
+                                TextInputPanel == null ||
+                                TextInputPanel.Visibility != Visibility.Visible)
+                            {
+                                return;
+                            }
 
+                            QuestionTextBox.Focus();
+                            Keyboard.Focus(QuestionTextBox);
 
-                    // Focus textbox
-                    if (QuestionTextBox != null)
-                    {
-                        QuestionTextBox.Clear();
-
-                        QuestionTextBox.Focus();
-
-                        QuestionTextBox.CaretIndex =
-                            QuestionTextBox.Text.Length;
-                    }
+                            QuestionTextBox.CaretIndex =
+                                QuestionTextBox.Text.Length;
+                        }),
+                        System.Windows.Threading.DispatcherPriority.Input);
                 }
             }
             catch

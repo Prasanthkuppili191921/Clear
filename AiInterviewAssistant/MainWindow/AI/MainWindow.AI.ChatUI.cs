@@ -52,10 +52,10 @@ namespace AiInterviewAssistant
             Color.FromRgb(44, 45, 55);
 
         private static readonly Color CodeBackgroundColor =
-            Color.FromRgb(32, 33, 36);
+            Color.FromArgb(0x50, 0x3D, 0x53, 0x6B);
 
         private static readonly Color CodeBorderColor =
-            Color.FromRgb(110, 112, 122);
+            Color.FromArgb(0x60, 0x4F, 0x71, 0x8C);
 
         private static readonly Color NormalTextColor =
             Color.FromRgb(225, 218, 205);
@@ -677,7 +677,7 @@ namespace AiInterviewAssistant
                 new Border
                 {
                     Background =
-                        Brushes.Transparent,
+                        new SolidColorBrush(CodeBackgroundColor),
 
                     CornerRadius =
                         new CornerRadius(8),
@@ -793,12 +793,7 @@ namespace AiInterviewAssistant
                             CodeTextColor),
 
                     Background =
-                        new SolidColorBrush(
-                            Color.FromArgb(
-                                55,
-                                255,
-                                255,
-                                255)),
+                        Brushes.Transparent,
 
                     BorderThickness =
                         new Thickness(0),

@@ -164,7 +164,7 @@ namespace AiInterviewAssistant
             // FIXED DARK THEME
             // =====================================================
 
-            ApplyDarkTheme(
+            ApplyTransparentNavyTheme(
                 window);
 
 
@@ -232,137 +232,81 @@ namespace AiInterviewAssistant
             }
         }
 
-
-        // =========================================================
-        // DARK THEME
-        // =========================================================
-        //
-        // Theme is intentionally fixed to Dark.
-        //
-        // Light/System theme functionality is no longer used.
-        //
-        // =========================================================
-
-        private static void ApplyDarkTheme(
-            Window window)
+        private static void ApplyTransparentNavyTheme(Window window)
         {
             if (window == null)
                 return;
 
-
-            Color primaryText =
-                Color.FromRgb(
-                    244,
-                    246,
-                    250);
-
-            Color secondaryText =
-                Color.FromRgb(
-                    133,
-                    140,
-                    153);
-
-            Color mutedText =
-                Color.FromRgb(
-                    104,
-                    113,
-                    128);
-
-
-            // -----------------------------------------------------
-            // MAIN RESOURCES
-            // -----------------------------------------------------
-
+            // Fully transparent window background.
             SetResource(
                 window,
                 WindowBackgroundBrush,
-                Color.FromArgb(
-                    102,
-                    12,
-                    14,
-                    18));
+                Color.FromArgb(0, 234, 246, 255));
 
-
+            // Frosted light-blue header.
             SetResource(
                 window,
                 HeaderBackgroundBrush,
-                Color.FromArgb(
-                    34,
-                    0,
-                    0,
-                    0));
+                Color.FromArgb(204, 234, 246, 255));
 
-
+            // Frosted input panel.
             SetResource(
                 window,
                 PanelBackgroundBrush,
-                Color.FromArgb(
-                    34,
-                    0,
-                    0,
-                    0));
+                Color.FromArgb(221, 234, 246, 255));
 
-
+            // Subtle blue borders.
             SetResource(
                 window,
                 MainBorderBrush,
-                Color.FromRgb(
-                    51,
-                    60,
-                    77));
-
+                Color.FromArgb(128, 181, 221, 248));
 
             SetResource(
                 window,
                 DividerBrush,
-                Color.FromRgb(
-                    41,
-                    49,
-                    59));
+                Color.FromArgb(96, 181, 221, 248));
 
+            // Header and controls use dark navy text.
+            Color primaryText =
+                Color.FromRgb(23, 47, 70);
+
+            Color secondaryText =
+                Color.FromRgb(65, 94, 120);
+
+            Color mutedText =
+                Color.FromRgb(82, 115, 140);
 
             SetResource(
                 window,
                 PrimaryTextBrush,
                 primaryText);
 
-
             SetResource(
                 window,
                 SecondaryTextBrush,
                 secondaryText);
-
 
             SetResource(
                 window,
                 MutedTextBrush,
                 mutedText);
 
-
+            // Blue accent colors.
             SetResource(
                 window,
                 AccentBrush,
-                Color.FromRgb(
-                    77,
-                    141,
-                    255));
+                Color.FromRgb(49, 138, 203));
 
-
-            // -----------------------------------------------------
-            // SETTINGS TAB ALIASES
-            // -----------------------------------------------------
-
+            // Preserve existing legacy resource aliases.
             SetResource(
                 window,
                 TextBrush,
                 primaryText);
 
-
             SetResource(
                 window,
                 SecondaryBrush,
                 secondaryText);
-
 
             SetResource(
                 window,
