@@ -113,5 +113,8 @@ namespace AiInterviewAssistant
         public bool DebugLogging { get; set; } = false;
 
         public string ResumeText { get; set; } = string.Empty;
+
+        // Original file path used by the Main Window's clickable resume link.
+        public string ResumeFilePath { get; set; } = string.Empty;
     }
 }
