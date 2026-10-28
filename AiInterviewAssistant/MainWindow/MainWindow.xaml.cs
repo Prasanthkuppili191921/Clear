@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Microsoft.Win32;
 using System.Windows.Interop;
 using System.Windows.Threading;
 using Tesseract;
@@ -210,6 +211,9 @@ namespace AiInterviewAssistant
             currentSettings =
                 SettingsService.Load()
                 ?? new AppSettings();
+
+            // Restore the previously selected resume link in the main window.
+            RefreshResumeFileLink();
 
             // =====================================================
             // APPLY APPEARANCE
@@ -1522,6 +1526,135 @@ namespace AiInterviewAssistant
             }
             catch
             {
+            }
+        }
+
+
+        // =========================================================
+        // ADD RESUME
+        // =========================================================
+
+        private void AddResumeButton_Click(
+            object sender,
+            RoutedEventArgs e)
+        {
+            try
+            {
+                OpenFileDialog dialog = new OpenFileDialog
+                {
+                    Title = "Select Resume",
+                    Filter =
+                        "Resume Files (*.pdf;*.docx;*.txt)|*.pdf;*.docx;*.txt|" +
+                        "PDF Files (*.pdf)|*.pdf|" +
+                        "Word Documents (*.docx)|*.docx|" +
+                        "Text Files (*.txt)|*.txt",
+                    Multiselect = false,
+                    CheckFileExists = true
+                };
+
+                if (dialog.ShowDialog(this) != true)
+                    return;
+
+                string selectedPath = dialog.FileName;
+                string extractedText = ResumeFileService.ExtractText(selectedPath);
+
+                if (string.IsNullOrWhiteSpace(extractedText))
+                {
+                    MessageBox.Show(
+                        "Could not extract any text from the selected resume. Your previously saved resume has not been changed.",
+                        "Resume",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return;
+                }
+
+                string previousText = currentSettings?.ResumeText ?? string.Empty;
+                string previousPath = currentSettings?.ResumeFilePath ?? string.Empty;
+
+                if (currentSettings == null)
+                    currentSettings = SettingsService.Load() ?? new AppSettings();
+
+                currentSettings.ResumeText = extractedText.Trim();
+                currentSettings.ResumeFilePath = selectedPath;
+
+                if (!SettingsService.Save(currentSettings))
+                {
+                    currentSettings.ResumeText = previousText;
+                    currentSettings.ResumeFilePath = previousPath;
+
+                    MessageBox.Show(
+                        "The resume was read, but settings could not be saved. Your previously saved resume has been preserved.",
+                        "Resume",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                    return;
+                }
+
+                RefreshResumeFileLink();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "Unable to import the selected resume. Your previously saved resume has not been changed.\n\n" + ex.Message,
+                    "Resume",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+        }
+
+        private void RefreshResumeFileLink()
+        {
+            if (ResumeFileLinkButton == null)
+                return;
+
+            string path = currentSettings?.ResumeFilePath;
+
+            if (!string.IsNullOrWhiteSpace(path) && File.Exists(path))
+            {
+                ResumeFileLinkButton.Content = Path.GetFileName(path);
+                ResumeFileLinkButton.ToolTip = path;
+                ResumeFileLinkButton.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                ResumeFileLinkButton.Content = string.Empty;
+                ResumeFileLinkButton.ToolTip = "No resume file selected";
+                ResumeFileLinkButton.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void ResumeFileLinkButton_Click(
+            object sender,
+            RoutedEventArgs e)
+        {
+            try
+            {
+                string path = currentSettings?.ResumeFilePath;
+
+                if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+                {
+                    MessageBox.Show(
+                        "The original resume file could not be found. It may have been moved or deleted.",
+                        "Resume",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    RefreshResumeFileLink();
+                    return;
+                }
+
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = path,
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "Unable to open the selected resume.\n\n" + ex.Message,
+                    "Resume",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
         }
 
