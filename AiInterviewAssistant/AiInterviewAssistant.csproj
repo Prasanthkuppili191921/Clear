@@ -360,6 +360,7 @@
     <Compile Include="Reports\InterviewReportsWindow.xaml.cs">
       <DependentUpon>InterviewReportsWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ResumeFileService.cs" />
     <Compile Include="ScreenCaptureProtection.cs" />
     <Compile Include="Security\OpenRouterKeyProtection.cs" />
     <Compile Include="Security\WindowBehaviorManager.cs" />

@@ -20,6 +20,9 @@ namespace AiInterviewAssistant
 {
     public partial class SettingsWindow : Window
     {
+        private bool _suppressSaveRequested;
+        private bool _lastSaveSucceeded;
+
         // =========================================================
         // EVENTS
         // =========================================================
@@ -199,6 +202,52 @@ namespace AiInterviewAssistant
 
             MouseLeftButtonDown +=
                 SettingsWindow_MouseLeftButtonDown;
+        }
+
+        public bool BrowseResumeFromMainWindow()
+        {
+            ShowResumeTab();
+
+            if (_resumeTab == null)
+                return false;
+
+            bool imported = _resumeTab.BrowseFromMainWindow();
+
+            if (!imported)
+                return false;
+
+            return SaveResumeFromMainWindow();
+        }
+
+        public bool ClearResumeFromMainWindow()
+        {
+            ShowResumeTab();
+
+            if (_resumeTab == null)
+                return false;
+
+            _resumeTab.ClearFromMainWindow();
+
+            return SaveResumeFromMainWindow();
+        }
+
+        private bool SaveResumeFromMainWindow()
+        {
+            _suppressSaveRequested = true;
+
+            try
+            {
+                // Call the existing Save Settings button handler.
+                SaveButton_Click(
+                    SaveButton,
+                    new RoutedEventArgs());
+
+                return _lastSaveSucceeded;
+            }
+            finally
+            {
+                _suppressSaveRequested = false;
+            }
         }
 
 
@@ -1030,18 +1079,34 @@ namespace AiInterviewAssistant
 
             try
             {
+                _lastSaveSucceeded = false;
                 _isSaving = true;
                 _suppressChangeTracking = true;
 
                 SaveCurrentTab();
 
-                SettingsService.Save(_settings);
+                bool saved = SettingsService.Save(_settings);
 
+                if (!saved)
+                {
+                    MessageBox.Show(
+                        "Failed to save settings.",
+                        "Settings",
+                        System.Windows.Forms.MessageBoxButtons.OK,
+                        System.Windows.Forms.MessageBoxIcon.Error);
+
+                    return;
+                }
+
+                _lastSaveSucceeded = true;
                 _hasUnsavedChanges = false;
 
-                SaveRequested?.Invoke(
-                    this,
-                    EventArgs.Empty);
+                if (!_suppressSaveRequested)
+                {
+                    SaveRequested?.Invoke(
+                        this,
+                        EventArgs.Empty);
+                }
             }
             catch (Exception ex)
             {

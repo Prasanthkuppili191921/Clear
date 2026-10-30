@@ -546,18 +546,6 @@ namespace AiInterviewAssistant
 
 
                 // =================================================
-                // CTRL + SHIFT + \
-                // =================================================
-
-                RegisterSingleHotkey(
-                    SETTINGS_HOTKEY_ID,
-                    MOD_CONTROL |
-                    MOD_SHIFT |
-                    MOD_NOREPEAT,
-                    VK_OEM_5);
-
-
-                // =================================================
                 // CTRL + M
                 // =================================================
 
@@ -1769,21 +1757,6 @@ namespace AiInterviewAssistant
                         handled = true;
 
                         break;
-
-
-                    // =============================================
-                    // CTRL + SHIFT + \
-                    // =============================================
-
-                    case SETTINGS_HOTKEY_ID:
-
-                        Execute(
-                            _settings);
-
-                        handled = true;
-
-                        break;
-
 
                     // =============================================
                     // CTRL + M

@@ -1,7 +1,9 @@
 ﻿using AiInterviewAssistant.AutoVoice;
 using AiInterviewAssistant.Privacy;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -129,7 +131,7 @@ namespace AiInterviewAssistant
 
         private bool _initializingPrivacy = true;
 
-        
+
         // =========================================================
         // INTERVIEW SESSION
         // =========================================================
@@ -139,6 +141,11 @@ namespace AiInterviewAssistant
         private readonly AutoVoiceManager _autoVoiceManager;
 
         private bool _recordInterview = false;
+
+        private bool showSettingsWindow =>
+            bool.TryParse(
+                ConfigurationManager.AppSettings["ShowSettingsWindow"],
+                out bool enabled) && enabled;
 
         // =========================================================
         // CONSTRUCTOR
@@ -211,6 +218,9 @@ namespace AiInterviewAssistant
                 SettingsService.Load()
                 ?? new AppSettings();
 
+            // Restore the saved resume filename/link on startup.
+            UpdateResumeFileLink();
+
             // =====================================================
             // APPLY APPEARANCE
             // =====================================================
@@ -218,6 +228,8 @@ namespace AiInterviewAssistant
             AppearanceManager.Apply(
                 this,
                 currentSettings);
+
+            UpdateResumeFileLink();
 
 
             // =====================================================
@@ -233,6 +245,7 @@ namespace AiInterviewAssistant
                     _hideFromCapture;
             }
 
+            SettingsButton.Visibility = showSettingsWindow ? Visibility.Visible : Visibility.Collapsed;
 
             // =====================================================
             // CLEAR CONVERSATION
@@ -612,30 +625,30 @@ namespace AiInterviewAssistant
                     },
 
 
-                //// =================================================
-                //// SPACE
-                //// =================================================
+                    //// =================================================
+                    //// SPACE
+                    //// =================================================
 
-                //() =>
-                //{
-                //    try
-                //    {
-                //        if (!IsVoiceInputEnabled()) 
-                //            return; 
+                    //() =>
+                    //{
+                    //    try
+                    //    {
+                    //        if (!IsVoiceInputEnabled()) 
+                    //            return; 
 
-                //        if (voiceRecorder == null) 
-                //        { 
-                //            StartVoiceRecording();
-                //        } 
-                //        else 
-                //        { 
-                //            StopVoiceRecording(); 
-                //        }
-                //    }
-                //    catch
-                //    {
-                //    }
-                //},
+                    //        if (voiceRecorder == null) 
+                    //        { 
+                    //            StartVoiceRecording();
+                    //        } 
+                    //        else 
+                    //        { 
+                    //            StopVoiceRecording(); 
+                    //        }
+                    //    }
+                    //    catch
+                    //    {
+                    //    }
+                    //},
 
                     // =================================================
                     // SPACE
@@ -659,7 +672,7 @@ namespace AiInterviewAssistant
                     {
                         try
                         {
-                           HandleAltEnterAsync();
+                            HandleAltEnterAsync();
                         }
                         catch (Exception ex)
                         {
@@ -711,10 +724,16 @@ namespace AiInterviewAssistant
                     {
                         try
                         {
-                            ToggleSettingsWindow();
+                            
+                            if (showSettingsWindow)
+                            {
+                                ToggleSettingsWindow();
+                            }
                         }
-                        catch
+                        catch (Exception ex)
                         {
+                            System.Diagnostics.Debug.WriteLine(
+                                $"Settings hotkey error: {ex.Message}");
                         }
                     },
 
@@ -1601,6 +1620,8 @@ namespace AiInterviewAssistant
                 currentSettings =
                     SettingsService.Load()
                     ?? new AppSettings();
+
+                UpdateResumeFileLink();
             }
             catch (Exception ex)
             {
@@ -1745,5 +1766,140 @@ namespace AiInterviewAssistant
             {
             }
         }
+
+
+        private void AddResumeButton_Click(
+    object sender,
+    RoutedEventArgs e)
+        {
+            try
+            {
+                SettingsWindow window =
+                    settingsManager.GetOrCreateSettingsWindowForResume();
+
+                if (window == null)
+                    return;
+
+                // Calls Resume Tab's existing Browse handler,
+                // then its existing Save Settings handler.
+                bool saved = window.BrowseResumeFromMainWindow();
+
+                if (!saved)
+                    return;
+
+                currentSettings =
+                    SettingsService.Load() ?? new AppSettings();
+
+                UpdateResumeFileLink();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "Unable to import the resume.\n\n" + ex.Message,
+                    "Resume",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+        }
+
+        private void UpdateResumeFileLink()
+        {
+            string filePath = currentSettings?.ResumeFilePath;
+
+            bool hasResume =
+                !string.IsNullOrWhiteSpace(filePath);
+
+            AddResumeButton.Visibility =
+                hasResume
+                    ? Visibility.Collapsed
+                    : Visibility.Visible;
+
+            SelectedResumePanel.Visibility =
+                hasResume
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
+
+            ResumeFileLinkButton.Content =
+                hasResume
+                    ? Path.GetFileName(filePath)
+                    : string.Empty;
+
+            ResumeFileLinkButton.ToolTip =
+                hasResume
+                    ? filePath
+                    : "No resume file selected";
+        }
+
+        private void RemoveResumeButton_Click(
+    object sender,
+    RoutedEventArgs e)
+        {
+            try
+            {
+                SettingsWindow window =
+                    settingsManager.GetOrCreateSettingsWindowForResume();
+
+                if (window == null)
+                    return;
+
+                // Calls Resume Tab's existing Clear handler,
+                // then the existing Save Settings handler.
+                bool saved = window.ClearResumeFromMainWindow();
+
+                if (!saved)
+                    return;
+
+                currentSettings =
+                    SettingsService.Load() ?? new AppSettings();
+
+                UpdateResumeFileLink();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "Unable to remove the resume.\n\n" + ex.Message,
+                    "Resume",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+        }
+
+        private void ResumeFileLinkButton_Click(
+            object sender,
+            RoutedEventArgs e)
+        {
+            try
+            {
+                string filePath = currentSettings?.ResumeFilePath;
+
+                if (string.IsNullOrWhiteSpace(filePath) ||
+                    !File.Exists(filePath))
+                {
+                    MessageBox.Show(
+                        "The original resume file could not be found. " +
+                        "Please select it again.",
+                        "Resume",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+
+                    return;
+                }
+
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = filePath,
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "Unable to open the resume.\n\n" + ex.Message,
+                    "Resume",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+        }
+
     }
 }

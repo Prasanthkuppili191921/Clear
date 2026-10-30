@@ -44,6 +44,28 @@ namespace AiInterviewAssistant
             }
         }
 
+        public SettingsWindow GetOrCreateSettingsWindowForResume()
+        {
+            if (_settingsWindow == null)
+            {
+                _settingsWindow = new SettingsWindow(_mainWindow);
+
+                _settingsWindow.CloseRequested +=
+                    SettingsWindow_CloseRequested;
+
+                _settingsWindow.SaveRequested +=
+                    SettingsWindow_SaveRequested;
+
+                _settingsWindow.Closed +=
+                    SettingsWindow_Closed;
+
+                _mainWindow.RegisterSettingsWindow(
+                    _settingsWindow);
+            }
+
+            return _settingsWindow;
+        }
+
 
         // =========================================================
         // SETTINGS VISIBLE

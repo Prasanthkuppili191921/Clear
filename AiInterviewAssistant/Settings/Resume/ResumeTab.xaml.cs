@@ -13,6 +13,8 @@ namespace AiInterviewAssistant.Settings.Resume
 
         private bool _isLoading;
 
+        private bool _lastBrowseSucceeded;
+
 
         // =========================================================
         // CONSTRUCTOR
@@ -55,6 +57,16 @@ namespace AiInterviewAssistant.Settings.Resume
 
                 ResumeTextBox.Text =
                     resume ?? string.Empty;
+
+                ResumeFileNameText.Text =
+    !string.IsNullOrWhiteSpace(_settings?.ResumeFilePath)
+        ? Path.GetFileName(_settings.ResumeFilePath)
+        : string.Empty;
+
+                ResumeStatusText.Text =
+                    string.IsNullOrWhiteSpace(ResumeFileNameText.Text)
+                        ? "No resume added"
+                        : "Resume imported";
 
                 UpdateResumeUI();
             }
@@ -109,6 +121,7 @@ namespace AiInterviewAssistant.Settings.Resume
         {
             try
             {
+                _lastBrowseSucceeded = false;
                 OpenFileDialog dialog =
                     new OpenFileDialog
                     {
@@ -176,6 +189,9 @@ namespace AiInterviewAssistant.Settings.Resume
 
 
                 UpdateResumeUI();
+
+                _settings.ResumeFilePath = filePath;
+                _lastBrowseSucceeded = true;
             }
             catch (Exception ex)
             {
@@ -387,12 +403,32 @@ namespace AiInterviewAssistant.Settings.Resume
             ResumeFileNameText.Text =
                 string.Empty;
 
+            _settings.ResumeFilePath = string.Empty;
+
 
             ResumeStatusText.Text =
                 "No resume added";
 
 
             UpdateResumeUI();
+        }
+
+        public bool BrowseFromMainWindow()
+        {
+            _lastBrowseSucceeded = false;
+
+            BrowseResumeButton_Click(
+                BrowseResumeButton,
+                new RoutedEventArgs());
+
+            return _lastBrowseSucceeded;
+        }
+
+        public void ClearFromMainWindow()
+        {
+            ClearResumeButton_Click(
+                ClearResumeButton,
+                new RoutedEventArgs());
         }
 
 

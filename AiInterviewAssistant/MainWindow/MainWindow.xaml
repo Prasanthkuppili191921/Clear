@@ -1001,24 +1001,6 @@
 
 
                     <!-- =================================================
-                         CENTER - RECORD INTERVIEW
-                         ================================================= -->
-                    <CheckBox
-                        x:Name="RecordInterviewCheckBox"
-                        Grid.Column="1"
-                        Content="Record Interview"
-                        IsChecked="False"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Foreground="{DynamicResource PrimaryTextBrush}"
-                        FontSize="12"
-                        FontWeight="SemiBold"
-                        Margin="0"
-                        Checked="RecordInterviewCheckBox_Checked"
-                        Unchecked="RecordInterviewCheckBox_Unchecked"/>
-
-
-                    <!-- =================================================
                          LEFT - TITLE
                          ================================================= -->
 
@@ -1065,6 +1047,91 @@
 
                         </StackPanel>
 
+                    </StackPanel>
+
+                    <!-- =================================================
+                         CENTER - ADD RESUME
+                         ================================================= -->
+
+                    <StackPanel
+    Grid.Column="1"
+    HorizontalAlignment="Center"
+    VerticalAlignment="Center"
+    MaxWidth="230">
+
+                        <Button
+        x:Name="AddResumeButton"
+        HorizontalAlignment="Center"
+        Background="Transparent"
+        BorderThickness="0"
+        Padding="4,2"
+        FocusVisualStyle="{x:Null}"
+        Click="AddResumeButton_Click">
+
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border
+                    Background="Transparent"
+                    Padding="{TemplateBinding Padding}">
+                                        <StackPanel
+                        Orientation="Horizontal"
+                        VerticalAlignment="Center">
+
+                                            <TextBlock
+                            Text="＋"
+                            FontSize="15"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource PrimaryTextBrush}"
+                            VerticalAlignment="Center"
+                            Margin="0,0,4,1"/>
+
+                                            <TextBlock
+                            Text="Add Resume"
+                            FontSize="12"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource PrimaryTextBrush}"
+                            VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+
+                        <StackPanel
+        x:Name="SelectedResumePanel"
+        Orientation="Horizontal"
+        HorizontalAlignment="Center"
+        VerticalAlignment="Center"
+        Visibility="Collapsed">
+
+                            <Button
+            x:Name="ResumeFileLinkButton"
+            Content=""
+            MaxWidth="185"
+            Padding="2,0"
+            FontSize="15"
+            FontWeight="SemiBold"
+            Foreground="{DynamicResource AccentBrush}"
+            Background="Transparent"
+            BorderThickness="0"
+            FocusVisualStyle="{x:Null}"
+            Click="ResumeFileLinkButton_Click"/>
+
+                            <Button
+            x:Name="RemoveResumeButton"
+            Content="×"
+            Width="20"
+            Height="20"
+            Margin="0,-10,0,0"
+            Padding="0"
+            FontSize="16"
+            FontWeight="SemiBold"
+            Foreground="{DynamicResource PrimaryTextBrush}"
+            Background="Transparent"
+            BorderThickness="0"
+            FocusVisualStyle="{x:Null}"
+            Click="RemoveResumeButton_Click"/>
+                        </StackPanel>
                     </StackPanel>
 
                     <!-- =================================================
@@ -1127,6 +1194,7 @@
                             BorderThickness="0"
                             Style="{StaticResource TransparentIconButton}"
                             Click="SettingsButton_Click"
+                            Visibility="Collapsed"
 />
 
 
@@ -1273,19 +1341,22 @@
                          MESSAGE + VOICE
                          ================================================= -->
 
-                    <StackPanel
+                    <Grid
                         x:Name="ModeButtonsPanel"
                         Grid.Row="1"
-                        Orientation="Horizontal"
-                        HorizontalAlignment="Center"
                         VerticalAlignment="Center">
 
+                        <StackPanel
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
 
-                        <!-- =================================================
+
+                            <!-- =================================================
                              MESSAGE TOGGLE
                              ================================================= -->
 
-                        <ToggleButton
+                            <ToggleButton
                             x:Name="MessageModeButton"
                             Width="40"
                             Height="50"
@@ -1298,15 +1369,15 @@
                             Unchecked="MessageModeButton_Unchecked"
                             >
 
-                            <Viewbox
+                                <Viewbox
                                 Width="19"
                                 Height="19">
 
-                                <Canvas
+                                    <Canvas
                                     Width="24"
                                     Height="22">
 
-                                    <Path
+                                        <Path
                                         Data="M4,5
                                               A2,2 0 0 1 6,3
                                               L18,3
@@ -1324,18 +1395,18 @@
                                         StrokeThickness="1.7"
                                         StrokeLineJoin="Round"/>
 
-                                </Canvas>
+                                    </Canvas>
 
-                            </Viewbox>
+                                </Viewbox>
 
-                        </ToggleButton>
+                            </ToggleButton>
 
 
-                        <!-- =================================================
+                            <!-- =================================================
                              VOICE
                          ================================================= -->
 
-                        <Button
+                            <Button
                             x:Name="VoiceButton"
                             Width="40"
                             Height="40"
@@ -1347,36 +1418,36 @@
                             Click="VoiceButton_Click"
                             >
 
-                            <Button.RenderTransformOrigin>
+                                <Button.RenderTransformOrigin>
 
-                                <Point
+                                    <Point
                                     X="0.5"
                                     Y="0.5"/>
 
-                            </Button.RenderTransformOrigin>
+                                </Button.RenderTransformOrigin>
 
 
-                            <Button.RenderTransform>
+                                <Button.RenderTransform>
 
-                                <ScaleTransform
+                                    <ScaleTransform
                                     x:Name="VoicePulseScale"
                                     ScaleX="1"
                                     ScaleY="1"/>
 
-                            </Button.RenderTransform>
+                                </Button.RenderTransform>
 
 
-                            <Viewbox
+                                <Viewbox
                                 Width="19"
                                 Height="19">
 
-                                <Canvas
+                                    <Canvas
                                     Width="24"
                                     Height="24">
 
-                                    <!-- MICROPHONE -->
+                                        <!-- MICROPHONE -->
 
-                                    <Path
+                                        <Path
                                         Data="M12,15
                                               A3,3 0 0 0 15,12
                                               L15,6
@@ -1389,9 +1460,9 @@
                                         StrokeLineJoin="Round"/>
 
 
-                                    <!-- OUTER CURVE -->
+                                        <!-- OUTER CURVE -->
 
-                                    <Path
+                                        <Path
                                         Data="M5,12
                                               A7,7 0 0 0 19,12"
                                         Fill="Transparent"
@@ -1401,9 +1472,9 @@
                                         StrokeEndLineCap="Round"/>
 
 
-                                    <!-- STEM -->
+                                        <!-- STEM -->
 
-                                    <Line
+                                        <Line
                                         X1="12"
                                         Y1="19"
                                         X2="12"
@@ -1412,9 +1483,9 @@
                                         StrokeThickness="1.7"/>
 
 
-                                    <!-- BOTTOM -->
+                                        <!-- BOTTOM -->
 
-                                    <Line
+                                        <Line
                                         X1="9"
                                         Y1="22"
                                         X2="15"
@@ -1424,17 +1495,19 @@
                                         StrokeStartLineCap="Round"
                                         StrokeEndLineCap="Round"/>
 
-                                </Canvas>
+                                    </Canvas>
 
-                            </Viewbox>
+                                </Viewbox>
 
-                        </Button>
+                            </Button>
 
-                        <!-- =================================================
+
+
+                            <!-- =================================================
      AUTO VOICE SWITCH
      ================================================= -->
 
-                        <ToggleButton
+                            <ToggleButton
     x:Name="AutoVoiceButton"
     Width="50"
     Height="22"
@@ -1443,19 +1516,19 @@
     Checked="AutoVoiceButton_Checked"
     Unchecked="AutoVoiceButton_Unchecked">
 
-                            <ToggleButton.Template>
-                                <ControlTemplate TargetType="ToggleButton">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
 
-                                    <Border
+                                        <Border
                 x:Name="AutoVoiceSwitchBorder"
                 Width="50"
                 Height="22"
                 CornerRadius="11"
                 Background="#555555">
 
-                                        <Grid>
+                                            <Grid>
 
-                                            <TextBlock
+                                                <TextBlock
                         x:Name="AutoVoiceSwitchText"
                         Text="OFF"
                         Foreground="White"
@@ -1465,7 +1538,7 @@
                         VerticalAlignment="Center"
                         Margin="0,0,7,0"/>
 
-                                            <Ellipse
+                                                <Ellipse
                         x:Name="AutoVoiceSwitchKnob"
                         Width="16"
                         Height="16"
@@ -1474,56 +1547,71 @@
                         VerticalAlignment="Center"
                         Margin="3,0,0,0"/>
 
-                                        </Grid>
+                                            </Grid>
 
-                                    </Border>
+                                        </Border>
 
-                                    <ControlTemplate.Triggers>
+                                        <ControlTemplate.Triggers>
 
-                                        <Trigger
+                                            <Trigger
                     Property="IsChecked"
                     Value="True">
 
-                                            <Setter
+                                                <Setter
                         TargetName="AutoVoiceSwitchBorder"
                         Property="Background"
                         Value="#2E7D32"/>
 
-                                            <Setter
+                                                <Setter
                         TargetName="AutoVoiceSwitchText"
                         Property="Text"
                         Value="ON"/>
 
-                                            <Setter
+                                                <Setter
                         TargetName="AutoVoiceSwitchText"
                         Property="HorizontalAlignment"
                         Value="Left"/>
 
-                                            <Setter
+                                                <Setter
                         TargetName="AutoVoiceSwitchText"
                         Property="Margin"
                         Value="7,0,0,0"/>
 
-                                            <Setter
+                                                <Setter
                         TargetName="AutoVoiceSwitchKnob"
                         Property="HorizontalAlignment"
                         Value="Right"/>
 
-                                            <Setter
+                                                <Setter
                         TargetName="AutoVoiceSwitchKnob"
                         Property="Margin"
                         Value="0,0,3,0"/>
 
-                                        </Trigger>
+                                            </Trigger>
 
-                                    </ControlTemplate.Triggers>
+                                        </ControlTemplate.Triggers>
 
-                                </ControlTemplate>
-                            </ToggleButton.Template>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
 
-                        </ToggleButton>
+                            </ToggleButton>
 
-                    </StackPanel>
+                        </StackPanel>
+
+                        <CheckBox
+                            x:Name="RecordInterviewCheckBox"
+                            Content="Record Interview"
+                            IsChecked="False"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource PrimaryTextBrush}"
+                            FontSize="12"
+                            FontWeight="SemiBold"
+                            Margin="0,0,4,0"
+                            Checked="RecordInterviewCheckBox_Checked"
+                            Unchecked="RecordInterviewCheckBox_Unchecked"/>
+
+                    </Grid>
 
                 </Grid>
 
