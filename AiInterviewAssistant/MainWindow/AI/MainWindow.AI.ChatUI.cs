@@ -497,59 +497,114 @@ namespace AiInterviewAssistant
             if (panel == null)
                 return;
 
-
             panel.Children.Clear();
 
-
-            if (string.IsNullOrEmpty(message))
+            if (string.IsNullOrWhiteSpace(message))
                 return;
 
-
-            // =====================================================
-            // SPLIT MARKDOWN CODE BLOCKS
-            // =====================================================
-
-            string[] parts =
-                message.Split(
+            // First, preserve the existing Markdown fenced-code behavior.
+            if (message.Contains("```"))
+            {
+                string[] parts = message.Split(
                     new[] { "```" },
                     StringSplitOptions.None);
 
-
-            for (int i = 0;
-                 i < parts.Length;
-                 i++)
-            {
-                string part =
-                    parts[i] ?? "";
-
-
-                // =================================================
-                // CODE BLOCK
-                // =================================================
-
-                if (i % 2 == 1)
+                for (int i = 0; i < parts.Length; i++)
                 {
-                    AddAvalonCodeBlock(
-                        panel,
-                        part);
+                    string part = parts[i] ?? "";
 
-                    continue;
+                    if (i % 2 == 1)
+                    {
+                        AddAvalonCodeBlock(panel, part);
+                    }
+                    else
+                    {
+                        AddNormalText(panel, part);
+                    }
                 }
 
-
-                // =================================================
-                // NORMAL TEXT
-                // =================================================
-
-                AddNormalText(
-                    panel,
-                    part);
+                return;
             }
 
+            // Vision responses often contain only code and no Markdown
+            // fences (for example: SELECT MAX(salary) FROM employees;).
+            // Detect standalone code and send it to the existing AvalonEdit
+            // renderer instead of displaying it as a normal TextBlock.
+            string detectedLanguage = DetectLanguageFromCode(message);
 
-            //ChatScrollViewer.ScrollToEnd();
+            if (IsLikelyStandaloneCode(message, detectedLanguage))
+            {
+                AddAvalonCodeBlock(
+                    panel,
+                    detectedLanguage + "\n" + message.Trim());
+
+                return;
+            }
+
+            // No code markers and not a standalone code response:
+            // retain the normal text rendering.
+            AddNormalText(panel, message);
         }
 
+        private bool IsLikelyStandaloneCode(
+            string text,
+            string language)
+        {
+            if (string.IsNullOrWhiteSpace(text) ||
+                string.IsNullOrWhiteSpace(language))
+            {
+                return false;
+            }
+
+            string trimmed = text.Trim();
+            string firstLine = trimmed
+                .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)[0]
+                .Trim();
+
+            // SQL is commonly returned as a single statement.
+            if (language == "sql")
+            {
+                return Regex.IsMatch(
+                    firstLine,
+                    @"^(SELECT|WITH|INSERT|UPDATE|DELETE|CREATE|ALTER|DROP|DECLARE|EXEC(?:UTE)?)\b",
+                    RegexOptions.IgnoreCase);
+            }
+
+            // For other languages, require a recognizable code opening
+            // rather than classifying explanatory prose as code.
+            if (language == "csharp")
+            {
+                return Regex.IsMatch(
+                    firstLine,
+                    @"^(using\s+[\w\.]+|namespace\s+[\w\.]+|public\s+|private\s+|internal\s+|class\s+|interface\s+|static\s+|var\s+\w+\s*=|[A-Za-z_]\w*\s*\()",
+                    RegexOptions.IgnoreCase);
+            }
+
+            if (language == "javascript" || language == "typescript")
+            {
+                return Regex.IsMatch(
+                    firstLine,
+                    @"^(const\s+|let\s+|var\s+|function\s+|async\s+function\s+|class\s+|import\s+|export\s+|return\b|console\.|document\.|window\.|[\w.$]+\s*=\s*|[\w.$]+\s*\()",
+                    RegexOptions.IgnoreCase);
+            }
+
+            if (language == "json")
+                return firstLine.StartsWith("{") || firstLine.StartsWith("[");
+
+            if (language == "xml" || language == "xaml" || language == "html")
+                return firstLine.StartsWith("<");
+
+            if (language == "css")
+                return Regex.IsMatch(firstLine, @"^[.#]?[A-Za-z][\w\-]*\s*\{");
+
+            if (language == "powershell")
+                return Regex.IsMatch(firstLine, @"^(\$\w+|Get-|Set-|New-|Remove-|Write-Host|foreach\b|if\b)", RegexOptions.IgnoreCase);
+
+            if (language == "vb")
+                return Regex.IsMatch(firstLine, @"^(Dim\b|Public\b|Private\b|Class\b|Module\b|Sub\b|Function\b|Imports\b)", RegexOptions.IgnoreCase);
+
+            return false;
+        }
 
         // =========================================================
         // NORMAL TEXT
@@ -658,6 +713,8 @@ namespace AiInterviewAssistant
                         code);
             }
 
+            System.Diagnostics.Debug.WriteLine(
+    $"CODE LANGUAGE: [{language}]");
 
             // =====================================================
             // CLEAN CODE

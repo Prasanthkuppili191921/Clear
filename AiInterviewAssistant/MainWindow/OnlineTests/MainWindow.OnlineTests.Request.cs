@@ -18,8 +18,8 @@ namespace AiInterviewAssistant
         // =========================================================
 
         private async Task<VisionResult>
-            AskVisionModelAsync(
-                string base64Image)
+    AskVisionModelAsync(
+        string base64Image)
         {
             AppSettings settings =
                 SettingsService.Load()
@@ -49,7 +49,7 @@ namespace AiInterviewAssistant
             if (string.IsNullOrWhiteSpace(apiKey))
             {
                 apiKey = OpenRouterKeyProtection.GetKey();
-               
+
             }
 
             if (string.IsNullOrWhiteSpace(apiKey))
@@ -144,13 +144,31 @@ namespace AiInterviewAssistant
                 "Do not return safety messages, moderation messages, " +
                 "system messages, or phrases such as 'User Safety: safe'.\n\n" +
 
-                "If you cannot identify the question, return:\n\n" +
+                "If the screenshot contains ANY readable question text, " +
+                "options, code, or diagram, you MUST attempt to answer it.\n\n" +
 
-                "QUESTION:\n\n" +
+                "Do not answer 'Unable to identify the question' merely " +
+                "because the wording is lengthy, the options are partial, " +
+                "or the question requires reasoning.\n\n" +
 
-                "ANSWER:\n" +
-                "Unable to identify the question.\n\n" +
+                "If options are visible, select the correct option and " +
+                "include its exact text. If options are not visible, " +
+                "give the best direct answer.\n\n" +
 
+                //"Only return 'Unable to identify the question' when the " +
+                //"question area is completely unreadable or absent.\n\n" +
+
+                "If the question text is present in the screenshot, " +
+                "never return 'Unable to identify the question'. " +
+                "Answer the question using your knowledge, even if " +
+                "the screenshot is partially unclear. If the question " +
+                "is 'what is DI and why', explain Dependency Injection " +
+                "and why it is used in software development.\n\n" +
+
+                "IMPORTANT: The QUESTION section contains the extracted " +
+                "question. You must answer that question directly. " +
+                "Do not claim that you cannot identify it when the " +
+                "question text is already provided.\n\n" +
                 "Never put anything other than the actual webpage question " +
                 "and its options inside QUESTION.";
 
@@ -200,33 +218,33 @@ namespace AiInterviewAssistant
                     messages =
                         new object[]
                         {
-                            new
+                    new
+                    {
+                        role = "user",
+
+                        content =
+                            new object[]
                             {
-                                role = "user",
+                                new
+                                {
+                                    type = "text",
+                                    text = prompt
+                                },
 
-                                content =
-                                    new object[]
-                                    {
+                                new
+                                {
+                                    type = "image_url",
+
+                                    image_url =
                                         new
                                         {
-                                            type = "text",
-                                            text = prompt
-                                        },
-
-                                        new
-                                        {
-                                            type = "image_url",
-
-                                            image_url =
-                                                new
-                                                {
-                                                    url =
-                                                        "data:image/jpeg;base64," +
-                                                        base64Image
-                                                }
+                                            url =
+                                                "data:image/jpeg;base64," +
+                                                base64Image
                                         }
-                                    }
+                                }
                             }
+                    }
                         },
 
                     temperature = temperature,
@@ -332,6 +350,10 @@ namespace AiInterviewAssistant
                             "Vision model returned an empty response.");
                     }
 
+                    DebugLog("VISION RAW RESPONSE:\n" + aiContent);
+                    System.Diagnostics.Debug.WriteLine(
+                        "VISION RAW RESPONSE:\n" + aiContent);
+
                     return ParseVisionResponse(
                         aiContent);
                 }
@@ -387,6 +409,12 @@ namespace AiInterviewAssistant
 
             string cleaned =
                 response.Trim();
+
+            // Remove accidental Markdown fences from model output.
+            cleaned = cleaned
+                .Replace("```text", "")
+                .Replace("```", "")
+                .Trim();
 
             int questionIndex =
                 cleaned.IndexOf(
